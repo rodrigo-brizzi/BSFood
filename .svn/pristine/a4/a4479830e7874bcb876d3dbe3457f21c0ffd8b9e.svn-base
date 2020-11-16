@@ -1,0 +1,155 @@
+﻿using BSFood.View;
+using BSFood.Apoio;
+using BSFood.Models;
+using BSFood.BusinessLogic;
+using BSFood.DataTransfer;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
+
+namespace BSFood.ViewModel
+{
+    public class CaixaFechamentoViewModel : ViewModelBase
+    {
+        public ICommand SalvarCommand { get; set; }
+        public ICommand ImprimirFechamentoCommand { get; set; }
+
+        public CaixaFechamentoViewModel()
+        {
+            SalvarCommand = new DelegateCommand(Salvar, CanSalvar);
+            ImprimirFechamentoCommand = new DelegateCommand(ImprimirFechamento, CanImprimirFechamento);
+            Retorno objRetorno;
+            using (Financeiro objBLL = new Financeiro())
+            {
+                objRetorno = objBLL.RetornaCaixaFechamento(Util.objConfigStorage.intCaiCodigo);
+            }
+            if (objRetorno.intCodigoErro == 0)
+                this.objFechamentoCaixa = (FechamentoCaixa)objRetorno.objRetorno;
+            else
+                MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+        }
+
+
+        #region Propriedades
+
+        private FechamentoCaixa _objFechamentoCaixa;
+        public FechamentoCaixa objFechamentoCaixa
+        {
+            get { return this._objFechamentoCaixa; }
+            set
+            {
+                this._objFechamentoCaixa = value;
+                RaisePropertyChanged(null);
+            }
+        }
+
+        private int _intSelectedIndexTab;
+        public int intSelectedIndexTab
+        {
+            get { return this._intSelectedIndexTab; }
+            set
+            {
+                this._intSelectedIndexTab = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private string _strRelatorioTela;
+        public string strRelatorioTela
+        {
+            get { return this.objFechamentoCaixa == null ? string.Empty : this.objFechamentoCaixa.strRelatorio; }
+            set
+            {
+                this._strRelatorioTela = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+        private bool CanSalvar(object objParam)
+        {
+            return this.objFechamentoCaixa != null && this.objFechamentoCaixa.objCaixa.cai_dataFechamento == null;
+        }
+        private void Salvar(object objParam)
+        {
+            this.Validate();
+            if (!this.HasErrors)
+            {
+                Retorno objRetorno;
+                using (Financeiro objBLL = new Financeiro())
+                {
+                    objRetorno = objBLL.FecharCaixa(this.objFechamentoCaixa);
+                }
+                if (objRetorno.intCodigoErro == 0)
+                {
+                    this.objFechamentoCaixa = (FechamentoCaixa)objRetorno.objRetorno;
+                    Util.objConfigStorage.intCaiCodigo = 0;
+                    this.ImprimirFechamento(null);
+                }
+                else
+                    MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+            }
+        }
+
+
+        private bool CanImprimirFechamento(object objParam)
+        {
+            return true;
+        }
+        private void ImprimirFechamento(object objParam)
+        {
+            if (this.objFechamentoCaixa != null && this.objFechamentoCaixa.strRelatorio != string.Empty)
+            {
+                string[] arrLinhas = this.objFechamentoCaixa.strRelatorio.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+                if (arrLinhas.Length > 0)
+                {
+                    
+                    if (string.IsNullOrWhiteSpace(Util.objConfigStorage.objConfiguracao.cfg_impressoraEntrega))
+                        MessageBox.Show("Impressora não configurada!", "Atenção", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    else
+                    {
+                        Util.objGerenciaCupom.AbreRelatorio();
+                        for (int i = 0; i < arrLinhas.Length; i++)
+                        {
+                            Util.objGerenciaCupom.LinhaRelatorio(arrLinhas[i]);
+                        }                        
+                        Util.objGerenciaCupom.FechaRelatorio(Util.objConfigStorage.objConfiguracao.cfg_impressoraEntrega);
+                    }
+                }
+            }
+        }
+
+        #endregion Comandos
+
+
+
+        #region Eventos
+
+
+        #endregion Eventos
+
+
+
+        #region Métodos
+
+
+
+        #endregion Métodos
+    }
+}

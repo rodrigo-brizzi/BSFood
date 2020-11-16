@@ -1,0 +1,61 @@
+﻿using BSFoodServer.DAL;
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Data;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows;
+
+namespace BSFoodServer
+{
+    /// <summary>
+    /// Interaction logic for App.xaml
+    /// </summary>
+    public partial class App : Application
+    {
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            using (EFContexto objCtx = new EFContexto())
+            {
+                if (objCtx.tbConfiguracao.FirstOrDefault() == null)
+                {
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "AC", est_nome = "ACRE"});
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "AL", est_nome = "ALAGOAS"});
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "AP", est_nome = "AMAPÁ"});
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "AM", est_nome = "AMAZONAS"});
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "BA", est_nome = "BAHIA"});
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "CE", est_nome = "CEARÁ"});
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "DF", est_nome = "DISTRITO FEDERAL"});
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "ES", est_nome = "ESPÍRITO SANTO"});
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "GO", est_nome = "GOIÁS"});
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "MA", est_nome = "MARANHÃO"});
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "MT", est_nome = "MATO GROSSO"});
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "MS", est_nome = "MATO GROSSO DO SUL"});
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "MG", est_nome = "MINAS GERAIS"});
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "PA", est_nome = "PARÁ"});
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "PB", est_nome = "PARAÍBA"});
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "PR", est_nome = "PARANÁ"});
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "PE", est_nome = "PERNAMBUCO"});
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "PI", est_nome = "PIAUÍ"});
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "RJ", est_nome = "RIO DE JANEIRO"});
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "RN", est_nome = "RIO GRANDE DO NORTE"});
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "RS", est_nome = "RIO GRANDE DO SUL"});
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "RO", est_nome = "RONDÔNIA"});
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "RR", est_nome = "RORAIMA"});
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "SC", est_nome = "SANTA CATARINA"});
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "SP", est_nome = "SÃO PAULO"});
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "SE", est_nome = "SERGIPE"});
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "TO", est_nome = "TOCANTINS"});
+                    objCtx.tbEstado.Add(new tbEstado { est_sigla = "EX", est_nome = "EXTERIOR" });
+
+                    objCtx.tbConfiguracao.Add(new tbConfiguracao { cfg_versaoBanco = 1, cfg_ultimoLogin = DateTime.Now });
+
+                    objCtx.SaveChanges();
+                }
+            }
+            
+            this.StartupUri = new System.Uri("winPrincipal.xaml", System.UriKind.Relative);
+        }
+    }
+}

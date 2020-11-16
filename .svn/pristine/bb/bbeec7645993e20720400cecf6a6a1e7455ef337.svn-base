@@ -1,0 +1,45 @@
+﻿using BSFoodWEB.Apoio;
+using BSFoodWEB.DAL;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+
+namespace BSFoodWEB.BLL
+{
+    public class Pessoas : ClasseBase, IPessoas, IDisposable
+    {
+        private bool blnFecharCon;
+        private Conexao objCtx;
+        private GerenciaTransacao objTransacao;
+
+
+        public Pessoas()
+            : base()
+        {
+            this.objCtx = new Conexao();
+            this.objCtx.Configuration.ProxyCreationEnabled = false;
+            this.objTransacao = new GerenciaTransacao(ref this.objCtx);
+            blnFecharCon = true;
+        }
+
+        public Pessoas(ref Conexao _objCtx, ref GerenciaTransacao _objTransacao)
+            : base()
+        {
+            this.objCtx = _objCtx;
+            this.objTransacao = _objTransacao;
+            blnFecharCon = false;
+        }
+
+        //Regions
+
+        public void Dispose()
+        {
+            if (this.blnFecharCon)
+            {
+                this.objCtx.Dispose();
+                this.objCtx = null;
+            }
+        }
+    }
+}

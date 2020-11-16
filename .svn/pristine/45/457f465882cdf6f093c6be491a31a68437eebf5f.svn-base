@@ -1,0 +1,74 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFood.Models
+{
+    public class tbPerfilAcessoMenu : ModelBase
+    {
+        private bool _pam_permiteAlteracao;
+        public bool pam_permiteAlteracao 
+        {
+            get { return this._pam_permiteAlteracao; }
+            set
+            {
+                this._pam_permiteAlteracao = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private bool _pam_permiteExclusao;
+        public bool pam_permiteExclusao 
+        {
+            get { return this._pam_permiteExclusao; }
+            set
+            {
+                this._pam_permiteExclusao = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private bool _pam_permiteInclusao;
+        public bool pam_permiteInclusao 
+        {
+            get { return this._pam_permiteInclusao; }
+            set
+            {
+                this._pam_permiteInclusao = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private bool _pam_permiteVisualizacao;
+        public bool pam_permiteVisualizacao 
+        {
+            get { return this._pam_permiteVisualizacao; }
+            set
+            {
+                this._pam_permiteVisualizacao = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private bool _pam_toolBar;
+        public bool pam_toolBar 
+        {
+            get { return this._pam_toolBar; }
+            set
+            {
+                this._pam_toolBar = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public int men_codigo { get; set; }
+        public virtual tbMenu tbMenu { get; set; }
+
+        public int pac_codigo { get; set; }
+        public virtual tbPerfilAcesso tbPerfilAcesso { get; set; }
+    }
+}

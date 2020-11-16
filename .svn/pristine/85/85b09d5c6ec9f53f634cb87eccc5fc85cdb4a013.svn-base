@@ -1,0 +1,129 @@
+﻿using BSFood.Models;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+using BSFood.View;
+using BSFood.Apoio;
+
+namespace BSFood.ViewModel
+{
+    public class PrincipalViewModel : ViewModelBase
+    {
+        public ICommand AbreTelaLoginCommand { get; set; }
+        public ICommand AbreTelaCommand { get; set; }
+
+        public PrincipalViewModel()
+        {
+            AbreTelaLoginCommand = new DelegateCommand(AbreTelaLogin, CanAbreTelaLogin);
+            AbreTelaCommand = new DelegateCommand(AbreTela, CanAbreTela);
+        }
+
+        #region Propriedades
+
+        public List<tbMenu> arrMenu { get; set; }
+
+        public List<tbMenu> arrToolBar { get; set; }
+
+        public string strFuncionario { get; set; }
+
+        public string strVersao { get; set; }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+        private bool CanAbreTelaLogin(object objParam)
+        {
+            return true;
+        }
+        private void AbreTelaLogin(object objParam)
+        {
+            winLogin objTelaLogin = new winLogin();
+            objTelaLogin.Owner = (Window)objParam;
+            objTelaLogin.Closed += (sen, eve) =>
+            {
+                if (Util.objConfigStorage != null)
+                    PreparaTelaPrincipal();
+                else
+                    Util.FecharSistema();
+            };
+            objTelaLogin.ShowDialog();
+        }
+
+        private bool CanAbreTela(object objParam)
+        {
+            return true;
+        }
+        private void AbreTela(object objParam)
+        {
+            if (objParam != null)
+                MessageBox.Show(objParam.ToString());
+        }
+
+        #endregion Comandos
+
+
+
+        #region Eventos
+
+
+        #endregion Eventos
+
+
+
+        #region Métodos
+
+        public void PreparaTelaPrincipal()
+        {
+            //Construindo o Menu
+            this.arrMenu = new List<tbMenu>();
+            foreach (tbMenu objMenu in Util.objConfigStorage.arrMenu.Where(men => men.men_codigoPai == null).OrderBy(men => men.men_ordem))
+            {
+                tbMenu objMenuItem = new tbMenu() { men_imagem = "../Imagens/Menu/" + objMenu.men_codigo + ".png", men_cabecalho = objMenu.men_cabecalho, men_nomeControle = objMenu.men_nomeControle };
+                AgrupaMenuItem(ref objMenuItem, objMenu.men_codigo);
+                this.arrMenu.Add(objMenuItem);
+            }
+            RaisePropertyChanged("arrMenu");
+
+            //Construindo a ToolBar
+            this.arrToolBar = new List<tbMenu>();
+            foreach (tbMenu objToolBar in Util.objConfigStorage.arrToolBar)
+            {
+                this.arrToolBar.Add(new tbMenu() { men_imagem = "../Imagens/Menu/" + objToolBar.men_codigo + ".png", men_cabecalho = objToolBar.men_cabecalho, men_nomeControle = objToolBar.men_nomeControle });
+            }
+            RaisePropertyChanged("arrToolBar");
+
+            //Construindo a StatusBar
+            this.strFuncionario = Util.objConfigStorage.objFuncionario.fun_nome;
+            RaisePropertyChanged("strFuncionario");
+
+            this.strVersao = Util.RetornaVersao();
+            RaisePropertyChanged("strVersao");            
+        }
+
+        private void AgrupaMenuItem(ref tbMenu objMenuItem, int intCodigoMenu)
+        {
+            foreach (tbMenu objMenu in Util.objConfigStorage.arrMenu.Where(men => men.men_codigoPai == intCodigoMenu).OrderBy(men => men.men_ordem))
+            {
+                tbMenu objMenuAux = new tbMenu() { men_imagem = "../Imagens/Menu/" + objMenu.men_codigo + ".png", men_cabecalho = objMenu.men_cabecalho, men_nomeControle = objMenu.men_nomeControle };
+                AgrupaMenuItem(ref objMenuAux, objMenu.men_codigo);
+                if (objMenuItem.tbMenuFilho == null)
+                    objMenuItem.tbMenuFilho = new List<tbMenu>();
+                objMenuItem.tbMenuFilho.Add(objMenuAux);
+            }
+        }
+
+        #endregion Métodos
+    }
+}

@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<repositories>
+  <repository path="..\BSFood\packages.config" />
+  <repository path="..\BSFoodServer\packages.config" />
+  <repository path="..\BSFoodWEB\packages.config" />
+</repositories>

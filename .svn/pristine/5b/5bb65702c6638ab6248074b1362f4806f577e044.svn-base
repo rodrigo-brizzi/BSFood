@@ -1,0 +1,531 @@
+﻿using BSFood.View;
+using BSFood.Apoio;
+using BSFood.Models;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
+using BSFood.BusinessLogic;
+using BSFood.DataTransfer;
+
+namespace BSFood.ViewModel
+{
+    public class PerfilAcessoViewModel : ViewModelBase
+    {
+        public ICommand AnteriorCommand { get; set; }
+        public ICommand ProximoCommand { get; set; }
+        public ICommand NovoCommand { get; set; }
+        public ICommand EditarCommand { get; set; }
+        public ICommand SalvarCommand { get; set; }
+        public ICommand CancelarCommand { get; set; }
+        public ICommand ExcluirCommand { get; set; }
+        public ICommand PesquisarCommand { get; set; }
+        public ICommand HerdarCommand { get; set; }
+        public ICommand LogCommand { get; set; }
+
+        private winPesquisa objTelaPesquisa;
+
+        public PerfilAcessoViewModel()
+        {
+            AnteriorCommand = new DelegateCommand(Anterior, CanAnterior);
+            ProximoCommand = new DelegateCommand(Proximo, CanProximo);
+            NovoCommand = new DelegateCommand(Novo, CanNovo);
+            EditarCommand = new DelegateCommand(Editar, CanEditar);
+            SalvarCommand = new DelegateCommand(Salvar, CanSalvar);
+            CancelarCommand = new DelegateCommand(Cancelar, CanCancelar);
+            ExcluirCommand = new DelegateCommand(Excluir, CanExcluir);
+            PesquisarCommand = new DelegateCommand(Pesquisar, CanPesquisar);
+            HerdarCommand = new DelegateCommand(Herdar, CanHerdar);
+            LogCommand = new DelegateCommand(Log, CanLog);
+        }
+
+
+        #region Propriedades
+
+        public int? pac_codigo 
+        {
+            get 
+            {
+                if (this.objPerfilAcesso == null)
+                    return null;
+                else
+                    return this.objPerfilAcesso.pac_codigo; 
+            }
+            set
+            {
+                if (this.objPerfilAcesso == null || this.objPerfilAcesso.pac_codigo != value)
+                {
+                    Retorno objRetorno;
+                    using (Pessoas objBLL = new Pessoas())
+                    {
+                        objRetorno = objBLL.RetornaPerfilAcesso(value == null ? 0 : (int)value, null);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objPerfilAcesso = (tbPerfilAcesso)objRetorno.objRetorno;
+                        base.enStatusTelaAtual = enStatusTela.Navegacao;
+                    }
+                    else
+                    {
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                        RaisePropertyChanged();
+                    }
+                }
+            }
+        }
+
+        private List<tbPerfilAcesso> _arrPerfilAcessoHerdar;
+        public List<tbPerfilAcesso> arrPerfilAcessoHerdar
+        {
+            get { return this._arrPerfilAcessoHerdar; }
+            set
+            {
+                this._arrPerfilAcessoHerdar = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private tbPerfilAcesso _objPerfilAcesso;
+        public tbPerfilAcesso objPerfilAcesso
+        {
+            get { return this._objPerfilAcesso; }
+            set
+            {
+                this._objPerfilAcesso = value;
+                RaisePropertyChanged();
+                RaisePropertyChanged("pac_codigo");
+                
+                //Prepara propriedades da viewmodel
+                this._blnPermiteAlteracaoTodos = false;
+                RaisePropertyChanged("blnPermiteAlteracaoTodos");
+
+                this._blnPermiteVisualizacaoTodos = false;
+                RaisePropertyChanged("blnPermiteVisualizacaoTodos");
+
+                this._blnPermiteExclusaoTodos = false;
+                RaisePropertyChanged("blnPermiteExclusaoTodos");
+
+                this._blnPermiteInclusaoTodos = false;
+                RaisePropertyChanged("blnPermiteInclusaoTodos");
+
+                this._blnToolBarTodos = false;
+                RaisePropertyChanged("blnToolBarTodos");
+
+                this.intSelectedIndexTab = 0;
+            }
+        }
+
+        private List<tbPerfilAcesso> _arrPerfilAcessoPesquisa;
+        public List<tbPerfilAcesso> arrPerfilAcessoPesquisa
+        {
+            get { return this._arrPerfilAcessoPesquisa; }
+            set
+            {
+                this._arrPerfilAcessoPesquisa = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private bool _blnPermiteInclusaoTodos;
+        public bool blnPermiteInclusaoTodos
+        {
+            get { return this._blnPermiteInclusaoTodos; }
+            set
+            {
+                this._blnPermiteInclusaoTodos = value;
+                foreach (tbPerfilAcessoMenu objPerfilAcessoMenu in this.objPerfilAcesso.tbPerfilAcessoMenu)
+                    objPerfilAcessoMenu.pam_permiteInclusao = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private bool _blnPermiteAlteracaoTodos;
+        public bool blnPermiteAlteracaoTodos
+        {
+            get { return this._blnPermiteAlteracaoTodos; }
+            set
+            {
+                this._blnPermiteAlteracaoTodos = value;
+                foreach (tbPerfilAcessoMenu objPerfilAcessoMenu in this.objPerfilAcesso.tbPerfilAcessoMenu)
+                    objPerfilAcessoMenu.pam_permiteAlteracao = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private bool _blnPermiteExclusaoTodos;
+        public bool blnPermiteExclusaoTodos
+        {
+            get { return this._blnPermiteExclusaoTodos; }
+            set
+            {
+                this._blnPermiteExclusaoTodos = value;
+                foreach (tbPerfilAcessoMenu objPerfilAcessoMenu in this.objPerfilAcesso.tbPerfilAcessoMenu)
+                    objPerfilAcessoMenu.pam_permiteExclusao = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private bool _blnPermiteVisualizacaoTodos;
+        public bool blnPermiteVisualizacaoTodos
+        {
+            get { return this._blnPermiteVisualizacaoTodos; }
+            set
+            {
+                this._blnPermiteVisualizacaoTodos = value;
+                foreach (tbPerfilAcessoMenu objPerfilAcessoMenu in this.objPerfilAcesso.tbPerfilAcessoMenu)
+                    objPerfilAcessoMenu.pam_permiteVisualizacao = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private bool _blnToolBarTodos;
+        public bool blnToolBarTodos
+        {
+            get { return this._blnToolBarTodos; }
+            set
+            {
+                this._blnToolBarTodos = value;
+                foreach (tbPerfilAcessoMenu objPerfilAcessoMenu in this.objPerfilAcesso.tbPerfilAcessoMenu)
+                    objPerfilAcessoMenu.pam_toolBar = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private int _intSelectedIndexTab;
+        public int intSelectedIndexTab 
+        {
+            get { return this._intSelectedIndexTab; }
+            set
+            {
+                this._intSelectedIndexTab = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+        private bool CanAnterior(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao || base.enStatusTelaAtual == enStatusTela.Padrao);
+        }
+        private void Anterior(object objParam)
+        {
+            Retorno objRetorno;
+            using (Pessoas objBLL = new Pessoas())
+            {
+                objRetorno = objBLL.RetornaPerfilAcesso(this.objPerfilAcesso == null ? 0 : this.objPerfilAcesso.pac_codigo, enNavegacao.Anterior);
+            }
+            if (objRetorno.intCodigoErro == 0)
+            {
+                this.objPerfilAcesso = (tbPerfilAcesso)objRetorno.objRetorno;
+                base.enStatusTelaAtual = enStatusTela.Navegacao;
+            }    
+            else
+                MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+        }
+
+        private bool CanProximo(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao || base.enStatusTelaAtual == enStatusTela.Padrao);
+        }
+        private void Proximo(object objParam)
+        {
+            Retorno objRetorno;
+            using (Pessoas objBLL = new Pessoas())
+            {
+                objRetorno = objBLL.RetornaPerfilAcesso(this.objPerfilAcesso == null ? 0 : this.objPerfilAcesso.pac_codigo, enNavegacao.Proximo);
+            }
+            if (objRetorno.intCodigoErro == 0)
+            {
+                this.objPerfilAcesso = (tbPerfilAcesso)objRetorno.objRetorno;
+                base.enStatusTelaAtual = enStatusTela.Navegacao;
+            }
+            else
+                MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+        }
+        
+        private bool CanNovo(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao || base.enStatusTelaAtual == enStatusTela.Padrao) && base.blnPermiteInclusaoRegistro;
+        }
+        private void Novo(object objParam)
+        {
+            //Carrega a lista de objetos referente ao combo
+            Retorno objRetorno;
+            Retorno objRetornoMenu;
+            using (Pessoas objBLL = new Pessoas())
+            {
+                objRetorno = objBLL.RetornaListaPerfilAcesso(string.Empty);
+                objRetornoMenu = objBLL.RetornaListaMenu();
+            }
+            if (objRetorno.intCodigoErro == 0)
+                this.arrPerfilAcessoHerdar = (List<tbPerfilAcesso>)objRetorno.objRetorno;
+            else
+                MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+
+            //Prepara a Model que será bindada na tela
+            if (objRetornoMenu.intCodigoErro == 0)
+            {
+                tbPerfilAcesso objPerfilAcessoAux = new tbPerfilAcesso();
+                objPerfilAcessoAux.tbPerfilAcessoMenu = new List<tbPerfilAcessoMenu>();
+                foreach (tbMenu objMenu in (List<tbMenu>)objRetornoMenu.objRetorno)
+                {
+                    objPerfilAcessoAux.tbPerfilAcessoMenu.Add(new tbPerfilAcessoMenu
+                    {
+                        pac_codigo = 0,
+                        men_codigo = objMenu.men_codigo,
+                        pam_permiteAlteracao = false,
+                        pam_permiteExclusao = false,
+                        pam_permiteInclusao = false,
+                        pam_permiteVisualizacao = false,
+                        pam_toolBar = false,
+                        tbMenu = objMenu
+                    });
+                }
+                this.objPerfilAcesso = objPerfilAcessoAux;
+                base.enStatusTelaAtual = enStatusTela.EmInclusaoOuAlteracao;
+            }
+            else
+                MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+        }
+
+        private bool CanEditar(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao && base.blnPermiteAlteracaoRegistro);
+        }
+        private void Editar(object objParam)
+        {
+            base.enStatusTelaAtual = enStatusTela.EmInclusaoOuAlteracao;
+        }
+        
+        private bool CanSalvar(object objParam)
+        {
+            return base.enStatusTelaAtual == enStatusTela.EmInclusaoOuAlteracao;
+        }
+        private void Salvar(object objParam)
+        {
+            this.Validate();
+            this.objPerfilAcesso.Validate();
+            if (!this.objPerfilAcesso.HasErrors && !this.HasErrors)
+            {
+                Retorno objRetorno;
+                using (Pessoas objBLL = new Pessoas())
+                {
+                    objRetorno = objBLL.SalvarPerfilAcesso(this.objPerfilAcesso);
+                }
+                if (objRetorno.intCodigoErro == 0)
+                {
+                    if (((tbPerfilAcesso)objRetorno.objRetorno).pac_codigo == Util.objConfigStorage.objPerfilAcesso.pac_codigo)
+                    {
+                        MessageBox.Show("O perfil do funcionário atual foi alterado, será necessário fechar o sistema!", "Atenção", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                        Util.FecharSistema();
+                    }
+                    else
+                    {
+                        this.objPerfilAcesso = (tbPerfilAcesso)objRetorno.objRetorno;
+                        base.enStatusTelaAtual = enStatusTela.Navegacao;
+                    }                    
+                }
+                else
+                    MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+            }
+        }
+
+        private bool CanCancelar(object objParam)
+        {
+            return base.enStatusTelaAtual == enStatusTela.EmInclusaoOuAlteracao;
+        }
+        private void Cancelar(object objParam)
+        {
+            if (MessageBox.Show("Todas as alterações serão perdidas, deseja cancelar a edição?", "Atenção", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                this.objPerfilAcesso.ClearAllErrors();
+                if (this.objPerfilAcesso.pac_codigo > 0)
+                {
+                    this.intSelectedIndexTab = 0;
+                    base.enStatusTelaAtual = enStatusTela.Navegacao;
+                }
+                else
+                {
+                    this.objPerfilAcesso = null;
+                    base.enStatusTelaAtual = enStatusTela.Padrao;
+                }
+            }
+        }
+
+        private bool CanExcluir(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao && base.blnPermiteExclusaoRegistro);
+        }
+        private void Excluir(object objParam)
+        {
+            if (this.objPerfilAcesso != null)
+            {
+                if (MessageBox.Show("Tem Certeza que deseja excluir o registro selecionado?", "Atenção", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                {
+                    Retorno objRetorno;
+                    using (Pessoas objBLL = new Pessoas())
+                    {
+                        objRetorno = objBLL.ExcluirPerfilAcesso(this.objPerfilAcesso.pac_codigo);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objPerfilAcesso = null;
+                        base.enStatusTelaAtual = enStatusTela.Padrao;
+                    }
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                }
+            }
+        }
+
+        private bool CanPesquisar(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao || base.enStatusTelaAtual == enStatusTela.Padrao);
+        }
+        private void Pesquisar(object objParam)
+        {
+            if (objParam != null)
+            {
+                if (objParam.ToString() == "AbrirTela")
+                {
+                    this.objTelaPesquisa = new winPesquisa();
+                    this.objTelaPesquisa.Title = "Pesquisa - " + base.strNomeTela;
+                    this.objTelaPesquisa.DataContext = this;
+                    this.objTelaPesquisa.Owner = (Window)Application.Current.MainWindow;
+                    this.objTelaPesquisa.Closed += (sen, eve) => { this.objTelaPesquisa = null; };
+                    this.objTelaPesquisa.ShowDialog();
+                }
+                else if (objParam.ToString() == "FecharTela")
+                {
+                    if (this.objTelaPesquisa != null)
+                        this.objTelaPesquisa.Close();
+                }
+                else if (objParam.GetType() == typeof(tbPerfilAcesso))
+                {
+                    this.pac_codigo = ((tbPerfilAcesso)objParam).pac_codigo;
+                    if (this.objTelaPesquisa != null)
+                        this.objTelaPesquisa.Close();
+                }
+                else
+                {
+                    Retorno objRetorno;
+                    using (Pessoas objBLL = new Pessoas())
+                    {
+                        objRetorno = objBLL.RetornaListaPerfilAcesso(objParam.ToString());
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                        this.arrPerfilAcessoPesquisa = (List<tbPerfilAcesso>)objRetorno.objRetorno;
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                }
+            }
+        }
+
+        private bool CanLog(object objParam)
+        {
+            return base.enStatusTelaAtual == enStatusTela.Navegacao;
+        }
+        private void Log(object objParam)
+        {
+            if (objParam != null)
+            {
+                if (objParam.ToString() == "AbrirTela")
+                {
+                    Retorno objRetorno;
+                    using (Pessoas objBLL = new Pessoas())
+                    {
+                        objRetorno = objBLL.RetornaListaAuditoria(this.objPerfilAcesso.pac_codigo, this.objPerfilAcesso);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        base.arrAuditoria = (List<tbAuditoria>)objRetorno.objRetorno;
+                        winAuditoria objTelaAuditoria = new winAuditoria();
+                        objTelaAuditoria.Title = "Auditoria - " + base.strNomeTela;
+                        objTelaAuditoria.DataContext = this;
+                        objTelaAuditoria.Owner = (Window)Application.Current.MainWindow;
+                        objTelaAuditoria.Closed += (sen, eve) => 
+                        {
+                            base.arrAuditoria = null;
+                            objTelaAuditoria = null; 
+                        };
+                        objTelaAuditoria.ShowDialog();
+                    }
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                }
+                else if (objParam.GetType() == typeof(winAuditoria))
+                {
+                    ((Window)objParam).Close();
+                }
+            }
+        }
+
+
+        private bool CanHerdar(object objParam)
+        {
+            return true;
+        }
+        private void Herdar(object objParam)
+        {
+            tbPerfilAcesso objPerfilAcessoHerdar = objParam as tbPerfilAcesso;
+            if (objPerfilAcessoHerdar != null)
+            {
+                Retorno objRetorno;
+                using (Pessoas objBLL = new Pessoas())
+                {
+                    objRetorno = objBLL.RetornaPerfilAcesso(objPerfilAcessoHerdar.pac_codigo, null);
+                }
+                if (objRetorno.intCodigoErro == 0)
+                {
+                    objPerfilAcessoHerdar = (tbPerfilAcesso)objRetorno.objRetorno;
+                    foreach (tbPerfilAcessoMenu objPerfilAcessoMenuHerdar in objPerfilAcessoHerdar.tbPerfilAcessoMenu)
+                    {
+                        foreach (tbPerfilAcessoMenu objPerfilAcessoMenu in this.objPerfilAcesso.tbPerfilAcessoMenu.Where(pam => pam.men_codigo == objPerfilAcessoMenuHerdar.men_codigo))
+                        {
+                            objPerfilAcessoMenu.pam_permiteAlteracao = objPerfilAcessoMenuHerdar.pam_permiteAlteracao;
+                            objPerfilAcessoMenu.pam_permiteInclusao = objPerfilAcessoMenuHerdar.pam_permiteInclusao;
+                            objPerfilAcessoMenu.pam_permiteExclusao = objPerfilAcessoMenuHerdar.pam_permiteExclusao;
+                            objPerfilAcessoMenu.pam_permiteVisualizacao = objPerfilAcessoMenuHerdar.pam_permiteVisualizacao;
+                            objPerfilAcessoMenu.pam_toolBar = objPerfilAcessoMenuHerdar.pam_toolBar;
+                        }
+                    }
+                }
+                else
+                    MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+            }
+        }
+
+        #endregion Comandos
+
+
+
+        #region Eventos
+
+
+
+        #endregion Eventos
+
+
+
+        #region Métodos
+
+
+
+        #endregion Métodos
+    }
+}

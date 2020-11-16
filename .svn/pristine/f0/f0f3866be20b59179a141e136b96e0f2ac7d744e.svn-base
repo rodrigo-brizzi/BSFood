@@ -1,0 +1,33 @@
+﻿using BSFoodServer.Models;
+using System;
+using System.Collections.Generic;
+using System.Data.Entity.ModelConfiguration;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.DAL.Config
+{
+    public class ClienteEnderecoConfig : EntityTypeConfiguration<ClienteEndereco>
+    {
+        public ClienteEnderecoConfig()
+        {
+            this.ToTable("tbClienteEndereco");
+            this.HasKey(e => e.Codigo);
+
+            this.Property(e => e.Codigo).HasColumnName("cen_codigo");
+            this.Property(e => e.Logradouro).HasColumnName("cen_logradouro").HasMaxLength(200);
+            this.Property(e => e.Numero).HasColumnName("cen_numero").HasMaxLength(10);
+            this.Property(e => e.Cep).HasColumnName("cen_cep").HasMaxLength(9);
+            this.Property(e => e.Complemento).HasColumnName("cen_complemento").HasMaxLength(150);
+            this.HasRequired(e => e.Bairro).WithMany(e => e.ClienteEnderecos).HasForeignKey(e => e.CodigoBairro);
+            this.Property(e => e.CodigoBairro).HasColumnName("bai_codigo");
+            this.HasRequired(e => e.Cidade).WithMany(e => e.ClienteEnderecos).HasForeignKey(e => e.CodigoCidade);
+            this.Property(e => e.CodigoCidade).HasColumnName("cid_codigo");
+            this.HasRequired(e => e.Estado).WithMany(e => e.ClienteEnderecos).HasForeignKey(e => e.CodigoEstado);
+            this.Property(e => e.CodigoEstado).HasColumnName("est_codigo");
+            this.HasRequired(e => e.Cliente).WithMany(e => e.ClienteEnderecos).HasForeignKey(e => e.CodigoCliente);
+            this.Property(e => e.CodigoCliente).HasColumnName("cli_codigo");
+        }
+    }
+}

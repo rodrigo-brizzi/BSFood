@@ -1,0 +1,19 @@
+﻿using BSFood.Apoio;
+using BSFood.DataTransfer;
+using BSFood.Models;
+
+namespace BSFood.BusinessLogic.Interfaces
+{
+    public interface IPerfilAcesso
+    {
+        Retorno RetornaPerfilAcesso(int intCodigo, enNavegacao? enDirecao);
+
+        Retorno RetornaListaPerfilAcesso(string strParametro);
+
+        Retorno RetornaListaMenu();
+
+        Retorno SalvarPerfilAcesso(tbPerfilAcesso objPerfilAcesso, int intFunCodigo);
+
+        Retorno ExcluirPerfilAcesso(int intCodigo);
+    }
+}

@@ -1,0 +1,34 @@
+﻿using BSFoodServer.Models;
+using System;
+using System.Collections.Generic;
+using System.Data.Entity.ModelConfiguration;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.DAL.Config
+{
+    public class FuncionarioConfig : EntityTypeConfiguration<Funcionario>
+    {
+        public FuncionarioConfig()
+        {
+            this.ToTable("tbFuncionario");
+            this.HasKey(e => e.Codigo);
+
+            this.Property(e => e.Codigo).HasColumnName("fun_codigo");
+            this.Property(e => e.Nome).HasColumnName("fun_nome").HasMaxLength(100);
+            this.Property(e => e.Login).HasColumnName("fun_login").HasMaxLength(20);
+            this.Property(e => e.Senha).HasColumnName("fun_senha").HasMaxLength(20);
+            this.Property(e => e.Logradouro).HasColumnName("fun_logradouro").HasMaxLength(200);
+            this.Property(e => e.Numero).HasColumnName("fun_numero").HasMaxLength(10);
+            this.Property(e => e.Cep).HasColumnName("fun_cep").HasMaxLength(9);
+            this.Property(e => e.Complemento).HasColumnName("fun_complemento").HasMaxLength(150);
+            this.HasRequired(e => e.Cidade).WithMany(e => e.Funcionarios).HasForeignKey(e => e.CodigoCidade);
+            this.Property(e => e.CodigoCidade).HasColumnName("cid_codigo");
+            this.HasRequired(e => e.Estado).WithMany(e => e.Funcionarios).HasForeignKey(e => e.CodigoEstado);
+            this.Property(e => e.CodigoEstado).HasColumnName("est_codigo");
+            this.HasRequired(e => e.PerfilAcesso).WithMany(e => e.Funcionarios).HasForeignKey(e => e.CodigoPerfilAcesso);
+            this.Property(e => e.CodigoPerfilAcesso).HasColumnName("pac_codigo");
+        }
+    }
+}

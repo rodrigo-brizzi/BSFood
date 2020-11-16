@@ -1,0 +1,250 @@
+﻿using BSFood.View;
+using BSFood.Apoio;
+using BSFood.Models;
+using BSFood.BusinessLogic;
+using BSFood.DataTransfer;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
+
+namespace BSFood.ViewModel
+{
+    public class CaixaAberturaViewModel : ViewModelBase
+    {
+        public ICommand SalvarCommand { get; set; }
+        public ICommand LogCommand { get; set; }
+        public ICommand AdicionaCaixaMovimentoCommand { get; set; }
+
+        public CaixaAberturaViewModel()
+        {
+            SalvarCommand = new DelegateCommand(Salvar, CanSalvar);
+            LogCommand = new DelegateCommand(Log, CanLog);
+            AdicionaCaixaMovimentoCommand = new DelegateCommand(AdicionaCaixaMovimento, CanAdicionaCaixaMovimento);
+            Retorno objRetorno;
+            if (Util.objConfigStorage.intCaiCodigo > 0)
+            {
+                using (var objBLL = new Caixa())
+                {
+                    objRetorno = objBLL.RetornaCaixa(Util.objConfigStorage.intCaiCodigo);
+                }
+                if (objRetorno.intCodigoErro == 0)
+                    this.objCaixa = (tbCaixa)objRetorno.objRetorno;
+                else
+                    MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+            }
+            else
+            {
+                tbCaixa objCaixaAux = new tbCaixa();
+                objCaixaAux.tbCaixaMovimento = new List<tbCaixaMovimento>();
+                using (var objBLL = new FormaPagamento())
+                {
+                    objRetorno = objBLL.RetornaListaFormaPagamento(string.Empty);
+                }
+                if (objRetorno.intCodigoErro == 0)
+                {
+                    List<tbFormaPagamento> arrFormaPagamento = (List<tbFormaPagamento>)objRetorno.objRetorno;
+                    if (arrFormaPagamento.Count > 0)
+                    {
+                        foreach (tbFormaPagamento objFormaPagamento in arrFormaPagamento)
+                        {
+                            tbCaixaMovimento objCaixaMovimento = new tbCaixaMovimento();
+                            objCaixaMovimento.tbFormaPagamento = objFormaPagamento;
+                            objCaixaMovimento.fpg_codigo = objFormaPagamento.fpg_codigo;
+                            objCaixaAux.tbCaixaMovimento.Add(objCaixaMovimento);
+                        }
+                    }
+                    else
+                    {
+                        tbCaixaMovimento objCaixaMovimento = new tbCaixaMovimento();
+                        objCaixaMovimento.tbFormaPagamento = new tbFormaPagamento();
+                        objCaixaAux.tbCaixaMovimento.Add(objCaixaMovimento);
+                    }
+                    this.objCaixa = objCaixaAux;
+                }
+                else
+                    MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+            }
+        }
+
+
+        #region Propriedades
+
+        private tbCaixa _objCaixa;
+        public tbCaixa objCaixa
+        {
+            get { return this._objCaixa; }
+            set
+            {
+                this._objCaixa = value;
+                //Prepara a coleção CaixaMovimento
+                if (this._objCaixa != null)
+                {
+                    ObservableCollection<CaixaMovimentoViewModel> arrCaixaMovimentoViewModelAux = new ObservableCollection<CaixaMovimentoViewModel>();
+                    foreach (tbCaixaMovimento objCaixaMovimento in this._objCaixa.tbCaixaMovimento)
+                    {
+                        CaixaMovimentoViewModel objCaixaMovimentoViewModel = new CaixaMovimentoViewModel(objCaixaMovimento);
+                        objCaixaMovimentoViewModel.OnDispose += objCaixaMovimentoViewModel_OnDispose;
+                        arrCaixaMovimentoViewModelAux.Add(objCaixaMovimentoViewModel);
+                    }
+                    this._arrCaixaMovimentoViewModel = arrCaixaMovimentoViewModelAux;
+                }
+                else
+                    this._arrCaixaMovimentoViewModel = null;
+
+                //Prepara propriedades da viewmodel
+                RaisePropertyChanged(null);
+            }
+        }
+
+        [StringLength(250, ErrorMessage = "É permitido apenas 100 caracteres")]
+        public string cai_observacao 
+        {
+            get { return this.objCaixa == null ? string.Empty : this.objCaixa.cai_observacao; }
+            set
+            {
+                if (this.objCaixa.cai_observacao != value)
+                {
+                    this.objCaixa.cai_observacao = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        private ObservableCollection<CaixaMovimentoViewModel> _arrCaixaMovimentoViewModel;
+        public ObservableCollection<CaixaMovimentoViewModel> arrCaixaMovimentoViewModel
+        {
+            get { return this._arrCaixaMovimentoViewModel; }
+            set
+            {
+                this._arrCaixaMovimentoViewModel = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+        private bool CanSalvar(object objParam)
+        {
+            return this.objCaixa != null && this.objCaixa.cai_codigo == 0;
+        }
+        private void Salvar(object objParam)
+        {
+            bool blnAchouErro = false;
+            foreach (CaixaMovimentoViewModel objCaixaMovimentoViewModel in this.arrCaixaMovimentoViewModel)
+            {
+                objCaixaMovimentoViewModel.Validate();
+                blnAchouErro = objCaixaMovimentoViewModel.HasErrors;
+                if (blnAchouErro)
+                    break;
+            }
+
+            this.Validate();
+            if (!this.HasErrors && !blnAchouErro)
+            {
+                this.objCaixa.tbCaixaMovimento.Clear();
+                foreach (CaixaMovimentoViewModel objCaixaMovimentoViewModel in this.arrCaixaMovimentoViewModel)
+                    this.objCaixa.tbCaixaMovimento.Add(objCaixaMovimentoViewModel.objCaixaMovimento);
+                Retorno objRetorno;
+                using (var objBLL = new Caixa())
+                {
+                    objRetorno = objBLL.AbrirCaixa(this.objCaixa, Util.objConfigStorage.objFuncionario.fun_codigo);
+                }
+                if (objRetorno.intCodigoErro == 0)
+                {
+                    this.objCaixa = (tbCaixa)objRetorno.objRetorno;
+                    Util.objConfigStorage.intCaiCodigo = this.objCaixa.cai_codigo;
+                }
+                else
+                    MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+            }
+        }
+
+        private bool CanLog(object objParam)
+        {
+            return this.objCaixa != null && this.objCaixa.cai_codigo > 0;
+        }
+        private void Log(object objParam)
+        {
+            if (objParam != null)
+            {
+                if (objParam.ToString() == "AbrirTela")
+                {
+                    Retorno objRetorno;
+                    using (Auditoria objBLL = new Auditoria())
+                    {
+                        objRetorno = objBLL.RetornaListaAuditoria(this.objCaixa.cai_codigo, this.objCaixa);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        base.arrAuditoria = (List<tbAuditoria>)objRetorno.objRetorno;
+                        winAuditoria objTelaAuditoria = new winAuditoria();
+                        objTelaAuditoria.Title = "Auditoria - " + base.strNomeTela;
+                        objTelaAuditoria.DataContext = this;
+                        objTelaAuditoria.Owner = (Window)Application.Current.MainWindow;
+                        objTelaAuditoria.Closed += (sen, eve) =>
+                        {
+                            base.arrAuditoria = null;
+                            objTelaAuditoria = null;
+                        };
+                        objTelaAuditoria.ShowDialog();
+                    }
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                }
+                else if (objParam.GetType() == typeof(winAuditoria))
+                {
+                    ((Window)objParam).Close();
+                }
+            }
+        }
+
+        private bool CanAdicionaCaixaMovimento(object objParam)
+        {
+            return true;
+        }
+        private void AdicionaCaixaMovimento(object objParam)
+        {
+            tbCaixaMovimento objCaixaMovimento = new tbCaixaMovimento();
+            objCaixaMovimento.tbFormaPagamento = new tbFormaPagamento();
+            CaixaMovimentoViewModel objCaixaMovimentoViewModel = new CaixaMovimentoViewModel(objCaixaMovimento);
+            objCaixaMovimentoViewModel.OnDispose += objCaixaMovimentoViewModel_OnDispose;
+            this.arrCaixaMovimentoViewModel.Add(objCaixaMovimentoViewModel);
+        }
+
+        #endregion Comandos
+
+
+
+        #region Eventos
+
+        void objCaixaMovimentoViewModel_OnDispose(object sender, EventArgs e)
+        {
+            this.arrCaixaMovimentoViewModel.Remove((CaixaMovimentoViewModel)sender);
+        }
+
+        #endregion Eventos
+
+
+
+        #region Métodos
+
+
+
+        #endregion Métodos
+    }
+}

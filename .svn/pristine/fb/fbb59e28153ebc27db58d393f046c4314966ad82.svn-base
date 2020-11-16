@@ -1,0 +1,359 @@
+﻿using BSFood.DataAccess;
+using BSFood.DataTransfer;
+using BSFood.Apoio;
+using BSFood.BusinessLogic.Interfaces;
+using BSFood.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Data.Entity;
+using System.ServiceModel;
+using System.Collections.ObjectModel;
+
+
+namespace BSFood.BusinessLogic
+{
+    public class Financeiro : IFinanceiro, IDisposable
+    {
+        private bool blnFecharCon;
+        private EFContexto objCtx;
+        private GerenciaTransacao objTransacao;
+
+
+        public Financeiro()
+            : base()
+        {
+            this.objCtx = new EFContexto();
+            this.objTransacao = new GerenciaTransacao(ref this.objCtx);
+            blnFecharCon = true;
+        }
+
+        public Financeiro(ref EFContexto _objCtx, ref GerenciaTransacao _objTransacao)
+            : base()
+        {
+            this.objCtx = _objCtx;
+            this.objTransacao = _objTransacao;
+            blnFecharCon = false;
+        }
+
+
+
+        #region Forma Pagamento
+
+        public Retorno RetornaFormaPagamento(int intCodigo, enNavegacao? enDirecao)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                tbFormaPagamento objFormaPagamento = null;
+                if (enDirecao == null)
+                    objFormaPagamento = this.objCtx.tbFormaPagamento.AsNoTracking()
+                                                    .Where(fpg => fpg.fpg_codigo == intCodigo)
+                                                    .FirstOrDefault();
+                if (enDirecao == enNavegacao.Proximo)
+                    objFormaPagamento = this.objCtx.tbFormaPagamento.AsNoTracking()
+                                                    .Where(fpg => fpg.fpg_codigo > intCodigo)
+                                                    .OrderBy(fpg => fpg.fpg_codigo).FirstOrDefault();
+                if (enDirecao == enNavegacao.Anterior)
+                    objFormaPagamento = this.objCtx.tbFormaPagamento.AsNoTracking()
+                                                    .Where(fpg => fpg.fpg_codigo < intCodigo)
+                                                    .OrderByDescending(fpg => fpg.fpg_codigo).FirstOrDefault();
+                if (objFormaPagamento != null)
+                {
+                    objRetorno.intCodigoErro = 0;
+                    objRetorno.objRetorno = objFormaPagamento;
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = "Registro não encontrado";
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno RetornaListaFormaPagamento(string strParametro)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                List<tbFormaPagamento> arrFormaPagamento = this.objCtx.tbFormaPagamento.AsNoTracking()
+                                                      .Where(fpg => (fpg.fpg_codigo.ToString().Contains(strParametro) || fpg.fpg_descricao.Contains(strParametro)))
+                                                      .OrderBy(fpg => fpg.fpg_descricao)
+                                                      .ToList();
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = arrFormaPagamento;
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno SalvarFormaPagamento(tbFormaPagamento objFormaPagamento)
+        {
+            Retorno objRetorno = new Retorno();
+            string strValidacao = this.ValidaFormaPagamento(objFormaPagamento);
+            try
+            {
+                enOperacao enTipoOperacao;
+                if (strValidacao == string.Empty)
+                {
+                    if (objFormaPagamento.fpg_codigo == 0)
+                    {
+                        enTipoOperacao = enOperacao.Inclusao;
+                        this.objCtx.tbFormaPagamento.Add(objFormaPagamento);
+                    }
+                    else
+                    {
+                        enTipoOperacao = enOperacao.Alteracao;
+                        tbFormaPagamento objFormaPagamentoContexto = this.objCtx.tbFormaPagamento.Where(fpg => fpg.fpg_codigo == objFormaPagamento.fpg_codigo).FirstOrDefault();
+                        this.objCtx.Entry(objFormaPagamentoContexto).CurrentValues.SetValues(objFormaPagamento);
+                    }
+                    this.objCtx.SaveChanges();
+                    using (Auditoria objBLL = new Auditoria(ref this.objCtx, ref this.objTransacao))
+                        objBLL.SalvarAuditoria(objFormaPagamento.fpg_codigo, enTipoOperacao, objFormaPagamento);
+                    objRetorno = RetornaFormaPagamento(objFormaPagamento.fpg_codigo, null);
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = strValidacao;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno ExcluirFormaPagamento(int intCodigo)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                //Cria um contexto isolado para a trasacao de exclusao
+                using (EFContexto objContexto = new EFContexto())
+                {
+                    //Inicia uma transacao no contexto isolado
+                    using (var transacao = objContexto.Database.BeginTransaction())
+                    {
+                        try
+                        {
+                            tbFormaPagamento objFormaPagamento = objContexto.tbFormaPagamento.Where(fpg => fpg.fpg_codigo == intCodigo).FirstOrDefault();
+                            if (objFormaPagamento != null)
+                            {
+                                //Tenta excluir o perfil no contexto isolado
+                                objContexto.tbFormaPagamento.Remove(objFormaPagamento);
+                                objContexto.SaveChanges();
+                                transacao.Commit();
+
+                                objRetorno.intCodigoErro = 0;
+                                objRetorno.objRetorno = true;
+                            }
+                            else
+                            {
+                                objRetorno.intCodigoErro = 48;
+                                objRetorno.strMsgErro = "FormaPagamento não encontrado para exclusão";
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            //Se deu erro é porque o perfil tem  registros relacionado
+                            transacao.Rollback();
+                            objRetorno.intCodigoErro = 48;
+                            objRetorno.strMsgErro = "FormaPagamento não pode ser excluido pois há registros relacionados ao mesmo.";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        private string ValidaFormaPagamento(tbFormaPagamento objFormaPagamento)
+        {
+            if (string.IsNullOrEmpty(objFormaPagamento.fpg_descricao) || string.IsNullOrWhiteSpace(objFormaPagamento.fpg_descricao))
+                return "O nome deve ser informado.";
+
+            if (this.objCtx.tbFormaPagamento.AsNoTracking()
+                                         .Where(fpg => (fpg.fpg_descricao.Equals(objFormaPagamento.fpg_descricao)) && fpg.fpg_codigo != objFormaPagamento.fpg_codigo)
+                                         .Count() > 0)
+                return "Já existe FormaPagamento com esse nome.";
+
+            return string.Empty;
+        }
+
+        #endregion FormaPagamentos
+
+
+
+        #region Caixa
+
+        public Retorno RetornaCaixa(int intCodigo)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                tbCaixa objCaixa = null;
+                if (intCodigo > 0)
+                {
+                    objCaixa = this.objCtx.tbCaixa.Include(cai => cai.tbCaixaMovimento)
+                                                      .Include(cai => cai.tbCaixaMovimento.Select(fpg => fpg.tbFormaPagamento)).AsNoTracking()
+                                                      .Where(cai => cai.cai_codigo == intCodigo)
+                                                      .FirstOrDefault();
+
+                }
+                else
+                {
+                    objCaixa = this.objCtx.tbCaixa.Include(cai => cai.tbCaixaMovimento)
+                                                      .Include(cai => cai.tbCaixaMovimento.Select(fpg => fpg.tbFormaPagamento)).AsNoTracking()
+                                                      .Where(cai => cai.cai_dataFechamento == null)
+                                                      .OrderByDescending(cai => cai.cai_codigo)
+                                                      .FirstOrDefault();
+                }
+                if (objCaixa != null)
+                {
+                    objRetorno.intCodigoErro = 0;
+                    objRetorno.objRetorno = objCaixa;
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = "Registro não encontrado";
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno AbrirCaixa(tbCaixa objCaixa)
+        {
+            Retorno objRetorno = new Retorno();
+            string strValidacao = this.ValidaAberturaCaixa(objCaixa);
+            try
+            {
+                enOperacao enTipoOperacao;
+                if (strValidacao == string.Empty)
+                {
+                    foreach (tbCaixaMovimento objCaixaMovimento in objCaixa.tbCaixaMovimento)
+                    {
+                        if (objCaixaMovimento.caim_data == null)
+                            objCaixaMovimento.caim_data = DateTime.Now;
+                        objCaixaMovimento.caio_codigo = 1;//ABERTURA DE CAIXA
+                        objCaixaMovimento.tbCaixa = null;
+                        objCaixaMovimento.tbCaixaOperacao = null;
+                        objCaixaMovimento.tbFormaPagamento = null;
+                    }
+                    if (objCaixa.cai_codigo == 0)
+                    {
+                        objCaixa.cai_dataAbertura = DateTime.Now;
+                        objCaixa.fun_codigo = Util.objConfigStorage.objFuncionario.fun_codigo;
+                        enTipoOperacao = enOperacao.Inclusao;
+                        this.objCtx.tbCaixa.Add(objCaixa);
+                    }
+                    else
+                    {
+                        enTipoOperacao = enOperacao.Alteracao;
+                        tbCaixa objCaixaContexto = this.objCtx.tbCaixa.Include(caim => caim.tbCaixaMovimento)
+                                                               .Where(cai => cai.cai_codigo == objCaixa.cai_codigo).FirstOrDefault();
+                        //Remover movimento de caixa que não vieram na coleçao
+                        int[] arrCaimCodigo = objCaixa.tbCaixaMovimento.Select(caim => caim.caim_codigo).ToArray();
+                        this.objCtx.tbCaixaMovimento.RemoveRange(objCaixaContexto.tbCaixaMovimento.Where(caim => !arrCaimCodigo.Contains(caim.caim_codigo)));
+
+                        //Alterar os movimentos de caixa que vieram na coleção
+                        foreach (tbCaixaMovimento objCaixaMovimentoContexto in objCaixaContexto.tbCaixaMovimento.Where(caim => arrCaimCodigo.Contains(caim.caim_codigo)))
+                            this.objCtx.Entry(objCaixaMovimentoContexto).CurrentValues.SetValues(objCaixa.tbCaixaMovimento.Where(caim => caim.caim_codigo == objCaixaMovimentoContexto.caim_codigo).FirstOrDefault());
+
+                        //Inclui os subgrupos que vieram na coleção sem codigo
+                        foreach (tbCaixaMovimento objItem in objCaixa.tbCaixaMovimento.Where(caim => caim.caim_codigo == 0))
+                        {
+                            objItem.caim_codigo = objCaixa.cai_codigo;
+                            this.objCtx.tbCaixaMovimento.Add(objItem);
+                        }
+
+                        //Atualiza o grupo de produtos
+                        this.objCtx.Entry(objCaixaContexto).CurrentValues.SetValues(objCaixa);
+                    }
+                    this.objCtx.SaveChanges();
+                    using (Auditoria objBLL = new Auditoria(ref this.objCtx, ref this.objTransacao))
+                        objBLL.SalvarAuditoria(objCaixa.cai_codigo, enTipoOperacao, objCaixa);
+                    objRetorno = RetornaCaixa(objCaixa.cai_codigo);
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = strValidacao;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+
+
+        private string ValidaAberturaCaixa(tbCaixa objCaixa)
+        {
+            //if (string.IsNullOrEmpty(objProdutoGrupo.pgr_nome) || string.IsNullOrWhiteSpace(objProdutoGrupo.pgr_nome))
+            //    return "O nome deve ser informado.";
+
+            //if (this.objCtx.tbProdutoGrupo.AsNoTracking()
+            //                             .Where(pgr => (pgr.pgr_nome.Equals(objProdutoGrupo.pgr_nome)) && pgr.pgr_codigo != objProdutoGrupo.pgr_codigo)
+            //                             .Count() > 0)
+            //    return "Já existe produto grupo com esse nome.";
+
+            if (objCaixa.tbCaixaMovimento.Count == 0)
+                return "Não foram informados nenhuma forma de pagamento.";
+
+            return string.Empty;
+        }
+
+        #endregion Caixa
+
+
+
+        public void Dispose()
+        {
+            if (this.blnFecharCon)
+            {
+                this.objCtx.Dispose();
+                this.objCtx = null;
+            }
+        }
+    }
+}

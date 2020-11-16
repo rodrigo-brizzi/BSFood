@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30110.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BSFood", "BSFood\BSFood.csproj", "{DD72BC5F-4018-483B-95F4-12B38AE5F441}"
+	ProjectSection(ProjectDependencies) = postProject
+		{31BB1302-19B7-4702-85FD-4B38CEA6685C} = {31BB1302-19B7-4702-85FD-4B38CEA6685C}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BSFoodWEB", "BSFoodWEB\BSFoodWEB.csproj", "{31BB1302-19B7-4702-85FD-4B38CEA6685C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BSFoodDTO", "BSFoodDTO\BSFoodDTO.csproj", "{56837B6E-20B6-4843-8AE5-D476D7BFFF25}"
+	ProjectSection(ProjectDependencies) = postProject
+		{31BB1302-19B7-4702-85FD-4B38CEA6685C} = {31BB1302-19B7-4702-85FD-4B38CEA6685C}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DD72BC5F-4018-483B-95F4-12B38AE5F441}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD72BC5F-4018-483B-95F4-12B38AE5F441}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD72BC5F-4018-483B-95F4-12B38AE5F441}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD72BC5F-4018-483B-95F4-12B38AE5F441}.Release|Any CPU.Build.0 = Release|Any CPU
+		{31BB1302-19B7-4702-85FD-4B38CEA6685C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{31BB1302-19B7-4702-85FD-4B38CEA6685C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{31BB1302-19B7-4702-85FD-4B38CEA6685C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{31BB1302-19B7-4702-85FD-4B38CEA6685C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{56837B6E-20B6-4843-8AE5-D476D7BFFF25}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{56837B6E-20B6-4843-8AE5-D476D7BFFF25}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{56837B6E-20B6-4843-8AE5-D476D7BFFF25}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{56837B6E-20B6-4843-8AE5-D476D7BFFF25}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		VisualSVNWorkingCopyRoot = .
+	EndGlobalSection
+EndGlobal

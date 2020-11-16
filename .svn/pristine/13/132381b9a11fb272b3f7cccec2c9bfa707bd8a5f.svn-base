@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ReferenceGroup xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ID="b115c06e-6920-40e2-ab13-a59947050618" xmlns="urn:schemas-microsoft-com:xml-wcfservicemap">
+  <ClientOptions>
+    <GenerateAsynchronousMethods>true</GenerateAsynchronousMethods>
+    <EnableDataBinding>true</EnableDataBinding>
+    <ExcludedTypes />
+    <ImportXmlTypes>false</ImportXmlTypes>
+    <GenerateInternalTypes>false</GenerateInternalTypes>
+    <GenerateMessageContracts>false</GenerateMessageContracts>
+    <NamespaceMappings />
+    <CollectionMappings>
+      <CollectionMapping TypeName="System.Collections.Generic.List`1" Category="List" />
+    </CollectionMappings>
+    <GenerateSerializableTypes>false</GenerateSerializableTypes>
+    <Serializer>Auto</Serializer>
+    <UseSerializerForFaults>true</UseSerializerForFaults>
+    <ReferenceAllAssemblies>true</ReferenceAllAssemblies>
+    <ReferencedAssemblies />
+    <ReferencedDataContractTypes />
+    <ServiceContractMappings />
+  </ClientOptions>
+  <MetadataSources>
+    <MetadataSource Address="http://localhost/BSFoodWEB/SVC/BSFoodDTO.svc" Protocol="http" SourceId="1" />
+  </MetadataSources>
+  <Metadata>
+    <MetadataFile FileName="BSFoodDTO.xsd" MetadataType="Schema" ID="96ce2c96-22f8-4115-bae9-cd6042fe1b9b" SourceId="1" SourceUrl="http://brizzinote/BSFoodWEB/svc/BSFoodDTO.svc?xsd=xsd3" />
+    <MetadataFile FileName="BSFoodDTO1.xsd" MetadataType="Schema" ID="42ed978b-6eab-42a7-9f8a-f7eb8d6ca8e6" SourceId="1" SourceUrl="http://brizzinote/BSFoodWEB/svc/BSFoodDTO.svc?xsd=xsd2" />
+    <MetadataFile FileName="BSFoodDTO.disco" MetadataType="Disco" ID="6643f318-d456-4cc4-890e-1aacd6cbab98" SourceId="1" SourceUrl="http://brizzinote/BSFoodWEB/svc/BSFoodDTO.svc?disco" />
+    <MetadataFile FileName="BSFoodDTO2.xsd" MetadataType="Schema" ID="6debfe33-3c95-4015-b880-e7333b64301c" SourceId="1" SourceUrl="http://brizzinote/BSFoodWEB/svc/BSFoodDTO.svc?xsd=xsd0" />
+    <MetadataFile FileName="BSFoodDTO.wsdl" MetadataType="Wsdl" ID="fede3894-8abb-4532-a8c8-1979946a2e6e" SourceId="1" SourceUrl="http://brizzinote/BSFoodWEB/svc/BSFoodDTO.svc?wsdl" />
+    <MetadataFile FileName="BSFoodDTO3.xsd" MetadataType="Schema" ID="d82d9d58-12cb-4ed8-9112-bf3279712a49" SourceId="1" SourceUrl="http://brizzinote/BSFoodWEB/svc/BSFoodDTO.svc?xsd=xsd1" />
+  </Metadata>
+  <Extensions>
+    <ExtensionFile FileName="configuration91.svcinfo" Name="configuration91.svcinfo" />
+    <ExtensionFile FileName="configuration.svcinfo" Name="configuration.svcinfo" />
+  </Extensions>
+</ReferenceGroup>

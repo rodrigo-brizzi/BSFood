@@ -1,0 +1,158 @@
+﻿<UserControl x:Class="BSFood.View.ucComanda"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:intr="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
+             xmlns:bh="clr-namespace:BSFood.Apoio.Behavior"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300"
+             Width="705" Height="473">
+    <UserControl.InputBindings>
+        <KeyBinding Key="F4" Command="{Binding Path=NovoCommand}" />
+        <KeyBinding Key="F6" Command="{Binding Path=SalvarCommand}" />
+        <KeyBinding Key="F7" Command="{Binding Path=CancelarCommand}" />
+        <KeyBinding Key="Escape" Command="{Binding FecharCommand}" />
+    </UserControl.InputBindings>
+    <Canvas>
+        <Canvas IsEnabled="{Binding Path=IsEnabled, ElementName=btnGravar}">
+            <Label Content="Mesa:" Canvas.Left="10" Canvas.Top="10" Width="68"/>
+            <TextBox x:Name="txtMesNumero" Canvas.Left="83" Canvas.Top="10" Width="120" bh:TextBoxService.IsNumericOnly="true"
+                     Text="{Binding ped_numeroMesa, Mode=TwoWay, UpdateSourceTrigger=LostFocus, Converter={StaticResource StringEmptyToZeroConverter}}"
+                     bh:FocusExtension.IsFocused="{Binding Path=IsEnabled, ElementName=btnGravar}">
+                <TextBox.InputBindings>
+                    <KeyBinding Key="Enter" Command="{Binding MesaCommand}" CommandParameter="{Binding Path=Text, ElementName=txtMesNumero}" />
+                </TextBox.InputBindings>
+            </TextBox>
+            <Button Width="32" Height="22" Canvas.Left="208" Canvas.Top="10" ToolTipService.ToolTip="Pesquisar"
+                        Command="{Binding MesaCommand}" CommandParameter="Pesquisar">
+                <Image Source="../Imagens/pesquisar16.png" Width="16" />
+            </Button>
+
+            <Label Content="Atendente:" Canvas.Left="10" Canvas.Top="38" Width="68"/>
+            <TextBox x:Name="txtFunCodigo" Canvas.Left="83" Canvas.Top="38" Width="120" bh:TextBoxService.IsNumericOnly="true"
+                        Text="{Binding fun_codigo, Mode=TwoWay, UpdateSourceTrigger=LostFocus, Converter={StaticResource StringEmptyToZeroConverter}}">
+                <TextBox.InputBindings>
+                    <KeyBinding Key="Enter" Command="{Binding FuncionarioCommand}" CommandParameter="{Binding Path=Text, ElementName=txtFunCodigo}" />
+                </TextBox.InputBindings>
+            </TextBox>
+            <TextBox Canvas.Left="208" Canvas.Top="38" Width="450" CharacterCasing="Upper" IsEnabled="False"
+                        Text="{Binding fun_nome, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+            <Button Width="32" Height="22" Canvas.Left="663" Canvas.Top="38" ToolTipService.ToolTip="Pesquisar"
+                        Command="{Binding FuncionarioCommand}" CommandParameter="Pesquisar">
+                <Image Source="../Imagens/pesquisar16.png" Width="16" />
+            </Button>
+
+            <Label Content="Observação:" Canvas.Left="10" Canvas.Top="66" Width="68"/>
+            <TextBox Canvas.Left="83" Canvas.Top="66" Width="377" CharacterCasing="Upper"
+                        Text="{Binding ped_observacao, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+            <Label Content="Caixa:" Canvas.Top="66" Canvas.Left="465" Width="42" />
+            <ComboBox Canvas.Top="66" Canvas.Left="512"
+                            SelectedValuePath="cai_codigo"
+                            SelectedValue="{Binding cai_codigo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                            ItemsSource="{Binding arrCaixa}" Width="146">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock>
+                                <Run Text="{Binding cai_codigo}" />
+                                -
+                                <Run Text="{Binding tbFuncionario.fun_nome}" />
+                        </TextBlock>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <Button Width="32" Height="22" Canvas.Top="66" Canvas.Left="663" ToolTipService.ToolTip="Atualizar Caixas"
+                            Command="{Binding CaixaCommand}">
+                <Image Source="../Imagens/atualizar16.png" Width="16" />
+            </Button>
+
+            <StackPanel Canvas.Top="94" Canvas.Left="10" Orientation="Horizontal">
+                <Label Content="Código" Width="75" HorizontalContentAlignment="Left" Height="17"/>
+                <Label Content="Nome" Width="299" HorizontalContentAlignment="Left" Height="17"/>
+                <Label Content="Qtde." Width="45" Height="17" Margin="5,0,0,0"/>
+                <Label Content="Unit." Width="65" Height="17" Margin="5,0,0,0"/>
+                <Label Content="SubTotal" Width="65" Height="17" Margin="5,0,0,0"/>
+            </StackPanel>
+            <Button Width="24" Height="24" Canvas.Top="116" Canvas.Left="671" ToolTipService.ToolTip="Novo"
+                        Command="{Binding AdicionaProdutoCommand}">
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="../Imagens/novo16.png" Width="16" />
+                </StackPanel>
+            </Button>
+            <ScrollViewer Canvas.Top="116" Canvas.Left="10" Width="648" Height="250" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding arrEntregaPedidoProdutoViewModel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Vertical"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBox x:Name="txtProCodigo" Width="70" bh:TextBoxService.IsNumericOnly="true" Margin="0,0,5,1"
+                                            Text="{Binding pro_codigo, Mode=TwoWay, UpdateSourceTrigger=LostFocus, Converter={StaticResource StringEmptyToZeroConverter}}"
+                                            bh:FocusExtension.IsFocused="{Binding blnCodigoFocus}">
+                                    <TextBox.InputBindings>
+                                        <KeyBinding Key="Enter" Command="{Binding ProdutoCommand}" CommandParameter="{Binding Path=Text, ElementName=txtProCodigo}" />
+                                        <KeyBinding Key="Delete" Command="{Binding RemoveProdutoCommand}" />
+                                    </TextBox.InputBindings>
+                                </TextBox>
+                                <TextBox Width="262" CharacterCasing="Upper" IsEnabled="False" Margin="0,0,5,1"
+                                            Text="{Binding pro_nome, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                <Button Width="32" Height="22" ToolTipService.ToolTip="Pesquisar" Margin="0,0,5,1"
+                                            Command="{Binding ProdutoCommand}" CommandParameter="Pesquisar">
+                                    <Image Source="../Imagens/pesquisar16.png" Width="16" />
+                                </Button>
+                                <TextBox Width="45" TextAlignment="Right" bh:TextBoxService.IsDecimal="true" Margin="0,0,5,1"
+                                            Text="{Binding ppr_quantidade, Mode=TwoWay, UpdateSourceTrigger=LostFocus, Converter={StaticResource DecimalToStringConverter}, ConverterParameter=n2, ConverterCulture=pt-BR}"
+                                            bh:FocusExtension.IsFocused="{Binding blnQuantidadeFocus}">
+                                    <TextBox.InputBindings>
+                                        <KeyBinding Key="Enter" Command="{Binding Path=DataContext.AdicionaProdutoCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" />
+                                        <KeyBinding Key="Down" Command="{Binding Path=DataContext.PedidoFocusCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="FormaPagamento" />
+                                    </TextBox.InputBindings>
+                                </TextBox>
+                                <TextBox Width="65" TextAlignment="Right" bh:TextBoxService.IsDecimal="true" IsEnabled="False" Margin="0,0,5,1"
+                                            Text="{Binding ppr_valorUnitario, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource DecimalToStringConverter}, ConverterParameter=n2, ConverterCulture=pt-BR}"/>
+                                <TextBox Width="65" TextAlignment="Right" bh:TextBoxService.IsDecimal="true" IsEnabled="False" Margin="0,0,5,1"
+                                            Text="{Binding ppr_valorTotal, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource DecimalToStringConverter}, ConverterParameter=n2, ConverterCulture=pt-BR}"/>
+                                <Button Width="24" Height="24" ToolTipService.ToolTip="Excluir" Margin="0,0,0,1"
+                                            Command="{Binding RemoveProdutoCommand}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Image Source="../Imagens/excluir16.png" Width="16" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <Label Canvas.Top="371" Canvas.Left="514" Width="74" Content="SubTotal:"/>
+            <Label Canvas.Top="371" Canvas.Left="593" Width="65"
+                        Content="{Binding ped_valorSubTotal, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource DecimalToStringConverter}, ConverterParameter=n2, ConverterCulture=pt-BR}"/>
+
+        </Canvas>
+        <Button Width="88" Height="31" Canvas.Left="421" Canvas.Top="432" ToolTipService.ToolTip="F4"
+                                Command="{Binding NovoCommand}">
+            <StackPanel Orientation="Horizontal">
+                <Image Source="../Imagens/novo16.png" Width="16" />
+                <TextBlock Text="Novo" Margin="5,0,0,0" />
+            </StackPanel>
+        </Button>
+        <Button x:Name="btnGravar" Width="88" Height="31" Canvas.Left="514" Canvas.Top="432" ToolTipService.ToolTip="F6"
+                        Command="{Binding SalvarCommand}">
+            <StackPanel Orientation="Horizontal">
+                <Image Source="../Imagens/gravar16.png" Width="16" />
+                <TextBlock Text="Gravar" Margin="5,0,0,0" />
+            </StackPanel>
+        </Button>
+        <Button Width="88" Height="31" Canvas.Left="607" Canvas.Top="432" ToolTipService.ToolTip="F7"
+                        Command="{Binding CancelarCommand}">
+            <StackPanel Orientation="Horizontal">
+                <Image Source="../Imagens/fechar16.png" Width="16" />
+                <TextBlock Text="Cancelar" Margin="5,0,0,0" />
+            </StackPanel>
+        </Button>
+    </Canvas>
+</UserControl>

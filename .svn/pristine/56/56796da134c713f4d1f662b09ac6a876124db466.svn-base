@@ -1,0 +1,186 @@
+﻿using BSFood.View;
+using BSFood.Apoio;
+using BSFood.Models;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+using System.Collections.ObjectModel;
+
+namespace BSFood.ViewModel
+{
+    public class PrincipalViewModel : ViewModelBase
+    {
+        public ICommand AbreTelaLoginCommand { get; set; }
+        public ICommand AbreTelaCommand { get; set; }
+
+        public PrincipalViewModel()
+        {
+            AbreTelaLoginCommand = new DelegateCommand(AbreTelaLogin, CanAbreTelaLogin);
+            AbreTelaCommand = new DelegateCommand(AbreTela, CanAbreTela);
+            this.arrViewModel = new ObservableCollection<ViewModelBase>();
+        }
+
+        #region Propriedades
+
+        private List<tbMenu> _arrMenu;
+        public List<tbMenu> arrMenu 
+        {
+            get { return this._arrMenu; }
+            set
+            {
+                this._arrMenu = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private List<tbMenu> _arrToolBar;
+        public List<tbMenu> arrToolBar 
+        {
+            get { return this._arrToolBar; }
+            set
+            {
+                this._arrToolBar = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private string _strFuncionario;
+        public string strFuncionario 
+        {
+            get { return this._strFuncionario; }
+            set
+            {
+                this._strFuncionario = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private string _strVersao;
+        public string strVersao 
+        {
+            get { return this._strVersao; }
+            set
+            {
+                this._strVersao = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private ViewModelBase _objViewModel;
+        public ViewModelBase objViewModel 
+        {
+            get { return this._objViewModel; }
+            set
+            {
+                this._objViewModel = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public ObservableCollection<ViewModelBase> arrViewModel { get; set; }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+        private bool CanAbreTelaLogin(object objParam)
+        {
+            return true;
+        }
+        private void AbreTelaLogin(object objParam)
+        {
+            winLogin objTelaLogin = new winLogin();
+            objTelaLogin.Owner = (Window)objParam;
+            objTelaLogin.Closed += (sen, eve) =>
+            {
+                if (Util.objConfigStorage != null)
+                    PreparaTelaPrincipal();
+                else
+                    Util.FecharSistema();
+            };
+            objTelaLogin.ShowDialog();
+        }
+
+        private bool CanAbreTela(object objParam)
+        {
+            return true;
+        }
+        private void AbreTela(object objParam)
+        {
+            var arrParam = (object[])objParam;
+            Type t = Type.GetType(arrParam[0].ToString());
+            ViewModelBase objConteudoTela = (ViewModelBase)Activator.CreateInstance(t);
+            objConteudoTela.strNomeTela = arrParam[2].ToString();
+            objConteudoTela.OnDispose += objConteudoTela_OnDispose;
+            this.arrViewModel.Add(objConteudoTela);
+            this.objViewModel = objConteudoTela;
+        }
+
+        #endregion Comandos
+
+
+
+        #region Eventos
+
+        void objConteudoTela_OnDispose(object sender, EventArgs e)
+        {
+            this.arrViewModel.Remove((ViewModelBase)sender);
+        }
+
+        #endregion Eventos
+
+        
+
+        #region Métodos
+
+        public void PreparaTelaPrincipal()
+        {
+            //Construindo o Menu
+            List<tbMenu> arrMenuAux = new List<tbMenu>();
+            foreach (tbMenu objMenu in Util.objConfigStorage.arrMenu.Where(men => men.men_codigoPai == null).OrderBy(men => men.men_ordem))
+            {
+                tbMenu objMenuItem = new tbMenu() { men_imagem = "../Imagens/Menu/" + objMenu.men_codigo + ".png", men_cabecalho = objMenu.men_cabecalho, men_nomeControle = objMenu.men_nomeControle };
+                AgrupaMenuItem(ref objMenuItem, objMenu.men_codigo);
+                arrMenuAux.Add(objMenuItem);
+            }
+            this.arrMenu = new List<tbMenu>(arrMenuAux);
+
+            //Construindo a ToolBar
+            List<tbMenu> arrToolBarAux = new List<tbMenu>();
+            foreach (tbMenu objToolBar in Util.objConfigStorage.arrToolBar)
+            {
+                arrToolBarAux.Add(new tbMenu() { men_imagem = "../Imagens/Menu/" + objToolBar.men_codigo + ".png", men_cabecalho = objToolBar.men_cabecalho, men_nomeControle = objToolBar.men_nomeControle });
+            }
+            this.arrToolBar = new List<tbMenu>(arrToolBarAux);
+
+            //Construindo a StatusBar
+            this.strFuncionario = Util.objConfigStorage.objFuncionario.fun_nome;
+            this.strVersao = Util.RetornaVersao();
+        }
+
+        private void AgrupaMenuItem(ref tbMenu objMenuItem, int intCodigoMenu)
+        {
+            foreach (tbMenu objMenu in Util.objConfigStorage.arrMenu.Where(men => men.men_codigoPai == intCodigoMenu).OrderBy(men => men.men_ordem))
+            {
+                tbMenu objMenuAux = new tbMenu() { men_imagem = "../Imagens/Menu/" + objMenu.men_codigo + ".png", men_cabecalho = objMenu.men_cabecalho, men_nomeControle = objMenu.men_nomeControle };
+                AgrupaMenuItem(ref objMenuAux, objMenu.men_codigo);
+                if (objMenuItem.tbMenuFilho == null)
+                    objMenuItem.tbMenuFilho = new List<tbMenu>();
+                objMenuItem.tbMenuFilho.Add(objMenuAux);
+            }
+        }
+
+        #endregion Métodos
+    }
+}

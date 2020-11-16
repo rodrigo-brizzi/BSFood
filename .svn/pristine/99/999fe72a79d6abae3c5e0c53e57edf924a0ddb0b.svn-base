@@ -1,0 +1,26 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.Models
+{
+    [DataContract]
+    [KnownType(typeof(Estado))]
+
+
+    [KnownType(typeof(List<Estado>))]
+    public class Retorno
+    {
+        [DataMember]
+        public bool blnTemErro { get; set; }
+        [DataMember]
+        public string strMsgErro { get; set; }
+        [DataMember]
+        public string strExceptionToString { get; set; }
+        [DataMember]
+        public object objRetorno { get; set; }
+    }
+}

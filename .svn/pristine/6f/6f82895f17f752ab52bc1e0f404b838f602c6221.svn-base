@@ -1,0 +1,26 @@
+﻿using BSFoodWEB.DAL;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Web;
+
+namespace BSFoodWEB.DTO
+{
+    [DataContract]
+    [KnownType(typeof(tbMenu))]
+
+
+    [KnownType(typeof(List<tbMenu>))]
+    public class BSRetorno
+    {
+        [DataMember]
+        public bool blnTemErro { get; set; }
+        [DataMember]
+        public string strMsgErro { get; set; }
+        [DataMember]
+        public string strExceptionToString { get; set; }
+        [DataMember]
+        public object objRetorno { get; set; }
+    }
+}

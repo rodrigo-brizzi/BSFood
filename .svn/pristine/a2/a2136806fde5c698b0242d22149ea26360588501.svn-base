@@ -1,0 +1,55 @@
+﻿using BSFoodServer.SVC;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+
+namespace BSFoodServer
+{
+    /// <summary>
+    /// Interaction logic for winPrincipal.xaml
+    /// </summary>
+    public partial class winPrincipal : Window
+    {
+        public winPrincipal()
+        {
+            InitializeComponent();
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            string state;
+            int i = 0;
+            HostingManager.CreateHosts();
+            HostingManager.StartHosts();
+            foreach (var item in HostingManager.ServicesTypes)
+            {
+                if (!HostingManager.IsAlive(HostingManager.ServicesTypes[i]))
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    state = "Closed";
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    state = "Opened";
+                }
+                Console.WriteLine("{0} : {1} : {2}", i, HostingManager.ServicesTypes[i++], state);
+            }
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            HostingManager.StopHost(null);
+        }
+    }
+}

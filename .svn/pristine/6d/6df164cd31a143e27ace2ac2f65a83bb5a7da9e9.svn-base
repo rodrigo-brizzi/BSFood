@@ -1,0 +1,24 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.Models
+{
+    public class PerfilAcesso : EntityBase
+    {
+        public int Codigo { get; set; }
+        public string Descricao { get; set; }
+        public bool PermiteDesconto { get; set; }
+        public bool PermiteCancelarItem { get; set; }
+        public bool PermiteCancelarVenda { get; set; }
+        public bool PermiteVendaClienteBloqueado { get; set; }
+        public bool PermiteVendaClienteNegativo { get; set; }
+
+        public ObservableCollection<PerfilAcessoMenu> PerfilAcessoMenus { get; set; }
+        public List<Funcionario> Funcionarios { get; set; }
+    }
+}

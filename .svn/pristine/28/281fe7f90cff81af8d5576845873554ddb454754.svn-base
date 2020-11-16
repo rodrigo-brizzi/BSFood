@@ -1,0 +1,1 @@
+﻿<%@ ServiceHost Language="C#" Debug="true" Service="BSFoodServer.BLL.Classes.ClientAccessPolicy" CodeBehind="ClientAccessPolicy.cs" %>

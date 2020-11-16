@@ -1,0 +1,248 @@
+﻿<UserControl x:Class="BSFood.View.ucFuncionario"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:intr="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
+             xmlns:bh="clr-namespace:BSFood.Apoio.Behavior"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300"
+             Width="705" Height="473">
+    <UserControl.InputBindings>
+        <KeyBinding Key="F2" Command="{Binding NavegarCommand}" CommandParameter="Anterior" />
+        <KeyBinding Key="F3" Command="{Binding NavegarCommand}" CommandParameter="Proximo" />
+        <KeyBinding Key="F4" Command="{Binding Path=NovoCommand}" />
+        <KeyBinding Key="F5" Command="{Binding Path=EditarCommand}" CommandParameter="{Binding Path=SelectedItem.fun_codigo, ElementName=dgPesquisa}" />
+        <KeyBinding Key="F6" Command="{Binding Path=SalvarCommand}" />
+        <KeyBinding Key="F7" Command="{Binding Path=CancelarCommand}" />
+        <KeyBinding Key="F8" Command="{Binding Path=ExcluirCommand}" CommandParameter="{Binding Path=SelectedItem.fun_codigo, ElementName=dgPesquisa}" />
+        <KeyBinding Key="F9" Command="{Binding Path=PesquisarCommand}" />
+        <KeyBinding Key="F10" Command="{Binding Path=LogCommand}" CommandParameter="AbrirTela" />
+        <KeyBinding Key="Escape" Command="{Binding FecharCommand}" />
+    </UserControl.InputBindings>
+    <Canvas>
+        <TabControl Canvas.Top="0" Canvas.Left="0" Width="705" Height="473"
+                    SelectedIndex="{Binding intSelectedIndexTabPrincipal, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
+            <TabItem Header="Pesquisa" IsEnabled="{Binding Path=IsEnabled, ElementName=btnGravar, Converter={StaticResource FalseToTrueConverter}}">
+                <Canvas>
+                    <GroupBox Header="Filtro" Height="92" Canvas.Left="10" Width="679">
+                        <Canvas>
+                            <Label Content="Código:" Canvas.Left="10" Canvas.Top="10" Width="45"/>
+                            <TextBox Canvas.Left="60" Canvas.Top="10" Width="120" CharacterCasing="Upper" bh:TextBoxService.IsNumericOnly="true"
+                                Text="{Binding strFunCodigoPesquisa, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                bh:FocusExtension.IsFocused="{Binding Path=IsEnabled, ElementName=btnGravar, Converter={StaticResource FalseToTrueConverter}}">
+                                <TextBox.InputBindings>
+                                    <KeyBinding Key="Enter" Command="{Binding PesquisarCommand}" />
+                                </TextBox.InputBindings>
+                            </TextBox>
+
+                            <Label Content="Nome:" Canvas.Left="10" Canvas.Top="38" Width="45"/>
+                            <TextBox Canvas.Left="60" Canvas.Top="38" Width="411" CharacterCasing="Upper"
+                                Text="{Binding strFunNomePesquisa, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                <TextBox.InputBindings>
+                                    <KeyBinding Key="Enter" Command="{Binding PesquisarCommand}" />
+                                </TextBox.InputBindings>
+                            </TextBox>
+
+                            <Button Width="88" Height="31" Canvas.Left="476" Canvas.Top="30" ToolTipService.ToolTip="F9"
+                                Command="{Binding PesquisarCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Source="../Imagens/pesquisar16.png" Width="16" />
+                                    <TextBlock Text="Buscar" Margin="5,0,0,0" />
+                                </StackPanel>
+                            </Button>
+                            <Button Width="88" Height="31" Canvas.Left="569" Canvas.Top="30" ToolTipService.ToolTip="F4"
+                                Command="{Binding NovoCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Source="../Imagens/novo16.png" Width="16" />
+                                    <TextBlock Text="Novo" Margin="5,0,0,0" />
+                                </StackPanel>
+                            </Button>
+                        </Canvas>
+                    </GroupBox>
+
+                    <DataGrid x:Name="dgPesquisa" Height="309" Canvas.Top="97" Canvas.Left="10" Width="679" AutoGenerateColumns="False" 
+                        CanUserAddRows="False" SelectionMode="Single" SelectionUnit="FullRow"
+                        ItemsSource="{Binding arrFuncionarioPesquisa}"
+                        SelectedIndex="{Binding intSelectedIndexGrid}"
+                        SelectionChanged="dgPesquisa_SelectionChanged">
+                        <intr:Interaction.Triggers>
+                            <intr:EventTrigger EventName="MouseDoubleClick">
+                                <intr:InvokeCommandAction Command="{Binding DataContext.PesquisarCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                                          CommandParameter="{Binding SelectedItem, ElementName=dgPesquisa}"/>
+                            </intr:EventTrigger>
+                        </intr:Interaction.Triggers>
+                        <DataGrid.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding DataContext.PesquisarCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding SelectedItem, ElementName=dgPesquisa}"/>
+                        </DataGrid.InputBindings>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Código" Binding="{Binding fun_codigo}" Width="80" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Nome" Binding="{Binding fun_nome}" Width="373" IsReadOnly="True"/>
+                            <DataGridTemplateColumn Header="Ação" Width="200">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Width="88" Height="31" ToolTipService.ToolTip="F5" Margin="5"
+                                                Command="{Binding Path=DataContext.EditarCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding fun_codigo}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Image Source="../Imagens/editar16.png" Width="16" />
+                                                    <TextBlock Text="Alterar" Margin="5,0,0,0" />
+                                                </StackPanel>
+                                            </Button>
+                                            <Button Width="88" Height="31" ToolTipService.ToolTip="F8" Margin="5"
+                                                Command="{Binding Path=DataContext.ExcluirCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding fun_codigo}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Image Source="../Imagens/excluir16.png" Width="16" />
+                                                    <TextBlock Text="Excluir" Margin="5,0,0,0" />
+                                                </StackPanel>
+                                            </Button>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <Button Width="24" Height="24" Canvas.Top="411" Canvas.Left="10" ToolTipService.ToolTip="F2"
+                        Command="{Binding NavegarCommand}" CommandParameter="Anterior">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="../Imagens/anterior16.png" Width="16" />
+                        </StackPanel>
+                    </Button>
+                    <Button Width="24" Height="24" Canvas.Top="411" Canvas.Left="39" ToolTipService.ToolTip="F3"
+                        Command="{Binding NavegarCommand}" CommandParameter="Proximo">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="../Imagens/proximo16.png" Width="16" />
+                        </StackPanel>
+                    </Button>
+                    <ComboBox Canvas.Left="68" Canvas.Top="411" Width="72" ToolTipService.ToolTip="Quantidade de registros por página"
+                        SelectedValuePath="Content"
+                        SelectedValue="{Binding intQtdeRegPagina, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource IntToStringConverter}}">
+                        <ComboBox.Items>
+                            <ComboBoxItem>10</ComboBoxItem>
+                            <ComboBoxItem>20</ComboBoxItem>
+                            <ComboBoxItem>30</ComboBoxItem>
+                            <ComboBoxItem>50</ComboBoxItem>
+                            <ComboBoxItem>100</ComboBoxItem>
+                        </ComboBox.Items>
+                    </ComboBox>
+                    <TextBlock Canvas.Left="145" Canvas.Top="411" Width="227" >
+                        <Run Text="Página:"/>
+                        <Run Text="{Binding intPaginaAtual,  Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        <Run Text="de"/>
+                        <Run Text="{Binding intTotalPagina,  Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    </TextBlock>
+                    <Grid Canvas.Left="377" Canvas.Top="411" Width="312">
+                        <TextBlock HorizontalAlignment="Right">
+                            <Run Text="Total de registros: "/>
+                            <Run Text="{Binding intQtdeReg,  Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        </TextBlock>
+                    </Grid>
+                </Canvas>
+            </TabItem>
+            <TabItem Header="Cadastro" IsEnabled="{Binding Path=IsEnabled, ElementName=btnGravar}">
+                <Canvas>
+                    <Label Content="Código:" Canvas.Left="10" Canvas.Top="10" Width="83"/>
+                    <TextBox Canvas.Left="98" Canvas.Top="10" Width="120" IsEnabled="False" bh:TextBoxService.IsNumericOnly="true"
+                        Text="{Binding objFuncionario.fun_codigo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <Label Content="Nome:" Canvas.Left="10" Canvas.Top="38" Width="83"/>
+                    <TextBox Canvas.Left="98" Canvas.Top="38" Width="592" CharacterCasing="Upper"
+                        Text="{Binding fun_nome, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        bh:FocusExtension.IsFocused="{Binding Path=IsEnabled, ElementName=btnGravar}"/>
+
+                    <Label Content="Endereço:" Canvas.Left="10" Canvas.Top="66" Width="83"/>
+                    <TextBox Canvas.Left="98" Canvas.Top="66" Width="402" CharacterCasing="Upper"
+                        Text="{Binding fun_logradouro, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <Label Content="Número:" Canvas.Left="505" Canvas.Top="66" Width="85"/>
+                    <TextBox Canvas.Left="595" Canvas.Top="66" Width="95" CharacterCasing="Upper"
+                        Text="{Binding fun_numero, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <Label Content="Bairro:" Canvas.Left="10" Canvas.Top="94" Width="83"/>
+                    <TextBox Canvas.Left="98" Canvas.Top="94" Width="402" CharacterCasing="Upper"
+                        Text="{Binding fun_bairro, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <Label Content="Cep:" Canvas.Left="505" Canvas.Top="94" Width="85"/>
+                    <TextBox Canvas.Left="595" Canvas.Top="94" Width="95" CharacterCasing="Upper"
+                        Text="{Binding fun_cep, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <Label Content="Complemento:" Canvas.Left="10" Canvas.Top="122" Width="83"/>
+                    <TextBox Canvas.Left="98" Canvas.Top="122" Width="592" CharacterCasing="Upper"
+                        Text="{Binding fun_complemento, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <Label Content="Estado:" Canvas.Left="10" Canvas.Top="150" Width="83"/>
+                    <ComboBox x:Name="cboEstado" Canvas.Left="99" Canvas.Top="150" Width="105"
+                        SelectedValuePath="est_codigo" DisplayMemberPath="est_nome"
+                        SelectedValue="{Binding est_codigo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        ItemsSource="{Binding arrEstado}"/>
+
+                    <Label Content="Cidade:" Canvas.Left="209" Canvas.Top="150" Width="83"/>
+                    <ComboBox Canvas.Left="297" Canvas.Top="150" Width="357"
+                        SelectedValuePath="cid_codigo" DisplayMemberPath="cid_nome"
+                        SelectedValue="{Binding cid_codigo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        ItemsSource="{Binding Path=SelectedItem.tbCidade, ElementName=cboEstado, Mode=TwoWay}"/>
+                    <Button Width="32" Height="22" Canvas.Left="659" Canvas.Top="150" ToolTipService.ToolTip="Pesquisar"
+                        Command="{Binding CidadeCommand}">
+                        <Image Source="../Imagens/pesquisar16.png" Width="16" />
+                    </Button>
+
+                    <Label Content="Telefone:" Canvas.Left="10" Canvas.Top="177" Width="83"/>
+                    <TextBox Canvas.Left="99" Canvas.Top="177" Width="105" CharacterCasing="Upper"
+                        Text="{Binding fun_telefone, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <Label Content="Celular:" Canvas.Left="209" Canvas.Top="177" Width="83"/>
+                    <TextBox Canvas.Left="297" Canvas.Top="177" Width="204" CharacterCasing="Upper"
+                        Text="{Binding fun_celular, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <Label Content="Perfil Acesso:" Canvas.Left="10" Canvas.Top="205" Width="83"/>
+                    <TextBox x:Name="txtPacCodigo" Canvas.Left="99" Canvas.Top="205" Width="105" bh:TextBoxService.IsNumericOnly="true"
+                        Text="{Binding pac_codigo, Mode=TwoWay, UpdateSourceTrigger=LostFocus, Converter={StaticResource StringEmptyToZeroConverter}}">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding PerfilAcessoCommand}" CommandParameter="{Binding Path=Text, ElementName=txtPacCodigo}" />
+                        </TextBox.InputBindings>
+                    </TextBox>
+                    <TextBox Canvas.Left="209" Canvas.Top="205" Width="445" CharacterCasing="Upper" IsEnabled="False"
+                        Text="{Binding pac_descricao, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <Button Width="32" Height="22" Canvas.Left="659" Canvas.Top="205" ToolTipService.ToolTip="Pesquisar"
+                        Command="{Binding PerfilAcessoCommand}" CommandParameter="Pesquisar">
+                        <Image Source="../Imagens/pesquisar16.png" Width="16" />
+                    </Button>
+
+                    <Label Content="Login:" Canvas.Left="10" Canvas.Top="233" Width="83"/>
+                    <TextBox Canvas.Left="99" Canvas.Top="233" Width="105" CharacterCasing="Upper"
+                        Text="{Binding fun_login, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <Label Content="Senha:" Canvas.Left="209" Canvas.Top="233" Width="83"/>
+                    <PasswordBox Width="204" Canvas.Left="297" Canvas.Top="233" Height="23" bh:PasswordHelper.Attach="True" VerticalContentAlignment="Center"
+                        bh:PasswordHelper.Password="{Binding fun_senha, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <Button x:Name="btnGravar" Width="88" Height="31" Canvas.Left="443" Canvas.Top="404" ToolTipService.ToolTip="F6"
+                        Command="{Binding SalvarCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="../Imagens/gravar16.png" Width="16" />
+                            <TextBlock Text="Gravar" Margin="5,0,0,0" />
+                        </StackPanel>
+                    </Button>
+                    <Button Width="88" Height="31" Canvas.Left="536" Canvas.Top="404" ToolTipService.ToolTip="F7"
+                        Command="{Binding CancelarCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="../Imagens/fechar16.png" Width="16" />
+                            <TextBlock Text="Cancelar" Margin="5,0,0,0" />
+                        </StackPanel>
+                    </Button>
+                    <Button Width="60" Height="31" Canvas.Left="629" Canvas.Top="404" ToolTipService.ToolTip="F10"
+                        Command="{Binding LogCommand}"
+                        CommandParameter="AbrirTela">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="../Imagens/novo16.png" Width="16" />
+                            <TextBlock Text="Log" Margin="5,0,0,0" />
+                        </StackPanel>
+                    </Button>
+                </Canvas>
+            </TabItem>
+        </TabControl>
+    </Canvas>
+</UserControl>

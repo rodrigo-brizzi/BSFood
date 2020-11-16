@@ -1,0 +1,22 @@
+﻿using BSFood.Apoio;
+using BSFood.DataTransfer;
+using BSFood.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFood.BusinessLogic.Interfaces
+{
+    public interface IRelatorios
+    {
+
+        #region Pedidos
+
+        Retorno RetornaPedidoPorEntregador(DateTime dtDataInicial, DateTime dtDataFinal, int? intFunCodigo, int intCaiCodigo, string strEmpresa);
+
+        #endregion Pedidos
+
+    }
+}

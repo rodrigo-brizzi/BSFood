@@ -1,0 +1,118 @@
+﻿using BSFoodServer.SVC;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+
+namespace BSFoodServer.View
+{
+    /// <summary>
+    /// Interaction logic for winPrincipal.xaml
+    /// </summary>
+    public partial class winPrincipal : Window
+    {
+        public winPrincipal()
+        {
+            InitializeComponent();
+        }
+
+        #region Eventos do menu e balão
+
+        private void MenuItemMostrar_Click(object sender, RoutedEventArgs e)
+        {
+            this.Show();
+            this.WindowState = WindowState.Normal;
+        }
+
+        private void MenuItemSair_Click(object sender, RoutedEventArgs e)
+        {
+            this.Show();
+            this.WindowState = WindowState.Normal;
+            this.Close();
+        }
+
+        //evento disparado quando é clicado duas vezes no icone do SysTray
+        private void MyNotifyIcon_TrayMouseDoubleClick(object sender, RoutedEventArgs e)
+        {
+            this.Show();
+            this.WindowState = WindowState.Normal;
+        }
+
+        //evento disparado quando é clicado na balão(notificação)
+        private void MyNotifyIcon_TrayBalloonTipClicked(object sender, RoutedEventArgs e)
+        {
+            this.Show();
+        }
+
+        public void ExibirBalaoInfo(string strMensagem)
+        {
+            this.MyNotifyIcon.ShowBalloonTip("BSFood Server", strMensagem, Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
+        }
+
+        public void ExibirBalaoAlerta(string strMensagem)
+        {
+            this.MyNotifyIcon.ShowBalloonTip("BSFood Server", strMensagem, Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Warning);
+        }
+
+        #endregion
+
+        #region Eventos da tela
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            string state;
+            int i = 0;
+            HostingManager.CreateHosts();
+            HostingManager.StartHosts();
+            foreach (var item in HostingManager.ServicesTypes)
+            {
+                if (!HostingManager.IsAlive(HostingManager.ServicesTypes[i]))
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    state = "Closed";
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    state = "Opened";
+                }
+                Console.WriteLine("{0} : {1} : {2}", i, HostingManager.ServicesTypes[i++], state);
+            }
+            this.WindowState = WindowState.Minimized;
+            this.ExibirBalaoInfo("Serviços iniciados");
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (MessageBox.Show("Parar o BSFood Server irá interromper o funcionamento do sistema BSFood em todos os computadores, deseja continuar?", "ATENÇÃO", MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No) == MessageBoxResult.No)
+            {
+                e.Cancel = true;
+            }
+            else
+            {
+                HostingManager.StopHost(null);
+            }
+        }
+
+        private void Window_StateChanged(object sender, EventArgs e)
+        {
+            //se a janela foi miminizada, esconde a janela para que ela seja fixada no SysTray
+            if (this.WindowState == System.Windows.WindowState.Minimized)
+            {
+                this.Hide();
+            }
+        }
+
+        #endregion
+
+    }
+}

@@ -1,0 +1,42 @@
+﻿using BSFood.Apoio;
+using BSFood.DataTransfer;
+using BSFood.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFood.BusinessLogic.Interfaces
+{
+    public interface IFinanceiro
+    {
+
+        #region Forma Pagamento
+
+        Retorno RetornaFormaPagamento(int intCodigo, enNavegacao? enDirecao);
+
+        Retorno RetornaListaFormaPagamento(string strParametro);
+
+        Retorno SalvarFormaPagamento(tbFormaPagamento objFormaPagamento);
+
+        Retorno ExcluirFormaPagamento(int intCodigo);
+
+        #endregion Forma Pagamento
+
+
+
+        #region Caixa
+
+        Retorno RetornaCaixa(int intCodigo);
+
+        Retorno AbrirCaixa(tbCaixa objCaixa);
+
+        Retorno RetornaCaixaFechamento(int intCodigo);
+
+        Retorno FecharCaixa(FechamentoCaixa objFechamentoCaixa);
+
+        #endregion Caixa
+
+    }
+}

@@ -1,0 +1,19 @@
+﻿using BSFood.Apoio;
+using BSFood.DataTransfer;
+using BSFood.Models;
+
+namespace BSFood.BusinessLogic.Interfaces
+{
+    public interface IPedidos
+    {
+        Retorno RetornaPedido(int intCodigo, enNavegacao? enDirecao, enOrigemPedido enOrigem);
+
+        Retorno RetornaListaPedidoEntrega(bool blnProducao, bool blnEntrega, bool blnFinalizado, bool blnExcluido, int intFunCodigo, int intCaiCodigo, int intSkip, int intTake);
+
+        Retorno SalvarPedido(tbPedido objPedido, enOrigemPedido enOrigem, int intFunCodigo);
+
+        Retorno ExcluirPedido(int intCodigo, string strMotivoCancelamento, int intFunCodigo);
+
+        Retorno SalvarEntregador(tbPedido objPedido, int intFunCodigo);
+    }
+}

@@ -1,0 +1,775 @@
+﻿using BSFood.View;
+using BSFood.Apoio;
+using BSFood.Models;
+using BSFood.BusinessLogic;
+using BSFood.DataTransfer;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
+
+namespace BSFood.ViewModel
+{
+    public class ClienteViewModel : ViewModelBase
+    {
+        public ICommand AnteriorCommand { get; set; }
+        public ICommand ProximoCommand { get; set; }
+        public ICommand NovoCommand { get; set; }
+        public ICommand EditarCommand { get; set; }
+        public ICommand SalvarCommand { get; set; }
+        public ICommand CancelarCommand { get; set; }
+        public ICommand ExcluirCommand { get; set; }
+        public ICommand PesquisarCommand { get; set; }
+        public ICommand LogCommand { get; set; }
+        public ICommand BuscarCommand { get; set; }
+        public ICommand ClienteGrupoCommand { get; set; }
+        public ICommand AdicionaEnderecoCommand { get; set; }
+        public ICommand AdicionaTelefoneCommand { get; set; }
+
+        private winPesquisa objTelaPesquisa;
+
+        public ClienteViewModel()
+        {
+            AnteriorCommand = new DelegateCommand(Anterior, CanAnterior);
+            ProximoCommand = new DelegateCommand(Proximo, CanProximo);
+            NovoCommand = new DelegateCommand(Novo, CanNovo);
+            EditarCommand = new DelegateCommand(Editar, CanEditar);
+            SalvarCommand = new DelegateCommand(Salvar, CanSalvar);
+            CancelarCommand = new DelegateCommand(Cancelar, CanCancelar);
+            ExcluirCommand = new DelegateCommand(Excluir, CanExcluir);
+            PesquisarCommand = new DelegateCommand(Pesquisar, CanPesquisar);
+            LogCommand = new DelegateCommand(Log, CanLog);
+            BuscarCommand = new DelegateCommand(Buscar, CanBuscar);
+            ClienteGrupoCommand = new DelegateCommand(ClienteGrupo, CanClienteGrupo);
+            AdicionaEnderecoCommand = new DelegateCommand(AdicionaEndereco, CanAdicionaEndereco);
+            AdicionaTelefoneCommand = new DelegateCommand(AdicionaTelefone, CanAdicionaTelefone);
+        }
+
+
+        #region Propriedades
+
+        public int? cli_codigo
+        {
+            get
+            {
+                if (this.objCliente == null)
+                    return null;
+                else
+                    return this.objCliente.cli_codigo;
+            }
+            set
+            {
+                if (this.objCliente == null || this.objCliente.cli_codigo != value)
+                {
+                    Retorno objRetorno;
+                    using (Pessoas objBLL = new Pessoas())
+                    {
+                        objRetorno = objBLL.RetornaCliente(value == null ? 0 : (int)value, null);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objCliente = (tbCliente)objRetorno.objRetorno;
+                        base.enStatusTelaAtual = enStatusTela.Navegacao;
+                    }
+                    else
+                    {
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                        RaisePropertyChanged();
+                    }
+                }
+            }
+        }
+
+        [Required(ErrorMessage = "Grupo de cliente obrigatório")]
+        [Range(1, int.MaxValue, ErrorMessage = "Grupo de cliente obrigatório")]
+        public int? cgr_codigo
+        {
+            get
+            {
+                if (this.objCliente == null || this.objCliente.cgr_codigo == 0)
+                    return null;
+                else
+                    return this.objCliente.cgr_codigo;
+            }
+            set
+            {
+                if (this.objCliente == null || this.objCliente.cgr_codigo != value)
+                {
+                    Retorno objRetorno;
+                    using (Pessoas objBLL = new Pessoas())
+                    {
+                        objRetorno = objBLL.RetornaClienteGrupo(value == null ? 0 : (int)value, null);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objCliente.cgr_codigo = ((tbClienteGrupo)objRetorno.objRetorno).cgr_codigo;
+                        this.objCliente.tbClienteGrupo.cgr_nome = ((tbClienteGrupo)objRetorno.objRetorno).cgr_nome;
+                    }
+                    else
+                    {
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                        this.objCliente.cgr_codigo = 0;
+                        this.objCliente.tbClienteGrupo.cgr_nome = string.Empty;
+                    }
+                    RaisePropertyChanged("cgr_codigo");
+                    RaisePropertyChanged("cgr_nome");
+                }
+            }
+        }
+
+        public string cgr_nome
+        {
+            get { return this.objCliente == null ? string.Empty : this.objCliente.tbClienteGrupo.cgr_nome; }
+            set
+            {
+                if (this.objCliente.tbClienteGrupo.cgr_nome != value)
+                {
+                    this.objCliente.tbClienteGrupo.cgr_nome = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [Required(ErrorMessage = "Nome do cliente obrigatório")]
+        [StringLength(100, ErrorMessage = "É permitido apenas 100 caracteres")]
+        public string cli_nome
+        {
+            get { return this.objCliente == null ? string.Empty : this.objCliente.cli_nome; }
+            set
+            {
+                if (this.objCliente.cli_nome != value)
+                {
+                    this.objCliente.cli_nome = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [StringLength(100, ErrorMessage = "É permitido apenas 100 caracteres")]
+        public string cli_nomeFantasia 
+        {
+            get { return this.objCliente == null ? string.Empty : this.objCliente.cli_nomeFantasia; }
+            set
+            {
+                if (this.objCliente.cli_nomeFantasia != value)
+                {
+                    this.objCliente.cli_nomeFantasia = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [Required(ErrorMessage = "Tipo do cliente obrigatório")]
+        [StringLength(1, ErrorMessage = "É permitido apenas 1 caracter")]        
+        public string cli_tipo
+        {
+            get { return this.objCliente == null ? string.Empty : this.objCliente.cli_tipo; }
+            set
+            {
+                if (this.objCliente.cli_tipo != value)
+                {
+                    this.objCliente.cli_tipo = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [StringLength(20, ErrorMessage = "É permitido apenas 20 caracteres")]
+        public string cli_cpfCnpj
+        {
+            get { return this.objCliente == null ? string.Empty : this.objCliente.cli_cpfCnpj; }
+            set
+            {
+                if (this.objCliente.cli_cpfCnpj != value)
+                {
+                    this.objCliente.cli_cpfCnpj = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [StringLength(20, ErrorMessage = "É permitido apenas 20 caracteres")]
+        public string cli_rgIe
+        {
+            get { return this.objCliente == null ? string.Empty : this.objCliente.cli_rgIe; }
+            set
+            {
+                if (this.objCliente.cli_rgIe != value)
+                {
+                    this.objCliente.cli_rgIe = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [Required(ErrorMessage = "Sexo do cliente obrigatório")]
+        [StringLength(1, ErrorMessage = "É permitido apenas 1 caracter")]                
+        public string cli_sexo
+        {
+            get { return this.objCliente == null ? string.Empty : this.objCliente.cli_sexo; }
+            set
+            {
+                if (this.objCliente.cli_sexo != value)
+                {
+                    this.objCliente.cli_sexo = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+        
+        [StringLength(100, ErrorMessage = "É permitido apenas 100 caracteres")]
+        public string cli_email
+        {
+            get { return this.objCliente == null ? string.Empty : this.objCliente.cli_email; }
+            set
+            {
+                if (this.objCliente.cli_email != value)
+                {
+                    this.objCliente.cli_email = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [StringLength(250, ErrorMessage = "É permitido apenas 250 caracteres")]
+        public string cli_observacao
+        {
+            get { return this.objCliente == null ? string.Empty : this.objCliente.cli_observacao; }
+            set
+            {
+                if (this.objCliente.cli_observacao != value)
+                {
+                    this.objCliente.cli_observacao = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [Range(0, 31, ErrorMessage = "Dia de fechamento inválido")]
+        public int cli_fechamento
+        {
+            get { return this.objCliente == null ? 0 : this.objCliente.cli_fechamento; }
+            set
+            {
+                if (this.objCliente.cli_fechamento != value)
+                {
+                    this.objCliente.cli_fechamento = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+        
+        [Range(0, 31, ErrorMessage = "Dia de vencimento inválido")]
+        public int cli_vencimento
+        {
+            get { return this.objCliente == null ? 0 : this.objCliente.cli_vencimento; }
+            set
+            {
+                if (this.objCliente.cli_vencimento != value)
+                {
+                    this.objCliente.cli_vencimento = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+        
+        private tbCliente _objCliente;
+        public tbCliente objCliente
+        {
+            get { return this._objCliente; }
+            set
+            {
+                this._objCliente = value;
+                //Prepara a coleção ClienteEndereco
+                if (this._objCliente != null)
+                {
+                    ObservableCollection<ClienteEnderecoViewModel> arrClienteEnderecoViewModelAux = new ObservableCollection<ClienteEnderecoViewModel>();
+                    foreach (tbClienteEndereco objClienteEndereco in this._objCliente.tbClienteEndereco)
+                    {
+                        ClienteEnderecoViewModel objClienteEnderecoViewModel = new ClienteEnderecoViewModel(objClienteEndereco);
+                        objClienteEnderecoViewModel.OnDispose += objClienteEnderecoViewModel_OnDispose;
+                        arrClienteEnderecoViewModelAux.Add(objClienteEnderecoViewModel);
+                    }
+                    this._arrClienteEnderecoViewModel = arrClienteEnderecoViewModelAux;
+
+                    ObservableCollection<ClienteTelefoneViewModel> arrClienteTelefoneViewModelAux = new ObservableCollection<ClienteTelefoneViewModel>();
+                    foreach (tbClienteTelefone objClienteTelefone in this._objCliente.tbClienteTelefone)
+                    {
+                        ClienteTelefoneViewModel objClienteTelefoneViewModel = new ClienteTelefoneViewModel(objClienteTelefone);
+                        objClienteTelefoneViewModel.OnDispose += objClienteTelefoneViewModel_OnDispose;
+                        arrClienteTelefoneViewModelAux.Add(objClienteTelefoneViewModel);
+                    }
+                    this._arrClienteTelefoneViewModel = arrClienteTelefoneViewModelAux;
+                }
+                else
+                {
+                    this._arrClienteEnderecoViewModel = null;
+                    this._arrClienteTelefoneViewModel = null;
+                }
+                    
+
+                //Prepara propriedades da viewmodel
+                this._intSelectedIndexTab = 0;
+                RaisePropertyChanged(null);
+            }
+        }
+
+        private ObservableCollection<ClienteEnderecoViewModel> _arrClienteEnderecoViewModel;
+        public ObservableCollection<ClienteEnderecoViewModel> arrClienteEnderecoViewModel
+        {
+            get { return this._arrClienteEnderecoViewModel; }
+            set
+            {
+                this._arrClienteEnderecoViewModel = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private ObservableCollection<ClienteTelefoneViewModel> _arrClienteTelefoneViewModel;
+        public ObservableCollection<ClienteTelefoneViewModel> arrClienteTelefoneViewModel
+        {
+            get { return this._arrClienteTelefoneViewModel; }
+            set
+            {
+                this._arrClienteTelefoneViewModel = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private List<tbCliente> _arrClientePesquisa;
+        public List<tbCliente> arrClientePesquisa
+        {
+            get { return this._arrClientePesquisa; }
+            set
+            {
+                this._arrClientePesquisa = value;
+                RaisePropertyChanged("arrClientePesquisa", false);
+            }
+        }
+
+        private int _intSelectedIndexTab;
+        public int intSelectedIndexTab
+        {
+            get { return this._intSelectedIndexTab; }
+            set
+            {
+                this._intSelectedIndexTab = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+        private bool CanAnterior(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao || base.enStatusTelaAtual == enStatusTela.Padrao);
+        }
+        private void Anterior(object objParam)
+        {
+            Retorno objRetorno;
+            using (Pessoas objBLL = new Pessoas())
+            {
+                objRetorno = objBLL.RetornaCliente(this.objCliente == null ? 0 : this.objCliente.cli_codigo, enNavegacao.Anterior);
+            }
+            if (objRetorno.intCodigoErro == 0)
+            {
+                this.objCliente = (tbCliente)objRetorno.objRetorno;
+                base.enStatusTelaAtual = enStatusTela.Navegacao;
+            }
+            else
+                MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+        }
+
+        private bool CanProximo(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao || base.enStatusTelaAtual == enStatusTela.Padrao);
+        }
+        private void Proximo(object objParam)
+        {
+            Retorno objRetorno;
+            using (Pessoas objBLL = new Pessoas())
+            {
+                objRetorno = objBLL.RetornaCliente(this.objCliente == null ? 0 : this.objCliente.cli_codigo, enNavegacao.Proximo);
+            }
+            if (objRetorno.intCodigoErro == 0)
+            {
+                this.objCliente = (tbCliente)objRetorno.objRetorno;
+                base.enStatusTelaAtual = enStatusTela.Navegacao;
+            }
+            else
+                MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+        }
+
+        private bool CanNovo(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao || base.enStatusTelaAtual == enStatusTela.Padrao) && base.blnPermiteInclusaoRegistro;
+        }
+        private void Novo(object objParam)
+        {
+            tbCliente objClienteAux = new tbCliente();
+            objClienteAux.cli_tipo = "F";
+            objClienteAux.cli_sexo = "M";
+            objClienteAux.tbClienteGrupo = new tbClienteGrupo();
+            objClienteAux.tbClienteEndereco = new List<tbClienteEndereco>();
+            objClienteAux.tbClienteTelefone = new List<tbClienteTelefone>();
+
+            tbClienteEndereco objClienteEndereco = new tbClienteEndereco();
+            objClienteEndereco.est_codigo = Util.objConfigStorage.objEmpresa.est_estadoPadrao;
+            objClienteEndereco.cid_codigo = Util.objConfigStorage.objEmpresa.cid_cidadePadrao;
+            objClienteEndereco.tbBairro = new tbBairro();
+            objClienteAux.tbClienteEndereco.Add(objClienteEndereco);
+
+            tbClienteTelefone objClienteTelefone = new tbClienteTelefone();
+            objClienteAux.tbClienteTelefone.Add(objClienteTelefone);
+
+            this.objCliente = objClienteAux;
+            base.enStatusTelaAtual = enStatusTela.EmInclusaoOuAlteracao;
+        }
+
+        private bool CanEditar(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao && base.blnPermiteAlteracaoRegistro);
+        }
+        private void Editar(object objParam)
+        {
+            base.enStatusTelaAtual = enStatusTela.EmInclusaoOuAlteracao;
+        }
+
+        private bool CanSalvar(object objParam)
+        {
+            return base.enStatusTelaAtual == enStatusTela.EmInclusaoOuAlteracao;
+        }
+        private void Salvar(object objParam)
+        {
+            bool blnAchouErro = false;
+            foreach (ClienteEnderecoViewModel objClienteEnderecoViewModel in this.arrClienteEnderecoViewModel)
+            {
+                objClienteEnderecoViewModel.Validate();
+                blnAchouErro = objClienteEnderecoViewModel.HasErrors;
+                if (blnAchouErro)
+                    break;
+            }
+            if (!blnAchouErro)
+            {
+                foreach (ClienteTelefoneViewModel objClienteTelefoneViewModel in this.arrClienteTelefoneViewModel)
+                {
+                    objClienteTelefoneViewModel.Validate();
+                    blnAchouErro = objClienteTelefoneViewModel.HasErrors;
+                    if (blnAchouErro)
+                        break;
+                }
+            }   
+            
+            this.Validate();
+            if (!this.HasErrors && !blnAchouErro)
+            {
+                this.objCliente.tbClienteEndereco.Clear();
+                foreach (ClienteEnderecoViewModel objClienteEnderecoViewModel in this.arrClienteEnderecoViewModel)
+                    this.objCliente.tbClienteEndereco.Add(objClienteEnderecoViewModel.objClienteEndereco);
+
+                this.objCliente.tbClienteTelefone.Clear();
+                foreach (ClienteTelefoneViewModel objClienteTelefoneViewModel in this.arrClienteTelefoneViewModel)
+                    this.objCliente.tbClienteTelefone.Add(objClienteTelefoneViewModel.objClienteTelefone);
+
+                Retorno objRetorno;
+                using (Pessoas objBLL = new Pessoas())
+                {
+                    objRetorno = objBLL.SalvarCliente(this.objCliente);
+                }
+                if (objRetorno.intCodigoErro == 0)
+                {
+                    this.objCliente = (tbCliente)objRetorno.objRetorno;
+                    base.enStatusTelaAtual = enStatusTela.Navegacao;
+                }
+                else
+                    MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+            }
+        }
+
+        private bool CanCancelar(object objParam)
+        {
+            return base.enStatusTelaAtual == enStatusTela.EmInclusaoOuAlteracao;
+        }
+        private void Cancelar(object objParam)
+        {
+            if (MessageBox.Show("Todas as alterações serão perdidas, deseja cancelar a edição?", "Atenção", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                if (this.objCliente.cli_codigo > 0)
+                {
+                    Retorno objRetorno;
+                    using (Pessoas objBLL = new Pessoas())
+                    {
+                        objRetorno = objBLL.RetornaCliente(this.objCliente.cli_codigo, null);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objCliente = (tbCliente)objRetorno.objRetorno;
+                        base.enStatusTelaAtual = enStatusTela.Navegacao;
+                    }
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                }
+                else
+                {
+                    this.objCliente = null;
+                    this.ClearAllErrorsAsync();
+                    base.enStatusTelaAtual = enStatusTela.Padrao;
+                }
+            }
+        }
+
+        private bool CanExcluir(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao && base.blnPermiteExclusaoRegistro);
+        }
+        private void Excluir(object objParam)
+        {
+            if (this.objCliente != null)
+            {
+                if (MessageBox.Show("Tem Certeza que deseja excluir o registro selecionado?", "Atenção", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                {
+                    Retorno objRetorno;
+                    using (Pessoas objBLL = new Pessoas())
+                    {
+                        objRetorno = objBLL.ExcluirCliente(this.objCliente.cli_codigo);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objCliente = null;
+                        this.ClearAllErrorsAsync();
+                        base.enStatusTelaAtual = enStatusTela.Padrao;
+                    }
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                }
+            }
+        }
+
+        private bool CanPesquisar(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao || base.enStatusTelaAtual == enStatusTela.Padrao);
+        }
+        public void Pesquisar(object objParam)
+        {
+            if (objParam != null)
+            {
+                if (objParam.ToString() == "AbrirTela")
+                {
+                    this.objTelaPesquisa = new winPesquisa();
+                    this.objTelaPesquisa.Title = "Pesquisa - " + base.strNomeTela;
+                    this.objTelaPesquisa.DataContext = this;
+                    this.objTelaPesquisa.Owner = (Window)Application.Current.MainWindow;
+                    this.objTelaPesquisa.Closed += (sen, eve) =>
+                    {
+                        this.objTelaPesquisa = null;
+                        var handler = OnPesquisa;
+                        if (handler != null)
+                            handler(this, null);
+                    };
+                    this.objTelaPesquisa.ShowDialog();
+                }
+                else if (objParam.ToString() == "FecharTela")
+                {
+                    if (this.objTelaPesquisa != null)
+                        this.objTelaPesquisa.Close();
+                }
+                else if (objParam.GetType() == typeof(tbCliente))
+                {
+                    this.cli_codigo = ((tbCliente)objParam).cli_codigo;
+                    if (this.objTelaPesquisa != null)
+                        this.objTelaPesquisa.Close();
+                }
+                else
+                {
+                    Retorno objRetorno;
+                    using (Pessoas objBLL = new Pessoas())
+                    {
+                        objRetorno = objBLL.RetornaListaCliente(objParam.ToString());
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                        this.arrClientePesquisa = (List<tbCliente>)objRetorno.objRetorno;
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                }
+            }
+        }
+
+        private bool CanLog(object objParam)
+        {
+            return base.enStatusTelaAtual == enStatusTela.Navegacao;
+        }
+        private void Log(object objParam)
+        {
+            if (objParam != null)
+            {
+                if (objParam.ToString() == "AbrirTela")
+                {
+                    Retorno objRetorno;
+                    using (Pessoas objBLL = new Pessoas())
+                    {
+                        objRetorno = objBLL.RetornaListaAuditoria(this.objCliente.cli_codigo, this.objCliente);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        base.arrAuditoria = (List<tbAuditoria>)objRetorno.objRetorno;
+                        winAuditoria objTelaAuditoria = new winAuditoria();
+                        objTelaAuditoria.Title = "Auditoria - " + base.strNomeTela;
+                        objTelaAuditoria.DataContext = this;
+                        objTelaAuditoria.Owner = (Window)Application.Current.MainWindow;
+                        objTelaAuditoria.Closed += (sen, eve) =>
+                        {
+                            base.arrAuditoria = null;
+                            objTelaAuditoria = null;
+                        };
+                        objTelaAuditoria.ShowDialog();
+                    }
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                }
+                else if (objParam.GetType() == typeof(winAuditoria))
+                {
+                    ((Window)objParam).Close();
+                }
+            }
+        }
+
+        private bool CanBuscar(object objParam)
+        {
+            return true;
+        }
+        private void Buscar(object objParam)
+        {
+            if (objParam != null)
+            {
+                int intCodigo;
+                if (int.TryParse(objParam.ToString(), out intCodigo))
+                    this.cli_codigo = intCodigo;
+            }
+        }
+
+        private bool CanClienteGrupo(object objParam)
+        {
+            return true;
+        }
+        private void ClienteGrupo(object objParam)
+        {
+            if (objParam != null)
+            {
+                if (objParam.ToString() == "Novo")
+                {
+                    winCadastro objTelaCadastro = new winCadastro();
+                    ClienteGrupoViewModel objClienteGrupoViewModel = new ClienteGrupoViewModel();
+                    if (this.objCliente.cgr_codigo > 0)
+                        objClienteGrupoViewModel.cgr_codigo = this.objCliente.cgr_codigo;
+                    objClienteGrupoViewModel.OnDispose += (sen1, eve1) => { objTelaCadastro.Close(); };
+                    objTelaCadastro.Title = "Cadastro - " + objClienteGrupoViewModel.strNomeTela;
+                    objTelaCadastro.DataContext = objClienteGrupoViewModel;
+                    objTelaCadastro.Owner = (Window)Application.Current.MainWindow;
+                    objTelaCadastro.Closed += (sen, eve) =>
+                    {
+                        if (objClienteGrupoViewModel.cgr_codigo != null)
+                        {
+                            this.objCliente.cgr_codigo = (int)objClienteGrupoViewModel.cgr_codigo;
+                            RaisePropertyChanged("cgr_codigo");
+                            this.objCliente.tbClienteGrupo.cgr_nome = objClienteGrupoViewModel.cgr_nome;
+                            RaisePropertyChanged("cgr_nome");
+                        }
+                        objClienteGrupoViewModel = null;
+                        objTelaCadastro = null;
+                    };
+                    objTelaCadastro.ShowDialog();
+                }
+                else if (objParam.ToString() == "Pesquisar")
+                {
+                    ClienteGrupoViewModel objClienteGrupoViewModel = new ClienteGrupoViewModel();
+                    objClienteGrupoViewModel.OnPesquisa += (sen, eve) =>
+                    {
+                        if (objClienteGrupoViewModel.cgr_codigo != null)
+                        {
+                            this.objCliente.cgr_codigo = (int)objClienteGrupoViewModel.cgr_codigo;
+                            RaisePropertyChanged("cgr_codigo");
+                            this.objCliente.tbClienteGrupo.cgr_nome = objClienteGrupoViewModel.cgr_nome;
+                            RaisePropertyChanged("cgr_nome");
+                        }
+                        objClienteGrupoViewModel.Dispose();
+                    };
+                    objClienteGrupoViewModel.Pesquisar("AbrirTela");
+                }
+                else
+                {
+                    int intCodigo;
+                    if (int.TryParse(objParam.ToString(), out intCodigo))
+                        this.cgr_codigo = intCodigo;
+                }
+            }
+        }
+
+        private bool CanAdicionaEndereco(object objParam)
+        {
+            return true;
+        }
+        private void AdicionaEndereco(object objParam)
+        {
+            tbClienteEndereco objClienteEndereco = new tbClienteEndereco();
+            objClienteEndereco.est_codigo = Util.objConfigStorage.objEmpresa.est_estadoPadrao;
+            objClienteEndereco.cid_codigo = Util.objConfigStorage.objEmpresa.cid_cidadePadrao;
+            objClienteEndereco.tbBairro = new tbBairro();
+            ClienteEnderecoViewModel objClienteEnderecoViewModel = new ClienteEnderecoViewModel(objClienteEndereco);
+            objClienteEnderecoViewModel.OnDispose += objClienteEnderecoViewModel_OnDispose;
+            this.arrClienteEnderecoViewModel.Add(objClienteEnderecoViewModel);
+        }
+
+        private bool CanAdicionaTelefone(object objParam)
+        {
+            return true;
+        }
+        private void AdicionaTelefone(object objParam)
+        {
+            ClienteTelefoneViewModel objClienteTelefoneViewModel = new ClienteTelefoneViewModel(new tbClienteTelefone());
+            objClienteTelefoneViewModel.OnDispose += objClienteTelefoneViewModel_OnDispose;
+            this.arrClienteTelefoneViewModel.Add(objClienteTelefoneViewModel);
+        }
+
+        #endregion Comandos
+
+
+
+        #region Eventos
+
+        public event EventHandler OnPesquisa;
+
+        void objClienteEnderecoViewModel_OnDispose(object sender, EventArgs e)
+        {
+            this.arrClienteEnderecoViewModel.Remove((ClienteEnderecoViewModel)sender);
+        }
+
+        void objClienteTelefoneViewModel_OnDispose(object sender, EventArgs e)
+        {
+            this.arrClienteTelefoneViewModel.Remove((ClienteTelefoneViewModel)sender);
+        }
+
+        #endregion Eventos
+
+
+
+        #region Métodos
+
+
+
+        #endregion Métodos
+    }
+}

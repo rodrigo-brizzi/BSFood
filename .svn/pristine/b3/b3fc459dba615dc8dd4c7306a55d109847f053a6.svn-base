@@ -1,0 +1,167 @@
+﻿using BSFoodServer.Apoio;
+using BSFoodServer.DTO;
+using BSFoodServer.SVC;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+
+namespace BSFoodServer.View
+{
+    /// <summary>
+    /// Interaction logic for winPrincipal.xaml
+    /// </summary>
+    public partial class winPrincipal : Window
+    {
+        public winPrincipal()
+        {
+            InitializeComponent();
+        }
+
+        #region Métodos
+
+        private void IniciaServicos()
+        {
+            HostingManager.CreateHosts();
+            HostingManager.StartHosts();
+            WebManager.OpenWebServer();
+        }
+
+        private void CarregaConfiguracao()
+        {
+            Util.CarregarConfiguracao();
+            rbSqlCompact.IsChecked = Util.objConfigServer.blnSqlCompact;
+            rbSqlServer.IsChecked = Util.objConfigServer.blnSqlServer;
+            tbEnderecoBanco.Text = Util.objConfigServer.strEnderecoBanco;
+            tbNomeBanco.Text = Util.objConfigServer.strNomeBanco;
+
+            lstLog.ItemsSource = App.arrLog;
+            tbLink.Text = "http://" + Util.strIp + ":9091/Default.html";
+        }
+
+        #endregion Métodos
+
+
+
+        #region Eventos do menu e balão
+
+        private void MenuItemMostrar_Click(object sender, RoutedEventArgs e)
+        {
+            this.Show();
+            this.WindowState = WindowState.Normal;
+        }
+
+        private void MenuItemSair_Click(object sender, RoutedEventArgs e)
+        {
+            this.Show();
+            this.WindowState = WindowState.Normal;
+            this.Close();
+        }
+
+        //evento disparado quando é clicado duas vezes no icone do SysTray
+        private void MyNotifyIcon_TrayMouseDoubleClick(object sender, RoutedEventArgs e)
+        {
+            this.Show();
+            this.WindowState = WindowState.Normal;
+        }
+
+        //evento disparado quando é clicado na balão(notificação)
+        private void MyNotifyIcon_TrayBalloonTipClicked(object sender, RoutedEventArgs e)
+        {
+            this.Show();
+        }
+
+        public void ExibirBalaoInfo(string strMensagem)
+        {
+            this.MyNotifyIcon.ShowBalloonTip("BSFood Server", strMensagem, Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
+        }
+
+        public void ExibirBalaoAlerta(string strMensagem)
+        {
+            this.MyNotifyIcon.ShowBalloonTip("BSFood Server", strMensagem, Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Warning);
+        }
+
+        #endregion
+
+
+
+        #region Eventos da tela
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            CarregaConfiguracao();
+            IniciaServicos();
+            this.WindowState = WindowState.Minimized;
+            this.ExibirBalaoInfo("Serviços iniciados");
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (MessageBox.Show("Parar o BSFood Server irá interromper o funcionamento do sistema BSFood em todos os computadores, deseja continuar?", "ATENÇÃO", MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No) == MessageBoxResult.No)
+            {
+                e.Cancel = true;
+            }
+            else
+            {
+                Util.FecharSistema();
+            }
+        }
+
+        private void Window_StateChanged(object sender, EventArgs e)
+        {
+            //se a janela foi miminizada, esconde a janela para que ela seja fixada no SysTray
+            if (this.WindowState == System.Windows.WindowState.Minimized)
+            {
+                this.Hide();
+                this.ExibirBalaoInfo("Serviços aguardando conexão");
+            }
+        }
+
+        #endregion
+
+
+
+        #region Eventos de ações, tais como botões, links etc
+
+        private void Hyperlink_Click(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start(tbLink.Text);
+        }
+
+        private void btnSalvar_Click(object sender, RoutedEventArgs e)
+        {
+            if (MessageBox.Show("Esta operação irá encerrar o sistema, tem certeza que deseja continuar?", "Atenção", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                string strMensagem = string.Empty;
+                ConfigServer _objConfigServer = new ConfigServer();
+                _objConfigServer.blnSqlCompact = (bool)rbSqlCompact.IsChecked;
+                _objConfigServer.blnSqlServer = (bool)rbSqlServer.IsChecked;
+                _objConfigServer.strEnderecoBanco = tbEnderecoBanco.Text;
+                _objConfigServer.strNomeBanco = tbNomeBanco.Text;
+                if (!Util.SalvarConfiguracao(_objConfigServer, out strMensagem))
+                    MessageBox.Show(strMensagem, "Atenção", MessageBoxButton.OK, MessageBoxImage.Warning);
+                else
+                {
+                    MessageBox.Show("Configuração salva com sucesso! o sistema será finalizado, entre novamente!", "Aviso", MessageBoxButton.OK, MessageBoxImage.Information);
+                    Environment.Exit(0);
+                    Application.Current.Shutdown();
+                }
+            }
+        }
+
+        #endregion Eventos de ações, tais como botões, links etc
+
+    }
+}

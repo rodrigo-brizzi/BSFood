@@ -1,0 +1,306 @@
+﻿using BSFood.DataAccess;
+using BSFood.DataTransfer;
+using BSFood.Apoio;
+using BSFood.BusinessLogic.Interfaces;
+using BSFood.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Data.Entity;
+
+namespace BSFood.BusinessLogic
+{
+    public class Pedidos : IPedidos, IDisposable
+    {
+        private readonly bool _blnFecharCon;
+        private EFContexto _objCtx;
+        private GerenciaTransacao _objTransacao;
+
+        public Pedidos()
+        {
+            _objCtx = new EFContexto();
+            _objTransacao = new GerenciaTransacao(ref _objCtx);
+            _blnFecharCon = true;
+        }
+
+        public Pedidos(ref EFContexto objCtx, ref GerenciaTransacao objTransacao)
+        {
+            _objCtx = objCtx;
+            _objTransacao = objTransacao;
+            _blnFecharCon = false;
+        }
+
+        public Retorno RetornaPedido(int intCodigo, enNavegacao? enDirecao, enOrigemPedido enOrigem)
+        {
+            var objRetorno = new Retorno();
+            try
+            {
+                var strOrigem = ((char)enOrigem).ToString();
+                tbPedido objPedido = null;
+                if (enDirecao == null)
+                    objPedido = _objCtx.tbPedido.AsNoTracking().Include(ppr => ppr.tbPedidoProduto.Select(pro => pro.tbProduto))
+                                                      .Include(cli => cli.tbCliente)
+                                                      .Include(cen => cen.tbCliente.tbClienteEndereco.Select(bai => bai.tbBairro))
+                                                      .Include(fun => fun.tbFuncionarioEntregador).Include(fpg => fpg.tbFormaPagamento)
+                                                      .FirstOrDefault(ped => ped.ped_codigo == intCodigo && ped.ped_origem == strOrigem);
+                if (enDirecao == enNavegacao.Proximo)
+                    objPedido = _objCtx.tbPedido.AsNoTracking().Include(ppr => ppr.tbPedidoProduto.Select(pro => pro.tbProduto))
+                                                      .Include(cli => cli.tbCliente)
+                                                      .Include(cen => cen.tbCliente.tbClienteEndereco.Select(bai => bai.tbBairro))
+                                                      .Include(fun => fun.tbFuncionarioEntregador)
+                                                      .Include(fpg => fpg.tbFormaPagamento)
+                                                      .Where(ped => ped.ped_codigo > intCodigo && ped.ped_origem == strOrigem)
+                                                      .OrderBy(ped => ped.ped_codigo).FirstOrDefault();
+                if (enDirecao == enNavegacao.Anterior)
+                    objPedido = _objCtx.tbPedido.AsNoTracking().Include(ppr => ppr.tbPedidoProduto.Select(pro => pro.tbProduto))
+                                                      .Include(cli => cli.tbCliente)
+                                                      .Include(cen => cen.tbCliente.tbClienteEndereco.Select(bai => bai.tbBairro))
+                                                      .Include(fun => fun.tbFuncionarioEntregador)
+                                                      .Include(fpg => fpg.tbFormaPagamento)
+                                                      .Where(ped => ped.ped_codigo < intCodigo && ped.ped_origem == strOrigem)
+                                                      .OrderByDescending(ped => ped.ped_codigo).FirstOrDefault();
+                if (objPedido != null)
+                {
+                    objRetorno.intCodigoErro = 0;
+                    objRetorno.objRetorno = objPedido;
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = "Registro não encontrado";
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno RetornaListaPedido(string strParametro, enOrigemPedido enOrigem, bool blnProducao = true, bool blnEntrega = true, bool blnFinalizado = true, bool blnExcluido = true, int? intFunCodigo = null, int? intCaiCodigo = null)
+        {
+            var objRetorno = new Retorno();
+            try
+            {
+                var strOrigem = ((char)enOrigem).ToString();
+                List<tbPedido> arrPedido;
+                if (intCaiCodigo != null)
+                {
+                    var query = _objCtx.tbPedido.Include(fun => fun.tbFuncionarioEntregador)
+                                                    .Include(ppr => ppr.tbPedidoProduto)
+                                                    .Include(fpg => fpg.tbFormaPagamento).AsNoTracking()
+                                                    .Where(ped => ped.ped_origem == strOrigem && ped.cai_codigo == intCaiCodigo &&
+                                                    (ped.ped_codigo.ToString().Contains(strParametro) || ped.ped_nomeCliente.Contains(strParametro)))
+                                                    .AsQueryable();
+                    if (!blnProducao)
+                        query = query.Where(ped => ped.ped_status != "P").AsQueryable();
+                    if (!blnEntrega)
+                        query = query.Where(ped => ped.ped_status != "E").AsQueryable();
+                    if (!blnFinalizado)
+                        query = query.Where(ped => ped.ped_status != "F").AsQueryable();
+                    if (!blnExcluido)
+                        query = query.Where(ped => ped.ped_status != "X").AsQueryable();
+                    if (intFunCodigo != null)
+                        query = query.Where(ped => ped.fun_funcionarioEntregador == intFunCodigo).AsQueryable();
+
+                    arrPedido = query.OrderBy(ped => ped.ped_codigo).ToList();
+                }
+                else
+                {
+                    arrPedido = _objCtx.tbPedido.AsNoTracking()
+                                                    .Where(ped => ped.ped_origem == strOrigem &&
+                                                    (ped.ped_codigo.ToString().Contains(strParametro) || ped.ped_nomeCliente.Contains(strParametro)))
+                                                    .OrderBy(ped => ped.ped_nomeCliente)
+                                                    .ToList();
+                }
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = arrPedido;
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno SalvarPedido(tbPedido objPedido, enOrigemPedido enOrigem, int intFunCodigo)
+        {
+            var objRetorno = new Retorno();
+            var strValidacao = ValidaPedido(objPedido, enOrigem);
+            try
+            {
+                if (strValidacao == string.Empty)
+                {
+                    objPedido.tbFuncionarioEntregador = null;
+                    objPedido.tbCliente = null;
+                    objPedido.tbFormaPagamento = null;
+                    foreach (var objPedidoProduto in objPedido.tbPedidoProduto)
+                    {
+                        objPedidoProduto.tbProduto = null;
+                        objPedidoProduto.tbPedido = null;
+                    }
+                    enOperacao enTipoOperacao;
+                    if (objPedido.ped_codigo == 0)
+                    {
+                        objPedido.ped_data = DateTime.Now;
+                        objPedido.ped_origem = ((char)enOrigem).ToString(); //"E" = Entrega, "C" = Comanda
+                        objPedido.ped_status = enStatusPedido.P.ToString(); //"P" = Produção, "E" = Entrega, "F" = Finalizado, "X" = Excluido
+                        if (objPedido.fun_funcionarioEntregador != null)
+                        {
+                            objPedido.ped_status = enStatusPedido.E.ToString();
+                            objPedido.ped_dataEntrega = DateTime.Now;
+                        }
+                        objPedido.fun_codigo = Util.objConfigStorage.objFuncionario.fun_codigo;
+                        objPedido.cai_codigo = Util.objConfigStorage.intCaiCodigo;
+                        if (objPedido.ped_cobranca == enFormaCobranca.P.ToString())//"P"
+                            objPedido.ped_observacao = (string.IsNullOrWhiteSpace(objPedido.ped_observacao) ? "" : Environment.NewLine) + "**PEDIDO CONVENIO - NAO COBRAR**";
+
+                        if (enOrigem == enOrigemPedido.Entrega)
+                        {
+                            var objCaixaContexto = _objCtx.tbCaixa.FirstOrDefault(cai => cai.cai_codigo == objPedido.cai_codigo);
+                            if (objCaixaContexto != null)
+                            {
+                                objCaixaContexto.cai_ordemPedido++;
+                                objPedido.ped_ordem = objCaixaContexto.cai_ordemPedido;
+                                _objCtx.Entry(objCaixaContexto).State = EntityState.Modified;
+                            }
+                        }
+
+                        enTipoOperacao = enOperacao.Inclusao;
+                        _objCtx.tbPedido.Add(objPedido);
+                    }
+                    else
+                    {
+                        enTipoOperacao = enOperacao.Alteracao;
+                        var objPedidoContexto = _objCtx.tbPedido.Include(ppr => ppr.tbPedidoProduto).FirstOrDefault(ped => ped.ped_codigo == objPedido.ped_codigo);
+
+                        if (objPedidoContexto != null && (objPedidoContexto.fun_funcionarioEntregador == null && objPedido.fun_funcionarioEntregador != null))
+                        {
+                            objPedido.ped_status = enStatusPedido.E.ToString();//"E";
+                            objPedido.ped_dataEntrega = DateTime.Now;
+                        }
+
+                        if (objPedidoContexto != null)
+                        {
+                            _objCtx.tbPedidoProduto.RemoveRange(objPedidoContexto.tbPedidoProduto);
+                            _objCtx.Entry(objPedidoContexto).CurrentValues.SetValues(objPedido);
+                        }
+
+                        foreach (var objItemProduto in objPedido.tbPedidoProduto)
+                        {
+                            objItemProduto.ped_codigo = objPedido.ped_codigo;
+                            _objCtx.tbPedidoProduto.Add(objItemProduto);
+                        }
+                    }
+                    _objCtx.SaveChanges();
+                    using (var objBll = new Auditoria(ref _objCtx, ref _objTransacao))
+                        objBll.SalvarAuditoria(objPedido.ped_codigo, enTipoOperacao, objPedido, intFunCodigo);
+                    objRetorno = RetornaPedido(objPedido.ped_codigo, null, enOrigem);
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = strValidacao;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno ExcluirPedido(int intCodigo, string strMotivoCancelamento, int intFunCodigo)
+        {
+            var objRetorno = new Retorno();
+            try
+            {
+                var objPedido = _objCtx.tbPedido.FirstOrDefault(ped => ped.ped_codigo == intCodigo);
+                if (objPedido != null)
+                {
+                    objPedido.ped_status = enStatusPedido.X.ToString();//"X";
+                    objPedido.ped_motivoCancelamento = strMotivoCancelamento;
+                    _objCtx.Entry(objPedido).State = EntityState.Modified;
+                    _objCtx.SaveChanges();
+                    using (var objBll = new Auditoria(ref _objCtx, ref _objTransacao))
+                        objBll.SalvarAuditoria(objPedido.ped_codigo, enOperacao.Exclusao, objPedido, intFunCodigo);
+
+                    objRetorno.intCodigoErro = 0;
+                    objRetorno.objRetorno = true;
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = "Pedido não encontrado para exclusão";
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno SalvarEntregador(tbPedido objPedido, int intFunCodigo)
+        {
+            var objRetorno = new Retorno();
+            try
+            {
+                objPedido.tbFuncionarioEntregador = null;
+                objPedido.tbPedidoProduto = null;
+                objPedido.tbFormaPagamento = null;
+                objPedido.ped_status = enStatusPedido.E.ToString();//"E";
+                objPedido.ped_dataEntrega = DateTime.Now;
+                var objPedidoContexto = _objCtx.tbPedido.FirstOrDefault(ped => ped.ped_codigo == objPedido.ped_codigo);
+                _objCtx.Entry(objPedidoContexto).CurrentValues.SetValues(objPedido);
+                _objCtx.SaveChanges();
+                using (var objBll = new Auditoria(ref _objCtx, ref _objTransacao))
+                    objBll.SalvarAuditoria(objPedido.ped_codigo, enOperacao.Outro, objPedido, intFunCodigo);
+                objRetorno = RetornaPedido(objPedido.ped_codigo, null, enOrigemPedido.Entrega);
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        private string ValidaPedido(tbPedido objPedido, enOrigemPedido enOrigem)
+        {
+            if (enOrigem == enOrigemPedido.Entrega)
+            {
+                if (objPedido.cli_codigo == 0)
+                    return "O cliente do Pedido deve ser informado.";
+
+                if (objPedido.tbPedidoProduto.Count == 0)
+                    return "Não foram informados nenhum produto.";
+
+                if (objPedido.fpg_codigo == 0)
+                    return "A forma de pagamento deve ser informada.";
+            }
+            return string.Empty;
+        }
+
+        public void Dispose()
+        {
+            if (!_blnFecharCon) return;
+            _objCtx.Dispose();
+            _objCtx = null;
+        }
+    }
+}

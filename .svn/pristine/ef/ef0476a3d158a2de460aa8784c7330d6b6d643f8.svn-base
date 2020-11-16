@@ -1,0 +1,15 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.Models
+{
+    public class ConfigStorage
+    {
+        public Funcionario objFuncionario { get; set; }
+
+        public List<PerfilAcessoMenu> arrPerfilAcessoMenu { get; set; }
+    }
+}

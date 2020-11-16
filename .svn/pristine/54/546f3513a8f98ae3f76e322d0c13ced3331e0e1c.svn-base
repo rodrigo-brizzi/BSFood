@@ -1,0 +1,426 @@
+﻿using BSFood.View;
+using BSFood.Apoio;
+using BSFood.Models;
+using BSFood.BusinessLogic;
+using BSFood.DataTransfer;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
+
+namespace BSFood.ViewModel
+{
+    public class EmpresaViewModel : ViewModelBase
+    {
+        public ICommand SalvarCommand { get; set; }
+        public ICommand LogCommand { get; set; }
+        public ICommand CidadeCommand { get; set; }
+
+        public EmpresaViewModel()
+        {
+            SalvarCommand = new DelegateCommand(Salvar, CanSalvar);
+            LogCommand = new DelegateCommand(Log, CanLog);
+            CidadeCommand = new DelegateCommand(Cidade, CanCidade);
+            CarregaComboEstado();
+            this.objEmpresa = Util.objConfigStorage.objEmpresa;
+        }
+
+
+        #region Propriedades
+
+        [Required(ErrorMessage = "Nome da Empresa obrigatório")]
+        [StringLength(100, ErrorMessage = "É permitido apenas 100 caracteres")]
+        public string emp_nome
+        {
+            get { return this.objEmpresa == null ? string.Empty : this.objEmpresa.emp_nome; }
+            set
+            {
+                if (this.objEmpresa.emp_nome != value)
+                {
+                    this.objEmpresa.emp_nome = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [Required(ErrorMessage = "Nome fantasia da Empresa obrigatório")]
+        [StringLength(100, ErrorMessage = "É permitido apenas 100 caracteres")]
+        public string emp_nomeFantasia
+        {
+            get { return this.objEmpresa == null ? string.Empty : this.objEmpresa.emp_nomeFantasia; }
+            set
+            {
+                if (this.objEmpresa.emp_nomeFantasia != value)
+                {
+                    this.objEmpresa.emp_nomeFantasia = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [StringLength(20, ErrorMessage = "É permitido apenas 20 caracteres")]
+        [Range(0, double.MaxValue, ErrorMessage = "Informe apenas números")]
+        public string emp_cnpj
+        {
+            get { return this.objEmpresa == null ? string.Empty : this.objEmpresa.emp_cnpj; }
+            set
+            {
+                if (this.objEmpresa.emp_cnpj != value)
+                {
+                    this.objEmpresa.emp_cnpj = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [StringLength(20, ErrorMessage = "É permitido apenas 20 caracteres")]
+        [Range(0, double.MaxValue, ErrorMessage = "Informe apenas números")]
+        public string emp_ie
+        {
+            get { return this.objEmpresa == null ? string.Empty : this.objEmpresa.emp_ie; }
+            set
+            {
+                if (this.objEmpresa.emp_ie != value)
+                {
+                    this.objEmpresa.emp_ie = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [StringLength(20, ErrorMessage = "É permitido apenas 20 caracteres")]
+        [Range(0, double.MaxValue, ErrorMessage = "Informe apenas números")]
+        public string emp_im
+        {
+            get { return this.objEmpresa == null ? string.Empty : this.objEmpresa.emp_im; }
+            set
+            {
+                if (this.objEmpresa.emp_im != value)
+                {
+                    this.objEmpresa.emp_im = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [StringLength(256, ErrorMessage = "É permitido apenas 256 caracteres")]
+        public string emp_assinaturaSat
+        {
+            get { return this.objEmpresa == null ? string.Empty : this.objEmpresa.emp_assinaturaSat; }
+            set
+            {
+                if (this.objEmpresa.emp_assinaturaSat != value)
+                {
+                    this.objEmpresa.emp_assinaturaSat = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [StringLength(200, ErrorMessage = "É permitido apenas 200 caracteres")]
+        public string emp_logradouro
+        {
+            get { return this.objEmpresa == null ? string.Empty : this.objEmpresa.emp_logradouro; }
+            set
+            {
+                if (this.objEmpresa.emp_logradouro != value)
+                {
+                    this.objEmpresa.emp_logradouro = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [StringLength(10, ErrorMessage = "É permitido apenas 10 caracteres")]
+        public string emp_numero
+        {
+            get { return this.objEmpresa == null ? string.Empty : this.objEmpresa.emp_numero; }
+            set
+            {
+                if (this.objEmpresa.emp_numero != value)
+                {
+                    this.objEmpresa.emp_numero = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [StringLength(100, ErrorMessage = "É permitido apenas 100 caracteres")]
+        public string emp_bairro
+        {
+            get { return this.objEmpresa == null ? string.Empty : this.objEmpresa.emp_bairro; }
+            set
+            {
+                if (this.objEmpresa.emp_bairro != value)
+                {
+                    this.objEmpresa.emp_bairro = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [StringLength(9, ErrorMessage = "É permitido apenas 9 caracteres")]
+        [Range(0, double.MaxValue, ErrorMessage = "Informe apenas números")]
+        public string emp_cep
+        {
+            get { return this.objEmpresa == null ? string.Empty : this.objEmpresa.emp_cep; }
+            set
+            {
+                if (this.objEmpresa.emp_cep != value)
+                {
+                    this.objEmpresa.emp_cep = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [StringLength(150, ErrorMessage = "É permitido apenas 150 caracteres")]
+        public string emp_complemento
+        {
+            get { return this.objEmpresa == null ? string.Empty : this.objEmpresa.emp_complemento; }
+            set
+            {
+                if (this.objEmpresa.emp_complemento != value)
+                {
+                    this.objEmpresa.emp_complemento = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [StringLength(20, ErrorMessage = "É permitido apenas 20 caracteres")]
+        [Range(0, double.MaxValue, ErrorMessage = "Informe apenas números")]
+        public string emp_telefone
+        {
+            get { return this.objEmpresa == null ? string.Empty : this.objEmpresa.emp_telefone; }
+            set
+            {
+                if (this.objEmpresa.emp_telefone != value)
+                {
+                    this.objEmpresa.emp_telefone = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [StringLength(20, ErrorMessage = "É permitido apenas 20 caracteres")]
+        [Range(0, double.MaxValue, ErrorMessage = "Informe apenas números")]
+        public string emp_fax
+        {
+            get { return this.objEmpresa == null ? string.Empty : this.objEmpresa.emp_fax; }
+            set
+            {
+                if (this.objEmpresa.emp_fax != value)
+                {
+                    this.objEmpresa.emp_fax = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [Required(ErrorMessage = "Estado obrigatório")]
+        [Range(1, int.MaxValue, ErrorMessage = "Estado obrigatório")]
+        public int est_codigo
+        {
+            get { return this.objEmpresa == null ? 0 : this.objEmpresa.est_codigo; }
+            set
+            {
+                if (this.objEmpresa.est_codigo != value)
+                {
+                    this.objEmpresa.est_codigo = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [Required(ErrorMessage = "Cidade obrigatório")]
+        [Range(1, int.MaxValue, ErrorMessage = "Cidade obrigatório")]
+        public int cid_codigo
+        {
+            get
+            {
+                if (this.objEmpresa == null)
+                    return 0;
+                else
+                {
+                    RaisePropertyChanged("est_codigo", false);
+                    return this.objEmpresa.cid_codigo;
+                }
+            }
+            set
+            {
+                if (this.objEmpresa.cid_codigo != value)
+                {
+                    this.objEmpresa.cid_codigo = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        private tbEmpresa _objEmpresa;
+        public tbEmpresa objEmpresa
+        {
+            get { return this._objEmpresa; }
+            set
+            {
+                this._objEmpresa = value;
+                RaisePropertyChanged(null);
+            }
+        }
+
+        private List<tbEstado> _arrEstado;
+        public List<tbEstado> arrEstado
+        {
+            get { return this._arrEstado; }
+            set
+            {
+                this._arrEstado = value;
+                RaisePropertyChanged("arrEstado", false);
+            }
+        }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+        private bool CanSalvar(object objParam)
+        {
+            return true;
+        }
+        private void Salvar(object objParam)
+        {
+            this.Validate();
+            if (!this.HasErrors)
+            {
+                Retorno objRetorno;
+                using (var objBLL = new Empresa())
+                {
+                    objRetorno = objBLL.SalvarEmpresa(this.objEmpresa, Util.objConfigStorage.objFuncionario.fun_codigo);
+                }
+                if (objRetorno.intCodigoErro == 0)
+                {
+                    MessageBox.Show("A empresa do sistema foi alterada, será necessário fechar o sistema!", "Atenção", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    Util.FecharSistema();
+                }
+                else
+                    MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+            }
+        }
+
+        private bool CanLog(object objParam)
+        {
+            return true;
+        }
+        private void Log(object objParam)
+        {
+            if (objParam != null)
+            {
+                if (objParam.ToString() == "AbrirTela")
+                {
+                    Retorno objRetorno;
+                    using (Auditoria objBLL = new Auditoria())
+                    {
+                        objRetorno = objBLL.RetornaListaAuditoria(this.objEmpresa.emp_codigo, this.objEmpresa);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        base.arrAuditoria = (List<tbAuditoria>)objRetorno.objRetorno;
+                        winAuditoria objTelaAuditoria = new winAuditoria();
+                        objTelaAuditoria.Title = "Auditoria - " + base.strNomeTela;
+                        objTelaAuditoria.DataContext = this;
+                        objTelaAuditoria.Owner = (Window)Application.Current.MainWindow;
+                        objTelaAuditoria.Closed += (sen, eve) =>
+                        {
+                            base.arrAuditoria = null;
+                            objTelaAuditoria = null;
+                        };
+                        objTelaAuditoria.ShowDialog();
+                    }
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                }
+                else if (objParam.GetType() == typeof(winAuditoria))
+                {
+                    ((Window)objParam).Close();
+                }
+            }
+        }
+
+        private bool CanCidade(object objParam)
+        {
+            return true;
+        }
+        private void Cidade(object objParam)
+        {
+            if (objParam != null)
+            {
+                if (objParam.ToString() == "Novo")
+                {
+                    winCadastro objTelaCadastro = new winCadastro();
+                    CidadeViewModel objCidadeViewModel = new CidadeViewModel();
+                    if (this.objEmpresa.cid_codigo > 0)
+                        objCidadeViewModel.cid_codigo = this.objEmpresa.cid_codigo;
+                    objCidadeViewModel.OnDispose += (sen1, eve1) => { objTelaCadastro.Close(); };
+                    objTelaCadastro.Title = "Cadastro - " + objCidadeViewModel.strNomeTela;
+                    objTelaCadastro.DataContext = objCidadeViewModel;
+                    objTelaCadastro.Owner = (Window)Application.Current.MainWindow;
+                    objTelaCadastro.Closed += (sen, eve) =>
+                    {
+                        if (objCidadeViewModel.cid_codigo != null)
+                        {
+                            CarregaComboEstado();
+                            this.objEmpresa.est_codigo = (int)objCidadeViewModel.est_codigo;
+                            RaisePropertyChanged("est_codigo");
+                            this.objEmpresa.cid_codigo = (int)objCidadeViewModel.cid_codigo;
+                            RaisePropertyChanged("cid_codigo");
+                        }
+                        objCidadeViewModel = null;
+                        objTelaCadastro = null;
+                    };
+                    objTelaCadastro.ShowDialog();
+                }
+            }
+        }
+
+        #endregion Comandos
+
+
+
+        #region Eventos
+
+
+
+        #endregion Eventos
+
+
+
+        #region Métodos
+
+        private void CarregaComboEstado()
+        {
+            Retorno objRetorno;
+            using (var objBLL = new Cidades())
+            {
+                objRetorno = objBLL.RetornaListaEstado();
+            }
+            if (objRetorno.intCodigoErro == 0)
+                this.arrEstado = (List<tbEstado>)objRetorno.objRetorno;
+            else
+                MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+        }
+
+        #endregion Métodos
+    }
+}

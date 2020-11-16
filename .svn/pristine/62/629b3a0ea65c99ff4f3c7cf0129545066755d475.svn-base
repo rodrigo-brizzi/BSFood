@@ -1,0 +1,24 @@
+﻿using BSFoodServer.Models;
+using System;
+using System.Collections.Generic;
+using System.Data.Entity.ModelConfiguration;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.DAL.Config
+{
+    public class ClienteTelefoneConfig : EntityTypeConfiguration<ClienteTelefone>
+    {
+        public ClienteTelefoneConfig()
+        {
+            this.ToTable("tbClienteTelefone");
+            this.HasKey(e => e.Codigo);
+
+            this.Property(e => e.Codigo).HasColumnName("ctl_codigo");
+            this.Property(e => e.Numero).HasColumnName("ctl_numero").HasMaxLength(20);
+            this.HasRequired(e => e.Cliente).WithMany(e => e.ClienteTelefones).HasForeignKey(e => e.CodigoCliente);
+            this.Property(e => e.CodigoCliente).HasColumnName("cli_codigo");
+        }
+    }
+}

@@ -1,0 +1,338 @@
+﻿using BSFood.Apoio;
+using BSFood.View;
+using BSFoodServer.BLL.Interfaces;
+using BSFoodServer.DTO;
+using BSFoodServer.Models;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Net;
+using System.ServiceModel;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+using System.Linq;
+using System.Collections.ObjectModel;
+
+namespace BSFood.ViewModel
+{
+    public class FuncionarioViewModel : ViewModelBase
+    {
+        public ICommand NovoCommand { get; set; }
+        public ICommand EditarCommand { get; set; }
+        public ICommand SalvarCommand { get; set; }
+        public ICommand ExcluirCommand { get; set; }
+        public ICommand PesquisarCommand { get; set; }
+
+        public FuncionarioViewModel()
+        {
+            this.PropertyChanged += FuncionarioViewModel_PropertyChanged;
+            NovoCommand = new DelegateCommand(Novo, CanNovo);
+            EditarCommand = new DelegateCommand(Editar, CanEditar);
+            SalvarCommand = new DelegateCommand(Salvar, CanSalvar);
+            ExcluirCommand = new DelegateCommand(Excluir, CanExcluir);
+            PesquisarCommand = new DelegateCommand(Pesquisar, CanPesquisar);
+            this.strPalavraChave = string.Empty;
+            this.objPerfilAcessoViewModel = new PerfilAcessoViewModel();
+            this.objPerfilAcessoViewModel.Salvar_Completed += objPerfilAcessoViewModel_Salvar_Completed;
+            this.arrPerfilAcesso = new ObservableCollection<PerfilAcesso>();
+        }
+
+
+
+        #region Propriedades
+
+        [Required(ErrorMessage = "Campo obrigatório")]
+        public PerfilAcesso objPerfilAcesso
+        {
+            get { return this.objFuncionario.PerfilAcesso; }
+            set
+            {
+                this.objFuncionario.PerfilAcesso = value;
+                RaisePropertyChanged("objPerfilAcesso");
+            }
+        }
+
+        private ObservableCollection<PerfilAcesso> _arrPerfilAcesso;
+        public ObservableCollection<PerfilAcesso> arrPerfilAcesso
+        {
+            get { return this._arrPerfilAcesso; }
+            set
+            {
+                this._arrPerfilAcesso = value;
+                RaisePropertyChanged("arrPerfilAcesso");
+            }
+        }
+
+        private Funcionario _objFuncionario;
+        public Funcionario objFuncionario
+        {
+            get { return this._objFuncionario; }
+            set
+            {
+                this._objFuncionario = value;
+                RaisePropertyChanged("objFuncionario");
+            }
+        }
+
+        private PagedCollectionView _arrFuncionarioPesquisa;
+        public PagedCollectionView arrFuncionarioPesquisa 
+        {
+            get { return this._arrFuncionarioPesquisa; }
+            set
+            {
+                this._arrFuncionarioPesquisa = value;
+                RaisePropertyChanged("arrFuncionarioPesquisa");
+            }
+        }
+
+        private string _strPalavraChave;
+        public string strPalavraChave
+        {
+            get { return this._strPalavraChave; }
+            set
+            {
+                this._strPalavraChave = value;
+                RaisePropertyChanged("strPalavraChave");
+            }
+        }
+
+        public PerfilAcessoViewModel objPerfilAcessoViewModel { get; set; }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+        private bool CanNovo(object objParam)
+        {
+            return this.blnPermiteInclusaoRegistro;
+        }
+        private void Novo(object objParam)
+        {
+            this.blnConsulta = false;
+            var factory = new ChannelFactory<IPessoasAsync>(App.objHttpBinding, Util.RetornaEndpointAddress(enSvc.svcPessoas));
+            IPessoasAsync service = factory.CreateChannel();
+            service.BeginNovoFuncionario((sen) =>
+            {
+                Deployment.Current.Dispatcher.BeginInvoke((Action)(() =>
+                {
+                    Retorno objRetorno = service.EndNovoFuncionario(sen);
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        List<object> arrRetorno = (List<object>)objRetorno.objRetorno;
+                        foreach (PerfilAcesso objPerfil in (List<PerfilAcesso>)arrRetorno[0])
+                        {
+                            arrPerfilAcesso.Add(objPerfil);
+                        }
+                        this.objFuncionario = (Funcionario)arrRetorno[1];
+                        FuncionarioForm objFuncionarioForm = new FuncionarioForm();
+                        objFuncionarioForm.Loaded += (sen1, eve1) =>
+                        {
+                            this.blnConsulta = true;
+                            objFuncionarioForm.DataContext = this;
+                            RaiseAllPropertyChanged<FuncionarioViewModel>();
+                        };
+                        objFuncionarioForm.Closed += (sen2, eve2) =>
+                        {
+                            if (objFuncionarioForm.DialogResult == true)
+                                this.Pesquisar(null);
+                        };
+                        objFuncionarioForm.Show();                           
+                    }
+                    else
+                    {
+                        MensagemViewModel.Show(objRetorno.strMsgErro, "Atenção", MensagemViewModel.enMsgBotao.Ok, objRetorno.intCodigoErro, (result) =>
+                        {
+                            this.blnConsulta = true;
+                            (objParam as FuncionarioPesquisa).Focus();
+                        });
+                    }
+                }));
+            }, null);
+        }
+
+        private bool CanEditar(object objParam)
+        {
+            return this.blnPermiteAlteracaoRegistro;
+        }
+        private void Editar(object objParam)
+        {
+            this.blnConsulta = false;
+            var factory = new ChannelFactory<IPessoasAsync>(App.objHttpBinding, Util.RetornaEndpointAddress(enSvc.svcPessoas));
+            IPessoasAsync service = factory.CreateChannel();
+            service.BeginEditarFuncionario(Convert.ToInt32(objParam), (sen) =>
+            {
+                Deployment.Current.Dispatcher.BeginInvoke((Action)(() =>
+                {
+                    Retorno objRetorno = service.EndEditarFuncionario(sen);
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objFuncionario = (Funcionario)objRetorno.objRetorno;
+
+                        FuncionarioForm objFuncionarioForm = new FuncionarioForm();
+                        objFuncionarioForm.Loaded += (sen1, eve1) =>
+                        {
+                            this.blnConsulta = true;
+                            objFuncionarioForm.DataContext = this;
+                            RaiseAllPropertyChanged<FuncionarioViewModel>();
+                        };
+                        objFuncionarioForm.Closed += (sen2, eve2) =>
+                        {
+                            if (objFuncionarioForm.DialogResult == true)
+                                this.Pesquisar(null);
+                        };
+                        objFuncionarioForm.Show();
+                    }
+                    else
+                    {
+                        MensagemViewModel.Show(objRetorno.strMsgErro, "Atenção", MensagemViewModel.enMsgBotao.Ok, objRetorno.intCodigoErro, (result) =>
+                        {
+                            this.blnConsulta = true;
+                            (objParam as FuncionarioPesquisa).Focus();
+                        });
+                    }
+                }));
+            }, null);
+        }
+
+        private bool CanSalvar(object objParam)
+        {
+            return !base.HasErrors;
+        }
+        private void Salvar(object objParam)
+        {
+            this.blnConsulta = false;
+            var factory = new ChannelFactory<IPessoasAsync>(App.objHttpBinding, Util.RetornaEndpointAddress(enSvc.svcPessoas));
+            IPessoasAsync service = factory.CreateChannel();
+            service.BeginSalvarFuncionario(this.objFuncionario, (sen) =>
+            {
+                Deployment.Current.Dispatcher.BeginInvoke((Action)(() =>
+                {
+                    Retorno objRetorno = service.EndSalvarFuncionario(sen);
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.blnConsulta = true;
+                        (objParam as FuncionarioForm).DialogResult = true;
+                    }
+                    else
+                    {
+                        MensagemViewModel.Show(objRetorno.strMsgErro, "Atenção", MensagemViewModel.enMsgBotao.Ok, objRetorno.intCodigoErro, (result) =>
+                        {
+                            this.blnConsulta = true;
+                        });
+                    }
+                }));
+            }, null);            
+        }
+
+        private bool CanExcluir(object objParam)
+        {
+            return this.blnPermiteExclusaoRegistro;
+        }
+        private void Excluir(object objParam)
+        {
+            MensagemViewModel.Show("Tem Certeza que deseja excluir o registro selecionado?", "Atenção", MensagemViewModel.enMsgBotao.SimOuNao, MensagemViewModel.enMsgIcone.Question, (result) =>
+            {
+                if (result == MensagemViewModel.enMsgResult.Sim)
+                {
+                    this.blnConsulta = false;
+                    var factory = new ChannelFactory<IPessoasAsync>(App.objHttpBinding, Util.RetornaEndpointAddress(enSvc.svcPessoas));
+                    IPessoasAsync service = factory.CreateChannel();
+                    service.BeginExcluirFuncionario(Convert.ToInt32(objParam), (sen) =>
+                    {
+                        Deployment.Current.Dispatcher.BeginInvoke((Action)(() =>
+                        {
+                            Retorno objRetorno = service.EndExcluirFuncionario(sen);
+                            if (objRetorno.intCodigoErro == 0)
+                            {
+                                this.blnConsulta = true;
+                                this.Pesquisar(null);
+                            }
+                            else
+                            {
+                                MensagemViewModel.Show(objRetorno.strMsgErro, "Atenção", MensagemViewModel.enMsgBotao.Ok, objRetorno.intCodigoErro, (resultErr) =>
+                                {
+                                    this.blnConsulta = true;
+                                });
+                            }
+                        }));
+                    }, null);
+                }
+            });
+        }
+
+        private bool CanPesquisar(object objParam)
+        {
+            return true;
+        }
+        private void Pesquisar(object objParam)
+        {
+            this.blnConsulta = false;
+            var factory = new ChannelFactory<IPessoasAsync>(App.objHttpBinding, Util.RetornaEndpointAddress(enSvc.svcPessoas));
+            IPessoasAsync service = factory.CreateChannel();
+            service.BeginRetornaListaFuncionario(this.strPalavraChave, (sen) =>
+            {
+                Deployment.Current.Dispatcher.BeginInvoke((Action)(() =>
+                {
+                    Retorno objRetorno = service.EndRetornaListaFuncionario(sen);
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.blnConsulta = true;
+                        this.arrFuncionarioPesquisa = new PagedCollectionView((List<Funcionario>)objRetorno.objRetorno);
+                        this.blnFocus = true;
+                    }
+                    else
+                    {
+                        MensagemViewModel.Show(objRetorno.strMsgErro, "Atenção", MensagemViewModel.enMsgBotao.Ok, objRetorno.intCodigoErro, (result) =>
+                        {
+                            this.blnConsulta = true;
+                            (objParam as FuncionarioPesquisa).Focus();
+                        });
+                    }
+                }));
+            }, null);
+        }
+
+        #endregion Comandos
+
+
+
+        #region Eventos
+
+        void FuncionarioViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            base.ViewModelBase_PropertyChanged<FuncionarioViewModel>(sender, e);
+            NovoCommand.CanExecute(sender);
+            EditarCommand.CanExecute(sender);
+            SalvarCommand.CanExecute(sender);
+            ExcluirCommand.CanExecute(sender);
+        }
+
+        private void objPerfilAcessoViewModel_Salvar_Completed(object sender, EventArgs e)
+        {
+            int intQtde = arrPerfilAcesso.Where(per => per.Codigo == objPerfilAcessoViewModel.objPerfilAcesso.Codigo).Count();
+            if (intQtde > 0)
+                arrPerfilAcesso.Remove(objPerfilAcessoViewModel.objPerfilAcesso);
+            arrPerfilAcesso.Add(objPerfilAcessoViewModel.objPerfilAcesso);
+            this.objPerfilAcesso = objPerfilAcessoViewModel.objPerfilAcesso;
+        }
+
+        #endregion Eventos
+
+
+
+        #region Métodos
+
+        
+
+        #endregion Métodos
+    }
+}

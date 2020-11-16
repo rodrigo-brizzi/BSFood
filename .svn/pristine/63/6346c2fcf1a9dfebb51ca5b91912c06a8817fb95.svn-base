@@ -1,0 +1,46 @@
+﻿<Window x:Class="BSFood.View.winPesquisa"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:BSFood.ViewModel"
+        xmlns:vw="clr-namespace:BSFood.View"
+        Height="300" 
+        Width="300"
+        SizeToContent="WidthAndHeight"
+        Icon="/BSFood;component/Imagens/pesquisar16.png" 
+        ResizeMode="NoResize" 
+        WindowStartupLocation="CenterScreen" 
+        ShowInTaskbar="False">
+    <Grid>
+        <ContentControl Content="{Binding}">
+            <ContentControl.Resources>
+                <DataTemplate DataType="{x:Type vm:PerfilAcessoViewModel}">
+                    <vw:ucPerfilAcessoPesquisa />
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vm:CidadeViewModel}">
+                    <vw:ucCidadePesquisa />
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vm:FuncionarioViewModel}">
+                    <vw:ucFuncionarioPesquisa />
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vm:BairroViewModel}">
+                    <vw:ucBairroPesquisa />
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vm:ClienteGrupoViewModel}">
+                    <vw:ucClienteGrupoPesquisa />
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vm:ClienteViewModel}">
+                    <vw:ucClientePesquisa />
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vm:FornecedorViewModel}">
+                    <vw:ucFornecedorPesquisa />
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vm:ProdutoGrupoViewModel}">
+                    <vw:ucProdutoGrupoPesquisa />
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vm:ProdutoViewModel}">
+                    <vw:ucProdutoPesquisa />
+                </DataTemplate>
+            </ContentControl.Resources>
+        </ContentControl>
+    </Grid>
+</Window>

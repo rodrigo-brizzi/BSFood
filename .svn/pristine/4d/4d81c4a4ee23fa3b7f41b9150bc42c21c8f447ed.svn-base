@@ -1,0 +1,32 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Data;
+using System.Windows.Media;
+
+namespace BSFood.Apoio
+{
+    public class StatusToColorConverter : IValueConverter
+    {
+        public object Convert(object value, System.Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            if (value == null || !(value is string))
+                return new SolidColorBrush(Colors.Black);
+
+            var dValue = value.ToString();
+            if (dValue == "Produção" || dValue == "Entrega")
+                return new SolidColorBrush(Colors.Blue);
+            else if (dValue == "Finalizado")
+                return new SolidColorBrush(Colors.Green);
+            else
+                return new SolidColorBrush(Colors.Red);
+        }
+
+        public object ConvertBack(object value, System.Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            return null;
+        }
+    }
+}

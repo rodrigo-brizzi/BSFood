@@ -1,0 +1,71 @@
+﻿<Window x:Class="BSFood.View.winPrincipal"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:intr="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
+        xmlns:local="clr-namespace:BSFood.ViewModel"
+        Title="BSFood" Height="491" Width="651" x:Name="winTelaPrincipal"
+        WindowState="Maximized" Icon="/BSFood;component/Imagens/icone.ico">
+    <Window.DataContext>
+        <local:PrincipalViewModel/>
+    </Window.DataContext>
+    <intr:Interaction.Triggers>
+        <intr:EventTrigger EventName="Loaded">
+            <intr:InvokeCommandAction Command="{Binding AbreTelaLoginCommand}" CommandParameter="{Binding ElementName=winTelaPrincipal}"/>
+        </intr:EventTrigger>
+    </intr:Interaction.Triggers>
+    <Grid x:Name="LayoutRoot">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Offset="0.0" Color="#FF000000"/>
+                <GradientStop Offset="1.0" Color="#FF4080FF"/>
+            </LinearGradientBrush>
+        </Grid.Background>
+        <Menu Grid.Row="0" Grid.Column="0" VerticalAlignment="Top" Height="20"
+               ItemsSource="{Binding arrMenu, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+            <Menu.Resources>
+                <Image x:Key="Icon" Source="{Binding men_imagem}" x:Shared="false" />
+            </Menu.Resources>
+            <Menu.ItemContainerStyle>
+                <Style TargetType="MenuItem">
+                    <Setter Property="Header" Value="{Binding men_cabecalho}" />
+                    <Setter Property="ItemsSource" Value="{Binding tbMenuFilho}" />
+                    <Setter Property="Icon" Value="{StaticResource Icon}" />
+                    <Setter Property="CommandParameter" Value="{Binding men_nomeControle}" />
+                    <Setter Property="Command" Value="{Binding Path=DataContext.AbreTelaCommand, RelativeSource={RelativeSource AncestorType=Menu}}" />
+                </Style>
+            </Menu.ItemContainerStyle>
+        </Menu>
+
+        <ToolBar Grid.Row="0" Grid.Column="0" VerticalAlignment="Top" Height="100" Margin="0,21,0,0"
+                 ItemsSource="{Binding arrToolBar, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" >
+            <ToolBar.ItemTemplate>
+                <DataTemplate>
+                    <Button Margin="5" Cursor="Hand" HorizontalAlignment="Left"
+						Command="{Binding Path=DataContext.AbreTelaCommand, RelativeSource={RelativeSource AncestorType=ToolBar}}" 
+                        CommandParameter="{Binding men_nomeControle}">
+                        <StackPanel>
+                            <Image Source="{Binding men_imagem}" Width="64" />
+                            <TextBlock Text="{Binding men_cabecalho}" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </DataTemplate>
+            </ToolBar.ItemTemplate>
+        </ToolBar>
+
+        <StackPanel Orientation="Horizontal" Background="#FF606062" VerticalAlignment="Bottom" Height="18">
+            <TextBlock >
+				<Run Text=" Funcionário: " Foreground="Yellow"/>
+				<Run Text="{Binding strFuncionario, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Foreground="White"/>
+                <Run Text=" | " Foreground="Gray"/>
+                <Run Text=" Versão: " Foreground="Yellow"/>
+				<Run Text="{Binding strVersao, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Foreground="White"/>
+            </TextBlock>
+        </StackPanel>
+    </Grid>
+</Window>

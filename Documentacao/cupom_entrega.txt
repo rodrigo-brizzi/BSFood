@@ -1,0 +1,30 @@
+================================================
+MARA LANCHES
+RUA CORONEL ALBINO, 1400 - PQ. SAO JUDAS TADEU
+Fone: 32236656 ou 997461277
+================================================
+
+  C O M P R O V A N T E   D E   E N T R E G A
+
+VENDA ..: 3                             ORDEM: 2
+CLIENTE : RODRIGO-PROGRAMADOR                   
+R GIACOMO DOMINGOS MUNGO, 206                   
+BAIRRO .: JD. ITATIAIA                          
+TELEFONE: (18)3917-3706
+
+QTD ITEM                          VALOR    TOTAL
+------------------------------------------------
+001 X CALABRESA ACEBOLADO          9,00     9,00
+
+                         TOTAL ITENS ->     9,00
+                                        --------
+                      TOTAL DA VENDA ->     9,00
+
+                      VALOR RECEBIDO ->    50,00
+
+                               TROCO ->    41,00
+
+OBSERVACOES
+                                                
+================================================
+                             10/4/2016 20:04:17

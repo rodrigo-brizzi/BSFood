@@ -1,0 +1,73 @@
+﻿<UserControl 
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="clr-namespace:BSFood.ViewModel"
+    xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk" x:Class="BSFood.View.PerfilAcessoPesquisa"
+    mc:Ignorable="d"
+    d:DesignHeight="300" d:DesignWidth="400" x:Name="ucPerfilAcessoPesquisa" IsEnabled="{Binding blnConsulta, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+    <UserControl.DataContext>
+        <local:PerfilAcessoViewModel/>
+    </UserControl.DataContext>
+    <Grid x:Name="LayoutRoot" Background="White">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="30" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="100" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="80" />
+            <ColumnDefinition Width="60" />
+        </Grid.ColumnDefinitions>
+        <TextBlock Grid.Column="0" Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center" Text="Palavra Chave:" />
+        <TextBox Grid.Column="1" Grid.Row="0" VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding strPalavraChave, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <Button Grid.Column="2" Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center"
+                Command="{Binding PesquisarCommand}" CommandParameter="{Binding ElementName=ucPerfilAcessoPesquisa}">
+            <StackPanel Orientation="Horizontal">
+                <Image Source="/BSFood;component/Imagens/lupa.png" Width="16" />
+                <TextBlock Text="Pesquisar"/>
+            </StackPanel>
+        </Button>
+        <Button Grid.Column="3" Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center"
+                Command="{Binding NovoCommand}">
+            <StackPanel Orientation="Horizontal">
+                <Image Source="/BSFood;component/Imagens/novo.png" Width="16" />
+                <TextBlock Text="Novo"/>
+            </StackPanel>
+        </Button>
+        <sdk:DataGrid Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="4" VerticalAlignment="Top" IsReadOnly="True" AutoGenerateColumns="False"
+                      ItemsSource="{Binding arrPerfilAcessoPesquisa}">
+            <sdk:DataGrid.Columns>
+                <sdk:DataGridTextColumn Header="Código" Width="80" Binding="{Binding Codigo}" />
+                <sdk:DataGridTextColumn Header="Descrição" Width="*" Binding="{Binding Descricao}" />
+                <sdk:DataGridTemplateColumn Header="Ação" Width="130">
+                    <sdk:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Command="{Binding DataContext.ExcluirCommand, RelativeSource={RelativeSource AncestorType=sdk:DataGrid}}" CommandParameter="{Binding Codigo}" Margin="5,0,0,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Image Source="/BSFood;component/Imagens/excluir.png" Width="16" />
+                                        <TextBlock Text="Excluir"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding DataContext.EditarCommand, RelativeSource={RelativeSource AncestorType=sdk:DataGrid}}" CommandParameter="{Binding Codigo}" Margin="5,0,0,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Image Source="/BSFood;component/Imagens/editar.png" Width="16" />
+                                        <TextBlock Text="Editar"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </DataTemplate>
+                    </sdk:DataGridTemplateColumn.CellTemplate>
+                </sdk:DataGridTemplateColumn>
+            </sdk:DataGrid.Columns>
+        </sdk:DataGrid>
+        <sdk:DataPager Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="4" DisplayMode="FirstLastPreviousNextNumeric" PageSize="3"
+                       NumericButtonCount="3"   
+                       HorizontalAlignment="Stretch" VerticalAlignment="Center" 
+                       Source="{Binding arrPerfilAcesso}" />
+    </Grid>
+</UserControl>

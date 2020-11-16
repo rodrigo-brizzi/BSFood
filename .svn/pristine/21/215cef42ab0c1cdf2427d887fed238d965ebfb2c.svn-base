@@ -1,0 +1,26 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.Models
+{
+    public class Menu : EntityBase
+    {
+        public int Codigo { get; set; }
+        public int? Nivel { get; set; }
+        public string NomeControle { get; set; }
+        public string Cabecalho { get; set; }
+        public string Ordem { get; set; }
+        public string Imagem { get; set; }
+        public bool Status { get; set; }
+
+        public int? CodigoMenu { get; set; }
+        public Menu MenuPai { get; set; }
+
+        public ICollection<PerfilAcessoMenu> PerfilAcessoMenus { get; set; }
+        public ICollection<Menu> MenuPais { get; set; }
+    }
+}

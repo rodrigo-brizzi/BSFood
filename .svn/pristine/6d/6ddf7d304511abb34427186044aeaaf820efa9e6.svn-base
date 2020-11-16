@@ -1,0 +1,29 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.Models
+{
+    public class Funcionario
+    {
+        public int Codigo { get; set; }
+        public string Nome { get; set; }
+        public string Login { get; set; }
+        public string Senha { get; set; }
+        public string Logradouro { get; set; }
+        public string Numero { get; set; }
+        public string Cep { get; set; }
+        public string Complemento { get; set; }
+
+        public int CodigoCidade { get; set; }
+        public Cidade Cidade { get; set; }
+
+        public int CodigoEstado { get; set; }
+        public Estado Estado { get; set; }
+
+        public int CodigoPerfilAcesso { get; set; }
+        public PerfilAcesso PerfilAcesso { get; set; }
+    }
+}

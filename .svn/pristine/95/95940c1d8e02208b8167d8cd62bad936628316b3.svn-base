@@ -1,0 +1,18 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.Models
+{
+    public class ClienteTelefone : EntityBase
+    {
+        public int Codigo { get; set; }
+        public string Numero { get; set; }
+
+        public int CodigoCliente { get; set; }
+        public Cliente Cliente { get; set; }
+    }
+}

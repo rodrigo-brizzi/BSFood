@@ -1,0 +1,15 @@
+Código do pedido
+Telefone
+Cliente(codigo e nome)
+Data e Hora(apenas mostrar)
+Endereco
+Complemento
+Bairro
+Produtos(codigo, nome, qtde, valor, subtotal)
+*Forma de pagamento
+SubTotal
+Valor Desconto
+Valor Acrescimo
+Taxa de Entrega
+Valor Recebido
+Troco

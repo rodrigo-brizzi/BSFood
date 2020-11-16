@@ -1,0 +1,24 @@
+﻿using BSFoodServer.Models;
+using System;
+using System.Collections.Generic;
+using System.Data.Entity.ModelConfiguration;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.DAL.Config
+{
+    public class ConfiguracaoConfig : EntityTypeConfiguration<Configuracao>
+    {
+        public ConfiguracaoConfig()
+        {
+            this.ToTable("tbConfiguracao");
+            this.HasKey(e => e.Codigo);
+
+            this.Property(e => e.Codigo).HasColumnName("cfg_codigo");
+            this.Property(e => e.UltimoLogin).HasColumnName("cfg_ultimoLogin");
+            this.Property(e => e.SenhaMaster).HasColumnName("cfg_senhaMaster").HasMaxLength(30);
+            this.Property(e => e.CnpjSoftwareHouse).HasColumnName("cfg_cnpjSoftwareHouse").HasMaxLength(20);
+        }
+    }
+}

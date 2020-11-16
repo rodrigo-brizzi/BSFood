@@ -1,0 +1,69 @@
+﻿using System;
+using System.Net;
+using System.Reflection;
+using System.ServiceModel;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+
+namespace BSFood.Apoio
+{
+    public enum enSvc { svcPessoas, svcConfiguracao };
+    
+    public static class Util
+    {
+        public static int intTelasAbertas { get; set; }
+
+        public static string RetornaEnderecoWeb()
+        {
+            string[] strFileName = App.Current.Host.Source.AbsoluteUri.ToLower().Split('/');
+            return App.Current.Host.Source.AbsoluteUri.ToLower().Replace(strFileName[strFileName.Length - 1].ToString(), "");
+        }
+
+        public static string RetornaEnderecoSvc()
+        {
+            string[] strFileName = App.Current.Host.Source.AbsoluteUri.ToLower().Split('/');
+            return App.Current.Host.Source.AbsoluteUri.ToLower().Replace(strFileName[strFileName.Length - 1].ToString(), "").Replace("9091","9090");
+        }
+
+        public static EndpointAddress RetornaEndpointAddress(enSvc strServico)
+        {
+            // HtmlPage.Document.DocumentUri.Port //obtem a porta da URL
+            // Application.Current.Host.Source.DnsSafeHost //obtem o ip do hospedeiro da aplicação silverlight
+            //string[] strFileName = App.Current.Host.Source.AbsoluteUri.ToLower().Split('/');
+#if (DEBUG)
+            EndpointAddress objEndereco = new EndpointAddress("http://localhost:9090/" + strServico.ToString() + ".svc");
+#else            
+            EndpointAddress objEndereco = new EndpointAddress(Util.RetornaEnderecoSvc() + strServico.ToString() + ".svc");
+#endif
+            return objEndereco;
+        }
+
+        /// <summary>
+        /// Metodo para Finalizar o sistema
+        /// </summary>
+        public static void FinalizaSistema()
+        {
+            if (Application.Current.IsRunningOutOfBrowser)
+                Application.Current.MainWindow.Close();
+            else
+                System.Windows.Browser.HtmlPage.Window.Invoke("FinalizaSistema");            
+        }
+
+        /// <summary>
+        /// Metodo que retorna a versão do app em execução
+        /// </summary>
+        /// <returns>string contendo a versao completa, ex: 1.0.0.1</returns>
+        public static string RetornaVersao()
+        {
+            Assembly objAssembly = Assembly.GetExecutingAssembly();
+            string strVersaoClient = objAssembly.FullName.Split(',')[1];
+            return strVersaoClient.Replace("Version=", "");
+        }
+    }
+}

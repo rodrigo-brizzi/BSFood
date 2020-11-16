@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ReferenceGroup xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ID="d32315f1-3c53-4fb6-b2b1-d82ccfc5799c" xmlns="urn:schemas-microsoft-com:xml-wcfservicemap">
+  <ClientOptions>
+    <GenerateAsynchronousMethods>true</GenerateAsynchronousMethods>
+    <EnableDataBinding>true</EnableDataBinding>
+    <ExcludedTypes />
+    <ImportXmlTypes>false</ImportXmlTypes>
+    <GenerateInternalTypes>false</GenerateInternalTypes>
+    <GenerateMessageContracts>false</GenerateMessageContracts>
+    <NamespaceMappings />
+    <CollectionMappings>
+      <CollectionMapping TypeName="System.Collections.Generic.List`1" Category="List" />
+    </CollectionMappings>
+    <GenerateSerializableTypes>false</GenerateSerializableTypes>
+    <Serializer>Auto</Serializer>
+    <UseSerializerForFaults>true</UseSerializerForFaults>
+    <ReferenceAllAssemblies>false</ReferenceAllAssemblies>
+    <ReferencedAssemblies>
+      <ReferencedAssembly AssemblyName="BSFoodDTO" />
+    </ReferencedAssemblies>
+    <ReferencedDataContractTypes />
+    <ServiceContractMappings />
+  </ClientOptions>
+  <MetadataSources>
+    <MetadataSource Address="http://localhost/BSFoodWEB/SVC/svcPessoas.svc" Protocol="http" SourceId="1" />
+  </MetadataSources>
+  <Metadata>
+    <MetadataFile FileName="svcPessoas.xsd" MetadataType="Schema" ID="f74389b3-331f-44e4-a18c-d80e48e7a8ed" SourceId="1" SourceUrl="http://brizzinote/BSFoodWEB/SVC/svcPessoas.svc?xsd=xsd3" />
+    <MetadataFile FileName="Pessoas.wsdl" MetadataType="Wsdl" ID="9b056909-0975-40ef-bd1e-faba47d8f3e9" SourceId="1" SourceUrl="http://brizzinote/BSFoodWEB/SVC/svcPessoas.svc?wsdl" />
+    <MetadataFile FileName="svcPessoas1.xsd" MetadataType="Schema" ID="c363dfee-1b73-45dd-ac86-2a1a890ebf7f" SourceId="1" SourceUrl="http://brizzinote/BSFoodWEB/SVC/svcPessoas.svc?xsd=xsd0" />
+    <MetadataFile FileName="svcPessoas.disco" MetadataType="Disco" ID="e7687fe6-99e4-40bb-a7df-a3bf20853c73" SourceId="1" SourceUrl="http://brizzinote/BSFoodWEB/SVC/svcPessoas.svc?disco" />
+    <MetadataFile FileName="svcPessoas2.xsd" MetadataType="Schema" ID="436721f7-ceb3-4ce0-abdc-4ddfd9f90bde" SourceId="1" SourceUrl="http://brizzinote/BSFoodWEB/SVC/svcPessoas.svc?xsd=xsd1" />
+    <MetadataFile FileName="svcPessoas3.xsd" MetadataType="Schema" ID="d0ee6855-b692-461c-9cb8-99131564a8df" SourceId="1" SourceUrl="http://brizzinote/BSFoodWEB/SVC/svcPessoas.svc?xsd=xsd2" />
+  </Metadata>
+  <Extensions>
+    <ExtensionFile FileName="configuration91.svcinfo" Name="configuration91.svcinfo" />
+    <ExtensionFile FileName="configuration.svcinfo" Name="configuration.svcinfo" />
+  </Extensions>
+</ReferenceGroup>

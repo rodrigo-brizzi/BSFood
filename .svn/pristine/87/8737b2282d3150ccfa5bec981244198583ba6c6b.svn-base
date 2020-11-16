@@ -1,0 +1,30 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFood.Models
+{
+    public class tbClienteEndereco
+    {
+        public int cen_codigo { get; set; }
+        public string cen_logradouro { get; set; }
+        public string cen_numero { get; set; }
+        public string cen_cep { get; set; }
+        public string cen_complemento { get; set; }
+
+        public int bai_codigo { get; set; }
+        public tbBairro tbBairro { get; set; }
+
+        public int cid_codigo { get; set; }
+        public tbCidade tbCidade { get; set; }
+
+        public int est_codigo { get; set; }
+        public tbEstado tbEstado { get; set; }
+
+        public int cli_codigo { get; set; }
+        public tbCliente tbCliente { get; set; }
+    }
+}

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  For more information on how to configure your ASP.NET application, please visit
+  http://go.microsoft.com/fwlink/?LinkId=169433
+  -->
+<configuration>
+  <configSections>
+    <!-- For more information on Entity Framework configuration, visit http://go.microsoft.com/fwlink/?LinkID=237468 -->
+    <section name="entityFramework" type="System.Data.Entity.Internal.ConfigFile.EntityFrameworkSection, EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" requirePermission="false" />
+  </configSections>
+  <system.web>
+    <compilation debug="true" targetFramework="4.5" />
+    <httpRuntime targetFramework="4.5" />
+  </system.web>
+  <entityFramework>
+    <defaultConnectionFactory type="System.Data.Entity.Infrastructure.SqlConnectionFactory, EntityFramework" />
+    <providers>
+      <provider invariantName="System.Data.SqlClient" type="System.Data.Entity.SqlServer.SqlProviderServices, EntityFramework.SqlServer" />
+    </providers>
+  </entityFramework>
+  <connectionStrings>
+    <add name="EFContexto" connectionString="metadata=res://*/DAL.BSFoodDAL.csdl|res://*/DAL.BSFoodDAL.ssdl|res://*/DAL.BSFoodDAL.msl;provider=System.Data.SqlClient;provider connection string=&quot;data source=.\sqlexpress;initial catalog=BSFOOD;user id=sa;password=developer;MultipleActiveResultSets=True;App=EntityFramework&quot;" providerName="System.Data.EntityClient" />
+  </connectionStrings>
+  <system.serviceModel>
+    <!--<diagnostics>
+      <messageLogging logEntireMessage="true"
+                                  logMalformedMessages="true"
+                                  logMessagesAtServiceLevel="true"
+                                  logMessagesAtTransportLevel="true"
+                                  maxMessagesToLog="500"/>
+    </diagnostics>-->
+    <bindings>
+      <basicHttpBinding>
+        <binding maxBufferSize="2147483647" maxReceivedMessageSize="2147483647" maxBufferPoolSize="2147483647" sendTimeout="00:10:00" receiveTimeout="00:10:00" openTimeout="00:10:00" closeTimeout="00:10:00" transferMode="Buffered">
+          <readerQuotas maxDepth="64" maxArrayLength="2147483647" maxStringContentLength="2147483647" maxBytesPerRead="4096" maxNameTableCharCount="16384"/>
+        </binding>
+      </basicHttpBinding>
+    </bindings>
+    <services>
+      <service behaviorConfiguration="metadata_and_debug_enabled" name="BSFoodWEB.BLL.BSFoodDTO">
+        <endpoint address="" binding="basicHttpBinding" contract="BSFoodWEB.BLL.IBSFoodDTO" bindingConfiguration=""/>
+      </service>
+      <service behaviorConfiguration="metadata_and_debug_enabled" name="BSFoodWEB.BLL.Pessoas">
+        <endpoint address="" binding="basicHttpBinding" contract="BSFoodWEB.BLL.IPessoas" bindingConfiguration=""/>
+      </service>
+    </services>
+    <behaviors>
+      <serviceBehaviors>
+        <behavior name="metadata_and_debug_enabled">
+          <serviceMetadata httpGetEnabled="true" httpGetUrl=""/>
+          <serviceDebug includeExceptionDetailInFaults="true"/>
+          <dataContractSerializer maxItemsInObjectGraph="2147483647"/>
+        </behavior>
+      </serviceBehaviors>
+    </behaviors>
+    <serviceHostingEnvironment aspNetCompatibilityEnabled="true" multipleSiteBindingsEnabled="false"/>
+  </system.serviceModel>  
+</configuration>

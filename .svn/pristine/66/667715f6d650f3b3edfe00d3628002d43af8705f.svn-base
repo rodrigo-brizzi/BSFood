@@ -1,0 +1,15 @@
+﻿using BSFoodWEB.Apoio;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+
+namespace BSFoodWEB.DAL
+{
+    public class Conexao : EFContexto
+    {
+        public Conexao() : base(Util.RetornaStringConexao()) { }
+
+        public Conexao(bool blnUnitTest) : base(Util.RetornaStringConexao()) { }
+    }
+}

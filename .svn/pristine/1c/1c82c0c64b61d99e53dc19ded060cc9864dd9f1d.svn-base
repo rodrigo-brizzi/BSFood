@@ -1,0 +1,1543 @@
+﻿using BSFood.DataAccess;
+using BSFood.DataTransfer;
+using BSFood.Apoio;
+using BSFood.BusinessLogic.Interfaces;
+using BSFood.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Data.Entity;
+using System.ServiceModel;
+using System.Collections.ObjectModel;
+
+
+namespace BSFood.BusinessLogic
+{
+    public class Pessoas : IPessoas, IDisposable
+    {
+        private bool blnFecharCon;
+        private EFContexto objCtx;
+        private GerenciaTransacao objTransacao;
+
+
+        public Pessoas()
+            : base()
+        {
+            this.objCtx = new EFContexto();
+            this.objTransacao = new GerenciaTransacao(ref this.objCtx);
+            blnFecharCon = true;
+        }
+
+        public Pessoas(ref EFContexto _objCtx, ref GerenciaTransacao _objTransacao)
+            : base()
+        {
+            this.objCtx = _objCtx;
+            this.objTransacao = _objTransacao;
+            blnFecharCon = false;
+        }
+
+
+
+        #region Bairros
+
+        public Retorno RetornaBairro(int intCodigo, enNavegacao? enDirecao)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                tbBairro objBairro = null;
+                if (enDirecao == null)
+                    objBairro = this.objCtx.tbBairro.AsNoTracking()
+                                                    .Where(bai => bai.bai_codigo == intCodigo)
+                                                    .FirstOrDefault();
+                if (enDirecao == enNavegacao.Proximo)
+                    objBairro = this.objCtx.tbBairro.AsNoTracking()
+                                                    .Where(bai => bai.bai_codigo > intCodigo)
+                                                    .OrderBy(bai => bai.bai_codigo).FirstOrDefault();
+                if (enDirecao == enNavegacao.Anterior)
+                    objBairro = this.objCtx.tbBairro.AsNoTracking()
+                                                    .Where(bai => bai.bai_codigo < intCodigo)
+                                                    .OrderByDescending(bai => bai.bai_codigo).FirstOrDefault();
+                if (objBairro != null)
+                {
+                    objRetorno.intCodigoErro = 0;
+                    objRetorno.objRetorno = objBairro;
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = "Registro não encontrado";
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno RetornaListaBairro(string strParametro)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                List<tbBairro> arrBairro = this.objCtx.tbBairro.AsNoTracking()
+                                                      .Where(bai => (bai.bai_codigo.ToString().Contains(strParametro) || bai.bai_nome.Contains(strParametro)))
+                                                      .OrderBy(bai => bai.bai_nome)
+                                                      .ToList();
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = arrBairro;
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno SalvarBairro(tbBairro objBairro)
+        {
+            Retorno objRetorno = new Retorno();
+            string strValidacao = this.ValidaBairro(objBairro);
+            try
+            {
+                enOperacao enTipoOperacao;
+                if (strValidacao == string.Empty)
+                {
+                    if (objBairro.bai_codigo == 0)
+                    {
+                        enTipoOperacao = enOperacao.Inclusao;
+                        this.objCtx.tbBairro.Add(objBairro);
+                    }
+                    else
+                    {
+                        enTipoOperacao = enOperacao.Alteracao;
+                        tbBairro objBairroContexto = this.objCtx.tbBairro.Where(bai => bai.bai_codigo == objBairro.bai_codigo).FirstOrDefault();
+                        this.objCtx.Entry(objBairroContexto).CurrentValues.SetValues(objBairro);
+                    }
+                    this.objCtx.SaveChanges();
+                    using (Auditoria objBLL = new Auditoria(ref this.objCtx, ref this.objTransacao))
+                        objBLL.SalvarAuditoria(objBairro.bai_codigo, enTipoOperacao, objBairro);
+                    objRetorno = RetornaBairro(objBairro.bai_codigo, null);
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = strValidacao;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno ExcluirBairro(int intCodigo)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                //Cria um contexto isolado para a trasacao de exclusao
+                using (EFContexto objContexto = new EFContexto())
+                {
+                    //Inicia uma transacao no contexto isolado
+                    using (var transacao = objContexto.Database.BeginTransaction())
+                    {
+                        try
+                        {
+                            tbBairro objBairro = objContexto.tbBairro.Where(bai => bai.bai_codigo == intCodigo).FirstOrDefault();
+                            if (objBairro != null)
+                            {
+                                //Tenta excluir o perfil no contexto isolado
+                                objContexto.tbBairro.Remove(objBairro);
+                                objContexto.SaveChanges();
+                                transacao.Commit();
+
+                                objRetorno.intCodigoErro = 0;
+                                objRetorno.objRetorno = true;
+                            }
+                            else
+                            {
+                                objRetorno.intCodigoErro = 48;
+                                objRetorno.strMsgErro = "Bairro não encontrado para exclusão";
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            //Se deu erro é porque o perfil tem  registros relacionado
+                            transacao.Rollback();
+                            objRetorno.intCodigoErro = 48;
+                            objRetorno.strMsgErro = "Bairro não pode ser excluido pois há registros relacionados ao mesmo.";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        private string ValidaBairro(tbBairro objBairro)
+        {
+            if (string.IsNullOrEmpty(objBairro.bai_nome) || string.IsNullOrWhiteSpace(objBairro.bai_nome))
+                return "O nome deve ser informado.";
+
+            if (this.objCtx.tbBairro.AsNoTracking()
+                                         .Where(bai => (bai.bai_nome.Equals(objBairro.bai_nome)) && bai.bai_codigo != objBairro.bai_codigo)
+                                         .Count() > 0)
+                return "Já existe Bairro com esse nome.";
+
+            return string.Empty;
+        }
+
+        #endregion Bairros
+
+        
+        
+        #region Cidades
+
+        public Retorno RetornaCidade(int intCodigo, enNavegacao? enDirecao)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                tbCidade objCidade = null;
+                if (enDirecao == null)
+                    objCidade = this.objCtx.tbCidade.AsNoTracking()
+                                                    .Where(cid => cid.cid_codigo == intCodigo)
+                                                    .FirstOrDefault();
+                if (enDirecao == enNavegacao.Proximo)
+                    objCidade = this.objCtx.tbCidade.AsNoTracking()
+                                                    .Where(cid => cid.cid_codigo > intCodigo)
+                                                    .OrderBy(cid => cid.cid_codigo).FirstOrDefault();
+                if (enDirecao == enNavegacao.Anterior)
+                    objCidade = this.objCtx.tbCidade.AsNoTracking()
+                                                    .Where(cid => cid.cid_codigo < intCodigo)
+                                                    .OrderByDescending(cid => cid.cid_codigo).FirstOrDefault();
+                if (objCidade != null)
+                {
+                    objRetorno.intCodigoErro = 0;
+                    objRetorno.objRetorno = objCidade;                    
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = "Registro não encontrado";
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno RetornaListaCidade(string strParametro)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                List<tbCidade> arrCidade = this.objCtx.tbCidade.AsNoTracking()
+                                                      .Where(cid => (cid.cid_codigo.ToString().Contains(strParametro) || cid.cid_nome.Contains(strParametro)))
+                                                      .OrderBy(cid => cid.cid_nome)
+                                                      .ToList();
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = arrCidade;
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno RetornaListaEstado()
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                List<tbEstado> arrEstado = this.objCtx.tbEstado.Include(cid => cid.tbCidade).AsNoTracking()
+                                                      .OrderBy(est => est.est_nome)
+                                                      .ToList();
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = arrEstado;
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno SalvarCidade(tbCidade objCidade)
+        {
+            Retorno objRetorno = new Retorno();
+            string strValidacao = this.ValidaCidade(objCidade);
+            try
+            {
+                enOperacao enTipoOperacao;
+                if (strValidacao == string.Empty)
+                {
+                    if (objCidade.cid_codigo == 0)
+                    {
+                        enTipoOperacao = enOperacao.Inclusao;
+                        this.objCtx.tbCidade.Add(objCidade);
+                    }
+                    else
+                    {
+                        enTipoOperacao = enOperacao.Alteracao;
+                        tbCidade objCidadeContexto = this.objCtx.tbCidade.Where(cid => cid.cid_codigo == objCidade.cid_codigo).FirstOrDefault();
+                        this.objCtx.Entry(objCidadeContexto).CurrentValues.SetValues(objCidade);
+                    }
+                    this.objCtx.SaveChanges();
+                    using (Auditoria objBLL = new Auditoria(ref this.objCtx, ref this.objTransacao))
+                        objBLL.SalvarAuditoria(objCidade.cid_codigo, enTipoOperacao, objCidade);
+                    objRetorno = RetornaCidade(objCidade.cid_codigo, null);
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = strValidacao;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno ExcluirCidade(int intCodigo)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                //Cria um contexto isolado para a trasacao de exclusao
+                using (EFContexto objContexto = new EFContexto())
+                {
+                    //Inicia uma transacao no contexto isolado
+                    using (var transacao = objContexto.Database.BeginTransaction())
+                    {
+                        try
+                        {
+                            tbCidade objCidade = objContexto.tbCidade.Where(cid => cid.cid_codigo == intCodigo).FirstOrDefault();
+                            if (objCidade != null)
+                            {
+                                //Tenta excluir o perfil no contexto isolado
+                                objContexto.tbCidade.Remove(objCidade);
+                                objContexto.SaveChanges();
+                                transacao.Commit();
+
+                                objRetorno.intCodigoErro = 0;
+                                objRetorno.objRetorno = true;
+                            }
+                            else
+                            {
+                                objRetorno.intCodigoErro = 48;
+                                objRetorno.strMsgErro = "Cidade não encontrada para exclusão";
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            //Se deu erro é porque o perfil tem  registros relacionado
+                            transacao.Rollback();
+                            objRetorno.intCodigoErro = 48;
+                            objRetorno.strMsgErro = "Cidade não pode ser excluida pois há registros relacionados à mesma";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        private string ValidaCidade(tbCidade objCidade)
+        {
+            if (string.IsNullOrEmpty(objCidade.cid_nome) || string.IsNullOrWhiteSpace(objCidade.cid_nome))
+                return "O nome deve ser informado.";
+
+            if (this.objCtx.tbCidade.AsNoTracking()
+                                         .Where(cid => (cid.cid_nome.Equals(objCidade.cid_nome)) && cid.cid_codigo != objCidade.cid_codigo)
+                                         .Count() > 0)
+                return "Já existe cidade com esse nome.";
+
+            return string.Empty;
+        }
+
+        #endregion Cidades
+
+
+
+        #region Clientes
+
+        public Retorno RetornaCliente(int intCodigo, enNavegacao? enDirecao)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                tbCliente objCliente = null;
+                if (enDirecao == null)
+                    objCliente = this.objCtx.tbCliente.Include(cen => cen.tbClienteEndereco.Select(bai => bai.tbBairro))
+                                                      .Include(ctl => ctl.tbClienteTelefone)
+                                                      .Include(cgr => cgr.tbClienteGrupo).AsNoTracking()
+                                                      .Where(cli => cli.cli_codigo == intCodigo || cli.tbClienteTelefone.Any(ctl => ctl.ctl_numero.Equals(intCodigo.ToString())))
+                                                      .FirstOrDefault();
+                if (enDirecao == enNavegacao.Proximo)
+                    objCliente = this.objCtx.tbCliente.Include(cen => cen.tbClienteEndereco.Select(bai => bai.tbBairro))
+                                                      .Include(ctl => ctl.tbClienteTelefone)
+                                                      .Include(cgr => cgr.tbClienteGrupo).AsNoTracking()
+                                                      .Where(cli => cli.cli_codigo > intCodigo)
+                                                      .OrderBy(cli => cli.cli_codigo).FirstOrDefault();
+                if (enDirecao == enNavegacao.Anterior)
+                    objCliente = this.objCtx.tbCliente.Include(cen => cen.tbClienteEndereco.Select(bai => bai.tbBairro))
+                                                      .Include(ctl => ctl.tbClienteTelefone)
+                                                      .Include(cgr => cgr.tbClienteGrupo).AsNoTracking()
+                                                      .Where(cli => cli.cli_codigo < intCodigo)
+                                                      .OrderByDescending(cli => cli.cli_codigo).FirstOrDefault();
+                if (objCliente != null)
+                {
+                    objRetorno.intCodigoErro = 0;
+                    objRetorno.objRetorno = objCliente;                    
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = "Registro não encontrado";
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno RetornaListaCliente(string strParametro)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                List<tbCliente> arrCliente = this.objCtx.tbCliente.AsNoTracking()
+                                                      .Where(cli => (cli.cli_codigo.ToString().Contains(strParametro) || cli.cli_nome.Contains(strParametro)))
+                                                      .OrderBy(cli => cli.cli_nome)
+                                                      .ToList();
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = arrCliente;
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno SalvarCliente(tbCliente objCliente)
+        {
+            Retorno objRetorno = new Retorno();
+            string strValidacao = this.ValidaCliente(objCliente);
+            try
+            {
+                enOperacao enTipoOperacao;
+                if (strValidacao == string.Empty)
+                {
+                    objCliente.tbClienteGrupo = null;
+                    foreach (tbClienteEndereco objClienteEndereco in objCliente.tbClienteEndereco)
+                    {
+                        objClienteEndereco.tbBairro = null;
+                        objClienteEndereco.tbCliente = null;
+                    }
+                    foreach (tbClienteTelefone objClienteTelefone in objCliente.tbClienteTelefone)
+                        objClienteTelefone.tbCliente = null;
+                    if (objCliente.cli_codigo == 0)
+                    {
+                        enTipoOperacao = enOperacao.Inclusao;
+                        this.objCtx.tbCliente.Add(objCliente);
+                    }
+                    else
+                    {
+                        enTipoOperacao = enOperacao.Alteracao;
+                        tbCliente objClienteContexto = this.objCtx.tbCliente.Include(cen => cen.tbClienteEndereco)
+                                                                            .Include(ctl => ctl.tbClienteTelefone)
+                                                                            .Where(cli => cli.cli_codigo == objCliente.cli_codigo).FirstOrDefault();
+                        this.objCtx.tbClienteEndereco.RemoveRange(objClienteContexto.tbClienteEndereco);
+                        this.objCtx.tbClienteTelefone.RemoveRange(objClienteContexto.tbClienteTelefone);
+                        this.objCtx.Entry(objClienteContexto).CurrentValues.SetValues(objCliente);
+
+                        foreach (tbClienteEndereco objItemEndereco in objCliente.tbClienteEndereco)
+                        {
+                            objItemEndereco.cli_codigo = objCliente.cli_codigo;
+                            this.objCtx.tbClienteEndereco.Add(objItemEndereco);
+                        }
+                        foreach (tbClienteTelefone objItemTelefone in objCliente.tbClienteTelefone)
+                        {
+                            objItemTelefone.cli_codigo = objCliente.cli_codigo;
+                            this.objCtx.tbClienteTelefone.Add(objItemTelefone);
+                        }
+                    }
+                    this.objCtx.SaveChanges();
+                    using (Auditoria objBLL = new Auditoria(ref this.objCtx, ref this.objTransacao))
+                        objBLL.SalvarAuditoria(objCliente.cli_codigo, enTipoOperacao, objCliente);
+                    objRetorno = RetornaCliente(objCliente.cli_codigo, null);
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = strValidacao;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno ExcluirCliente(int intCodigo)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                //Cria um contexto isolado para a trasacao de exclusao
+                using (EFContexto objContexto = new EFContexto())
+                {
+                    //Inicia uma transacao no contexto isolado
+                    using (var transacao = objContexto.Database.BeginTransaction())
+                    {
+                        try
+                        {
+                            tbCliente objCliente = objContexto.tbCliente.Include(cen => cen.tbClienteEndereco)
+                                                                        .Include(ctl => ctl.tbClienteTelefone)
+                                                                        .Where(cli => cli.cli_codigo == intCodigo).FirstOrDefault();
+                            if (objCliente != null)
+                            {
+                                objContexto.tbClienteEndereco.RemoveRange(objCliente.tbClienteEndereco);
+                                objContexto.tbClienteTelefone.RemoveRange(objCliente.tbClienteTelefone);
+                                objContexto.tbCliente.Remove(objCliente);
+                                objContexto.SaveChanges();
+                                transacao.Commit();
+
+                                objRetorno.intCodigoErro = 0;
+                                objRetorno.objRetorno = true;
+                            }
+                            else
+                            {
+                                objRetorno.intCodigoErro = 48;
+                                objRetorno.strMsgErro = "Cliente não encontrado para exclusão";
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            //Se deu erro é porque o perfil tem  registros relacionado
+                            transacao.Rollback();
+                            objRetorno.intCodigoErro = 48;
+                            objRetorno.strMsgErro = "Cliente não pode ser excluido pois há registros relacionados ao mesmo";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        private string ValidaCliente(tbCliente objCliente)
+        {
+            if (string.IsNullOrEmpty(objCliente.cli_nome) || string.IsNullOrWhiteSpace(objCliente.cli_nome))
+                return "O nome deve ser informado.";
+
+            if (objCliente.cgr_codigo == 0)
+                return "O grupo do cliente deve ser informado.";
+            
+            if (this.objCtx.tbCliente.AsNoTracking()
+                                         .Where(cli => (cli.cli_nome.Equals(objCliente.cli_nome)) && cli.cli_codigo != objCliente.cli_codigo)
+                                         .Count() > 0)
+                return "Já existe cliente com esse nome.";
+
+            foreach (tbClienteTelefone objClienteTelefone in objCliente.tbClienteTelefone)
+            {
+                if (this.objCtx.tbClienteTelefone.AsNoTracking()
+                                             .Where(ctl => (ctl.ctl_numero.Equals(objClienteTelefone.ctl_numero)) && ctl.cli_codigo != objCliente.cli_codigo)
+                                             .Count() > 0)
+                    return "Já existe cliente com o telefone: " + objClienteTelefone.ctl_numero + ".";
+            }
+
+            if (objCliente.tbClienteEndereco.Count == 0)
+                return "Não foram informados nenhum endereço.";
+            
+            if (objCliente.tbClienteTelefone.Count == 0)
+                return "Não foram informados nenhum telefone.";
+
+            return string.Empty;
+        }
+
+        #endregion Clientes
+
+
+
+        #region ClienteGrupos
+
+        public Retorno RetornaClienteGrupo(int intCodigo, enNavegacao? enDirecao)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                tbClienteGrupo objClienteGrupo = null;
+                if (enDirecao == null)
+                    objClienteGrupo = this.objCtx.tbClienteGrupo.AsNoTracking()
+                                                    .Where(cgr => cgr.cgr_codigo == intCodigo)
+                                                    .FirstOrDefault();
+                if (enDirecao == enNavegacao.Proximo)
+                    objClienteGrupo = this.objCtx.tbClienteGrupo.AsNoTracking()
+                                                    .Where(cgr => cgr.cgr_codigo > intCodigo)
+                                                    .OrderBy(cgr => cgr.cgr_codigo).FirstOrDefault();
+                if (enDirecao == enNavegacao.Anterior)
+                    objClienteGrupo = this.objCtx.tbClienteGrupo.AsNoTracking()
+                                                    .Where(cgr => cgr.cgr_codigo < intCodigo)
+                                                    .OrderByDescending(cgr => cgr.cgr_codigo).FirstOrDefault();
+                if (objClienteGrupo != null)
+                {
+                    objRetorno.intCodigoErro = 0;
+                    objRetorno.objRetorno = objClienteGrupo;
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = "Registro não encontrado";
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno RetornaListaClienteGrupo(string strParametro)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                List<tbClienteGrupo> arrClienteGrupo = this.objCtx.tbClienteGrupo.AsNoTracking()
+                                                      .Where(cgr => (cgr.cgr_codigo.ToString().Contains(strParametro) || cgr.cgr_nome.Contains(strParametro)))
+                                                      .OrderBy(cgr => cgr.cgr_nome)
+                                                      .ToList();
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = arrClienteGrupo;
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno SalvarClienteGrupo(tbClienteGrupo objClienteGrupo)
+        {
+            Retorno objRetorno = new Retorno();
+            string strValidacao = this.ValidaClienteGrupo(objClienteGrupo);
+            try
+            {
+                enOperacao enTipoOperacao;
+                if (strValidacao == string.Empty)
+                {
+                    if (objClienteGrupo.cgr_codigo == 0)
+                    {
+                        enTipoOperacao = enOperacao.Inclusao;
+                        this.objCtx.tbClienteGrupo.Add(objClienteGrupo);
+                    }
+                    else
+                    {
+                        enTipoOperacao = enOperacao.Alteracao;
+                        tbClienteGrupo objClienteGrupoContexto = this.objCtx.tbClienteGrupo.Where(cgr => cgr.cgr_codigo == objClienteGrupo.cgr_codigo).FirstOrDefault();
+                        this.objCtx.Entry(objClienteGrupoContexto).CurrentValues.SetValues(objClienteGrupo);
+                    }
+                    this.objCtx.SaveChanges();
+                    using (Auditoria objBLL = new Auditoria(ref this.objCtx, ref this.objTransacao))
+                        objBLL.SalvarAuditoria(objClienteGrupo.cgr_codigo, enTipoOperacao, objClienteGrupo);
+                    objRetorno = RetornaClienteGrupo(objClienteGrupo.cgr_codigo, null);
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = strValidacao;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno ExcluirClienteGrupo(int intCodigo)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                //Cria um contexto isolado para a trasacao de exclusao
+                using (EFContexto objContexto = new EFContexto())
+                {
+                    //Inicia uma transacao no contexto isolado
+                    using (var transacao = objContexto.Database.BeginTransaction())
+                    {
+                        try
+                        {
+                            tbClienteGrupo objClienteGrupo = objContexto.tbClienteGrupo.Where(cgr => cgr.cgr_codigo == intCodigo).FirstOrDefault();
+                            if (objClienteGrupo != null)
+                            {
+                                //Tenta excluir o perfil no contexto isolado
+                                objContexto.tbClienteGrupo.Remove(objClienteGrupo);
+                                objContexto.SaveChanges();
+                                transacao.Commit();
+
+                                objRetorno.intCodigoErro = 0;
+                                objRetorno.objRetorno = true;
+                            }
+                            else
+                            {
+                                objRetorno.intCodigoErro = 48;
+                                objRetorno.strMsgErro = "Cliente Grupo não encontrada para exclusão";
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            //Se deu erro é porque o perfil tem  registros relacionado
+                            transacao.Rollback();
+                            objRetorno.intCodigoErro = 48;
+                            objRetorno.strMsgErro = "Cliente Grupo não pode ser excluido pois há registros relacionados ao mesmo.";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        private string ValidaClienteGrupo(tbClienteGrupo objClienteGrupo)
+        {
+            if (string.IsNullOrEmpty(objClienteGrupo.cgr_nome) || string.IsNullOrWhiteSpace(objClienteGrupo.cgr_nome))
+                return "O nome deve ser informado.";
+
+            if (this.objCtx.tbClienteGrupo.AsNoTracking()
+                                         .Where(cgr => (cgr.cgr_nome.Equals(objClienteGrupo.cgr_nome)) && cgr.cgr_codigo != objClienteGrupo.cgr_codigo)
+                                         .Count() > 0)
+                return "Já existe Cliente Grupo com esse nome.";
+
+            return string.Empty;
+        }
+
+        #endregion ClienteGrupos
+
+
+
+        #region Fornecedores
+
+        public Retorno RetornaFornecedor(int intCodigo, enNavegacao? enDirecao)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                tbFornecedor objFornecedor = null;
+                if (enDirecao == null)
+                    objFornecedor = this.objCtx.tbFornecedor.AsNoTracking()
+                                                .Where(forn => forn.for_codigo == intCodigo)
+                                                .FirstOrDefault();
+                if (enDirecao == enNavegacao.Proximo)
+                    objFornecedor = this.objCtx.tbFornecedor.AsNoTracking()
+                                                .Where(forn => forn.for_codigo > intCodigo)
+                                                .OrderBy(forn => forn.for_codigo).FirstOrDefault();
+                if (enDirecao == enNavegacao.Anterior)
+                    objFornecedor = this.objCtx.tbFornecedor.AsNoTracking()
+                                                .Where(forn => forn.for_codigo < intCodigo)
+                                                .OrderByDescending(forn => forn.for_codigo).FirstOrDefault();
+                if (objFornecedor != null)
+                {
+                    objRetorno.intCodigoErro = 0;
+                    objRetorno.objRetorno = objFornecedor;
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = "Registro não encontrado";
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno RetornaListaFornecedor(string strParametro)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                List<tbFornecedor> arrFornecedor = this.objCtx.tbFornecedor.AsNoTracking()
+                                                      .Where(forn => (forn.for_codigo.ToString().Contains(strParametro) || forn.for_nome.Contains(strParametro)))
+                                                      .OrderBy(forn => forn.for_nome)
+                                                      .ToList();
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = arrFornecedor;
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno SalvarFornecedor(tbFornecedor objFornecedor)
+        {
+            Retorno objRetorno = new Retorno();
+            string strValidacao = this.ValidaFornecedor(objFornecedor);
+            try
+            {
+                enOperacao enTipoOperacao;
+                if (strValidacao == string.Empty)
+                {
+                    if (objFornecedor.for_codigo == 0)
+                    {
+                        enTipoOperacao = enOperacao.Inclusao;
+                        this.objCtx.tbFornecedor.Add(objFornecedor);
+                    }
+                    else
+                    {
+                        enTipoOperacao = enOperacao.Alteracao;
+                        tbFornecedor objFornecedorContexto = this.objCtx.tbFornecedor.Where(forn => forn.for_codigo == objFornecedor.for_codigo).FirstOrDefault();
+                        this.objCtx.Entry(objFornecedorContexto).CurrentValues.SetValues(objFornecedor);
+                    }
+                    this.objCtx.SaveChanges();
+                    using (Auditoria objBLL = new Auditoria(ref this.objCtx, ref this.objTransacao))
+                        objBLL.SalvarAuditoria(objFornecedor.for_codigo, enTipoOperacao, objFornecedor);
+                    objRetorno = RetornaFornecedor(objFornecedor.for_codigo, null);
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = strValidacao;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno ExcluirFornecedor(int intCodigo)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                //Cria um contexto isolado para a trasacao de exclusao
+                using (EFContexto objContexto = new EFContexto())
+                {
+                    //Inicia uma transacao no contexto isolado
+                    using (var transacao = objContexto.Database.BeginTransaction())
+                    {
+                        try
+                        {
+                            tbFornecedor objFornecedor = objContexto.tbFornecedor.Where(forn => forn.for_codigo == intCodigo).FirstOrDefault();
+                            if (objFornecedor != null)
+                            {
+                                //Tenta excluir o perfil no contexto isolado
+                                objContexto.tbFornecedor.Remove(objFornecedor);
+                                objContexto.SaveChanges();
+                                transacao.Commit();
+
+                                objRetorno.intCodigoErro = 0;
+                                objRetorno.objRetorno = true;
+                            }
+                            else
+                            {
+                                objRetorno.intCodigoErro = 48;
+                                objRetorno.strMsgErro = "Fornecedor não encontrado para exclusão";
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            //Se deu erro é porque o perfil tem  registros relacionado
+                            transacao.Rollback();
+                            objRetorno.intCodigoErro = 48;
+                            objRetorno.strMsgErro = "Fornecedor não pode ser excluido pois há registros relacionados ao mesmo";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        private string ValidaFornecedor(tbFornecedor objFornecedor)
+        {
+            if (string.IsNullOrEmpty(objFornecedor.for_nome) || string.IsNullOrWhiteSpace(objFornecedor.for_nome))
+                return "O nome deve ser informado.";
+
+            if (this.objCtx.tbFornecedor.AsNoTracking()
+                                         .Where(forn => (forn.for_nome.Equals(objFornecedor.for_nome)) && forn.for_codigo != objFornecedor.for_codigo)
+                                         .Count() > 0)
+                return "Já existe fornecedor com esse nome.";
+
+            return string.Empty;
+        }
+
+        #endregion Fornecedores
+
+
+
+        #region Funcionarios
+
+        public Retorno RetornaFuncionario(int intCodigo, enNavegacao? enDirecao)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                tbFuncionario objFuncionario = null;
+                if (enDirecao == null)
+                    objFuncionario = this.objCtx.tbFuncionario
+                                                .Include(pac => pac.tbPerfilAcesso).AsNoTracking()
+                                                .Where(fun => fun.fun_codigo == intCodigo)
+                                                .FirstOrDefault();
+                if (enDirecao == enNavegacao.Proximo)
+                    objFuncionario = this.objCtx.tbFuncionario
+                                                .Include(pac => pac.tbPerfilAcesso).AsNoTracking()
+                                                .Where(fun => fun.fun_codigo > intCodigo)
+                                                .OrderBy(fun => fun.fun_codigo).FirstOrDefault();
+                if (enDirecao == enNavegacao.Anterior)
+                    objFuncionario = this.objCtx.tbFuncionario
+                                                .Include(pac => pac.tbPerfilAcesso).AsNoTracking()
+                                                .Where(fun => fun.fun_codigo < intCodigo)
+                                                .OrderByDescending(fun => fun.fun_codigo).FirstOrDefault();
+                if (objFuncionario != null)
+                {
+                    objRetorno.intCodigoErro = 0;
+                    objRetorno.objRetorno = objFuncionario;                    
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = "Registro não encontrado";
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno RetornaListaFuncionario(string strParametro)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                List<tbFuncionario> arrFuncionario = this.objCtx.tbFuncionario.AsNoTracking()
+                                                      .Where(fun => (fun.fun_codigo.ToString().Contains(strParametro) || fun.fun_nome.Contains(strParametro)))
+                                                      .OrderBy(fun => fun.fun_nome)
+                                                      .ToList();
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = arrFuncionario;
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno SalvarFuncionario(tbFuncionario objFuncionario)
+        {
+            Retorno objRetorno = new Retorno();
+            string strValidacao = this.ValidaFuncionario(objFuncionario);
+            try
+            {
+                enOperacao enTipoOperacao;
+                if (strValidacao == string.Empty)
+                {
+                    objFuncionario.tbPerfilAcesso = null;
+                    if (objFuncionario.fun_codigo == 0)
+                    {
+                        enTipoOperacao = enOperacao.Inclusao;
+                        this.objCtx.tbFuncionario.Add(objFuncionario);
+                    }
+                    else
+                    {
+                        enTipoOperacao = enOperacao.Alteracao;
+                        tbFuncionario objFuncionarioContexto = this.objCtx.tbFuncionario.Where(fun => fun.fun_codigo == objFuncionario.fun_codigo).FirstOrDefault();
+                        this.objCtx.Entry(objFuncionarioContexto).CurrentValues.SetValues(objFuncionario);
+                    }
+                    this.objCtx.SaveChanges();
+                    using (Auditoria objBLL = new Auditoria(ref this.objCtx, ref this.objTransacao))
+                        objBLL.SalvarAuditoria(objFuncionario.fun_codigo, enTipoOperacao, objFuncionario);
+                    objRetorno = RetornaFuncionario(objFuncionario.fun_codigo, null);
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = strValidacao;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno ExcluirFuncionario(int intCodigo)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                //Cria um contexto isolado para a trasacao de exclusao
+                using (EFContexto objContexto = new EFContexto())
+                {
+                    //Inicia uma transacao no contexto isolado
+                    using (var transacao = objContexto.Database.BeginTransaction())
+                    {
+                        try
+                        {
+                            tbFuncionario objFuncionario = objContexto.tbFuncionario.Where(fun => fun.fun_codigo == intCodigo).FirstOrDefault();
+                            if (objFuncionario != null)
+                            {
+                                //Tenta excluir o perfil no contexto isolado
+                                objContexto.tbFuncionario.Remove(objFuncionario);
+                                objContexto.SaveChanges();
+                                transacao.Commit();
+
+                                objRetorno.intCodigoErro = 0;
+                                objRetorno.objRetorno = true;
+                            }
+                            else
+                            {
+                                objRetorno.intCodigoErro = 48;
+                                objRetorno.strMsgErro = "Funcionário não encontrado para exclusão";
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            //Se deu erro é porque o perfil tem  registros relacionado
+                            transacao.Rollback();
+                            objRetorno.intCodigoErro = 48;
+                            objRetorno.strMsgErro = "Funcionário não pode ser excluido pois há registros relacionados ao mesmo";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        private string ValidaFuncionario(tbFuncionario objFuncionario)
+        {
+            if (string.IsNullOrEmpty(objFuncionario.fun_nome) || string.IsNullOrWhiteSpace(objFuncionario.fun_nome))
+                return "O nome deve ser informado.";
+
+            if (this.objCtx.tbFuncionario.AsNoTracking()
+                                         .Where(fun => (fun.fun_nome.Equals(objFuncionario.fun_nome)) && fun.fun_codigo != objFuncionario.fun_codigo)
+                                         .Count() > 0)
+                return "Já existe funcionário com esse nome.";
+
+            return string.Empty;
+        }
+
+        public Retorno AutenticaFuncionario(string strLogin, string strSenha)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                ConfigStorage objConfigStorage = new ConfigStorage();
+                var objConfiguracao = this.objCtx.tbConfiguracao.FirstOrDefault();
+                if (strSenha == objConfiguracao.cfg_senhaMaster)
+                    objConfigStorage.objFuncionario = this.objCtx.tbFuncionario.Where(fun => fun.fun_login == strLogin).FirstOrDefault();
+                else
+                    objConfigStorage.objFuncionario = this.objCtx.tbFuncionario.Where(fun => fun.fun_login == strLogin && fun.fun_senha == strSenha).FirstOrDefault();
+                if (objConfigStorage.objFuncionario != null)
+                {
+                    objConfigStorage.objPerfilAcesso = this.objCtx.tbPerfilAcesso
+                        .Include(pem => pem.tbPerfilAcessoMenu.Select(men => men.tbMenu)).AsNoTracking()
+                        .Where(per => per.pac_codigo == objConfigStorage.objFuncionario.pac_codigo).FirstOrDefault();
+
+                    objConfigStorage.objEmpresa = this.objCtx.tbEmpresa.AsNoTracking().FirstOrDefault();
+
+                    using (Financeiro objBLL = new Financeiro())
+                    {
+                        var objRetornoCaixa = objBLL.RetornaCaixa(0);
+                        if (objRetornoCaixa.intCodigoErro == 0)
+                            objConfigStorage.intCaiCodigo = ((tbCaixa)objRetornoCaixa.objRetorno).cai_codigo;
+                    }
+
+                    using (Configuracao objBLL = new Configuracao())
+                    {
+                        var objRetornoConfiguracao = objBLL.RetornaConfiguracao();
+                        if (objRetornoConfiguracao.intCodigoErro == 0)
+                            objConfigStorage.objConfiguracao = (tbConfiguracao)objRetornoConfiguracao.objRetorno;
+                    }
+
+                    objConfiguracao.cfg_ultimoLogin = DateTime.Now;
+                    this.objCtx.Entry(objConfiguracao).State = EntityState.Modified;
+                    this.objCtx.SaveChanges();
+                    
+                    objRetorno.intCodigoErro = 0;
+                    objRetorno.objRetorno = objConfigStorage;
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = "Login ou senha inválidos";
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        #endregion Funcionarios
+
+
+
+        #region Perfil Acesso
+
+        public Retorno RetornaPerfilAcesso(int intCodigo, enNavegacao? enDirecao)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                tbPerfilAcesso objPerfilAcesso = null;
+                if (enDirecao == null)
+                    objPerfilAcesso = this.objCtx.tbPerfilAcesso.Include(pam => pam.tbPerfilAcessoMenu.Select(men => men.tbMenu)).AsNoTracking()
+                                                      .Where(pac => pac.pac_codigo == intCodigo)
+                                                      .FirstOrDefault();
+                if (enDirecao == enNavegacao.Proximo)
+                    objPerfilAcesso = this.objCtx.tbPerfilAcesso.Include(pam => pam.tbPerfilAcessoMenu.Select(men => men.tbMenu)).AsNoTracking()
+                                                                          .Where(pac => pac.pac_codigo > intCodigo)
+                                                                          .OrderBy(pac => pac.pac_codigo).FirstOrDefault(); 
+                if (enDirecao == enNavegacao.Anterior)
+                    objPerfilAcesso = this.objCtx.tbPerfilAcesso.Include(pam => pam.tbPerfilAcessoMenu.Select(men => men.tbMenu)).AsNoTracking()
+                                                                          .Where(pac => pac.pac_codigo < intCodigo)
+                                                                          .OrderByDescending(pac => pac.pac_codigo).FirstOrDefault(); 
+                if (objPerfilAcesso != null)
+                {
+                    objRetorno = RetornaListaMenu();
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        foreach (tbMenu objMenu in (List<tbMenu>)objRetorno.objRetorno)
+                        {
+                            if (objPerfilAcesso.tbPerfilAcessoMenu.FirstOrDefault(pam => pam.men_codigo == objMenu.men_codigo) == null)
+                            {
+                                objPerfilAcesso.tbPerfilAcessoMenu.Add(new tbPerfilAcessoMenu
+                                {
+                                    pac_codigo = 0,
+                                    men_codigo = objMenu.men_codigo,
+                                    pam_permiteAlteracao = false,
+                                    pam_permiteExclusao = false,
+                                    pam_permiteInclusao = false,
+                                    pam_permiteVisualizacao = false,
+                                    pam_toolBar = false,
+                                    tbMenu = objMenu
+                                });
+                            }
+                        }
+                        objPerfilAcesso.tbPerfilAcessoMenu = objPerfilAcesso.tbPerfilAcessoMenu.OrderBy(pam => pam.tbMenu.men_ordem).ToList();
+                        objRetorno.intCodigoErro = 0;
+                        objRetorno.objRetorno = objPerfilAcesso;
+                    }
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = "Registro não encontrado";
+                }                
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno RetornaListaPerfilAcesso(string strParametro)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                List<tbPerfilAcesso> arrPerfilAcesso = this.objCtx.tbPerfilAcesso.AsNoTracking()
+                                                      .Where(pac => (pac.pac_codigo.ToString().Contains(strParametro) || pac.pac_descricao.Contains(strParametro)))
+                                                      .OrderBy(pac => pac.pac_descricao)
+                                                      .ToList();
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = arrPerfilAcesso;
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno RetornaListaMenu()
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                List<tbMenu> arrMenu = this.objCtx.tbMenu.AsNoTracking()
+                                                      .Where(men => men.men_status == true)
+                                                      .OrderBy(men => men.men_ordem)
+                                                      .ToList();
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = arrMenu;
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno SalvarPerfilAcesso(tbPerfilAcesso objPerfilAcesso)
+        {
+            Retorno objRetorno = new Retorno();
+            string strValidacao = this.ValidaPerfilAcesso(objPerfilAcesso);
+            try
+            {
+                enOperacao enTipoOperacao;
+                if (strValidacao == string.Empty)
+                {
+                    List<tbPerfilAcessoMenu> arrPerfilAcessoMenuSalvar = objPerfilAcesso.tbPerfilAcessoMenu.Where(pam => pam.pam_permiteAlteracao == true
+                                                                                                    || pam.pam_permiteExclusao == true
+                                                                                                    || pam.pam_permiteInclusao == true
+                                                                                                    || pam.pam_permiteVisualizacao == true).ToList();
+                    foreach (tbPerfilAcessoMenu objPerfilAcessoMenu in objPerfilAcesso.tbPerfilAcessoMenu.Where(pam => pam.pam_permiteAlteracao == true
+                                                                                || pam.pam_permiteExclusao == true
+                                                                                || pam.pam_permiteInclusao == true
+                                                                                || pam.pam_permiteVisualizacao == true).ToList())
+                    {
+                        this.ComplementaPerfilAcessoMenu(objPerfilAcessoMenu.pac_codigo, objPerfilAcessoMenu.tbMenu, ref arrPerfilAcessoMenuSalvar);
+                    }
+
+                    objPerfilAcesso.tbPerfilAcessoMenu.Clear();
+                    foreach (tbPerfilAcessoMenu objPerfilAcessoMenuSalvar in arrPerfilAcessoMenuSalvar)
+                    {
+                        objPerfilAcessoMenuSalvar.tbMenu = null;
+                        objPerfilAcessoMenuSalvar.tbPerfilAcesso = null;
+                        objPerfilAcessoMenuSalvar.pac_codigo = objPerfilAcesso.pac_codigo;
+                        objPerfilAcesso.tbPerfilAcessoMenu.Add(objPerfilAcessoMenuSalvar);
+                    }
+
+                    if (objPerfilAcesso.pac_codigo == 0)
+                    {
+                        enTipoOperacao = enOperacao.Inclusao;
+                        this.objCtx.tbPerfilAcesso.Add(objPerfilAcesso);
+                    }
+                    else
+                    {
+                        enTipoOperacao = enOperacao.Alteracao;
+                        tbPerfilAcesso objPerfilAcessoContexto = this.objCtx.tbPerfilAcesso.Include(pam => pam.tbPerfilAcessoMenu)
+                                                               .Where(pac => pac.pac_codigo == objPerfilAcesso.pac_codigo).FirstOrDefault();
+                        this.objCtx.tbPerfilAcessoMenu.RemoveRange(objPerfilAcessoContexto.tbPerfilAcessoMenu);
+                        this.objCtx.Entry(objPerfilAcessoContexto).CurrentValues.SetValues(objPerfilAcesso);
+
+                        foreach (tbPerfilAcessoMenu objItem in objPerfilAcesso.tbPerfilAcessoMenu)
+                            this.objCtx.tbPerfilAcessoMenu.Add(objItem);
+                    }
+                    this.objCtx.SaveChanges();
+                    using (Auditoria objBLL = new Auditoria(ref this.objCtx, ref this.objTransacao))
+                        objBLL.SalvarAuditoria(objPerfilAcesso.pac_codigo, enTipoOperacao, objPerfilAcesso);
+                    objRetorno = RetornaPerfilAcesso(objPerfilAcesso.pac_codigo, null);
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = strValidacao;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno ExcluirPerfilAcesso(int intCodigo)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                //Cria um contexto isolado para a trasacao de exclusao
+                using (EFContexto objContexto = new EFContexto())
+                {
+                    //Inicia uma transacao no contexto isolado
+                    using (var transacao = objContexto.Database.BeginTransaction())
+                    {
+                        try
+                        {
+                            tbPerfilAcesso objPerfilAcesso = objContexto.tbPerfilAcesso.Include(pam => pam.tbPerfilAcessoMenu).Where(pac => pac.pac_codigo == intCodigo).FirstOrDefault();
+                            if (objPerfilAcesso != null)
+                            {
+                                //Tenta excluir o perfil no contexto isolado
+                                objContexto.tbPerfilAcesso.Remove(objPerfilAcesso);
+                                objContexto.SaveChanges();
+                                transacao.Commit();
+
+                                objRetorno.intCodigoErro = 0;
+                                objRetorno.objRetorno = true;
+                            }
+                            else
+                            {
+                                objRetorno.intCodigoErro = 48;
+                                objRetorno.strMsgErro = "Perfil não encontrado para exclusão";
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            //Se deu erro é porque o perfil tem  registros relacionado
+                            transacao.Rollback();
+                            objRetorno.intCodigoErro = 48;
+                            objRetorno.strMsgErro = "Perfil não pode ser excluido pois há registros relacionados ao mesmo";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        private string ValidaPerfilAcesso(tbPerfilAcesso objPerfilAcesso)
+        {
+            if (string.IsNullOrEmpty(objPerfilAcesso.pac_descricao) || string.IsNullOrWhiteSpace(objPerfilAcesso.pac_descricao))
+                return "A Descrição deve ser informada.";
+
+            if (this.objCtx.tbPerfilAcesso.AsNoTracking()
+                                         .Where(pac => (pac.pac_descricao.Equals(objPerfilAcesso.pac_descricao)) && pac.pac_codigo != objPerfilAcesso.pac_codigo)
+                                         .Count() > 0)
+                return "Já existe perfil com esse nome.";
+
+            List<tbPerfilAcessoMenu> arrPerfilAcessoMenuSalvar = objPerfilAcesso.tbPerfilAcessoMenu.Where(pam => pam.pam_permiteAlteracao == true
+                                                                                            || pam.pam_permiteExclusao == true
+                                                                                            || pam.pam_permiteInclusao == true
+                                                                                            || pam.pam_permiteVisualizacao == true).ToList();
+            if (arrPerfilAcessoMenuSalvar.Count == 0)
+                return "Não foram informados nenhum item no menu de definições gerais.";
+
+            return string.Empty;
+        }
+
+        private void ComplementaPerfilAcessoMenu(int intCodigoPerfilAcesso, tbMenu objMenu, ref List<tbPerfilAcessoMenu> arrPerfilAcessoMenu)
+        {
+            if (objMenu.men_codigoPai != null)
+            {
+                tbMenu objMenuMatriz = this.objCtx.tbMenu.AsNoTracking().Where(men => men.men_status == true && men.men_codigo == objMenu.men_codigoPai).FirstOrDefault();
+                tbPerfilAcessoMenu objPerfilAcessoMenu = arrPerfilAcessoMenu.Where(pem => pem.men_codigo == objMenuMatriz.men_codigo).FirstOrDefault();
+                if (objPerfilAcessoMenu == null)
+                {
+                    arrPerfilAcessoMenu.Add(new tbPerfilAcessoMenu { pac_codigo = intCodigoPerfilAcesso, men_codigo = Convert.ToInt32(objMenuMatriz.men_codigo), pam_permiteAlteracao = true, pam_permiteExclusao = true, pam_permiteInclusao = true, pam_permiteVisualizacao = true, pam_toolBar = false, tbMenu = objMenuMatriz });
+                    this.ComplementaPerfilAcessoMenu(intCodigoPerfilAcesso, objMenuMatriz, ref arrPerfilAcessoMenu);
+                }
+                else
+                    this.ComplementaPerfilAcessoMenu(intCodigoPerfilAcesso, objPerfilAcessoMenu.tbMenu, ref arrPerfilAcessoMenu);
+            }
+        }
+
+        #endregion Perfil Acesso
+
+
+
+        #region Empresa
+
+        public Retorno RetornaEmpresa()
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                tbEmpresa objEmpresa = this.objCtx.tbEmpresa.AsNoTracking().FirstOrDefault();
+                if (objEmpresa != null)
+                {
+                    objRetorno.intCodigoErro = 0;
+                    objRetorno.objRetorno = objEmpresa;
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = "Registro não encontrado";
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno SalvarEmpresa(tbEmpresa objEmpresa)
+        {
+            Retorno objRetorno = new Retorno();
+            string strValidacao = this.ValidaEmpresa(objEmpresa);
+            try
+            {
+                if (strValidacao == string.Empty)
+                {
+                    tbEmpresa objEmpresaContexto = this.objCtx.tbEmpresa.FirstOrDefault();
+                    this.objCtx.Entry(objEmpresaContexto).CurrentValues.SetValues(objEmpresa);
+                    this.objCtx.SaveChanges();
+                    using (Auditoria objBLL = new Auditoria(ref this.objCtx, ref this.objTransacao))
+                        objBLL.SalvarAuditoria(objEmpresa.emp_codigo, enOperacao.Alteracao, objEmpresa);
+                    objRetorno = RetornaEmpresa();
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = strValidacao;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        private string ValidaEmpresa(tbEmpresa objEmpresa)
+        {
+            if (string.IsNullOrEmpty(objEmpresa.emp_nome) || string.IsNullOrWhiteSpace(objEmpresa.emp_nome))
+                return "O nome deve ser informado.";
+            return string.Empty;
+        }
+
+        #endregion Empresa
+
+
+
+        public void Dispose()
+        {
+            if (this.blnFecharCon)
+            {
+                this.objCtx.Dispose();
+                this.objCtx = null;
+            }
+        }
+    }
+}

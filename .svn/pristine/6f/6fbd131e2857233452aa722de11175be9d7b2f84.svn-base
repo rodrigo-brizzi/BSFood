@@ -1,0 +1,131 @@
+﻿using BSFood.View;
+using BSFood.Apoio;
+using BSFood.Models;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+using System.Collections.ObjectModel;
+
+namespace BSFood.ViewModel
+{
+    public class PerfilAcessoViewModel : ViewModelBase
+    {
+        public ICommand NovoCommand { get; set; }
+        public ICommand EditarCommand { get; set; }
+        public ICommand SalvarCommand { get; set; }
+        public ICommand ExcluirCommand { get; set; }
+        public ICommand PesquisarCommand { get; set; }
+        public ICommand HerdarCommand { get; set; }
+
+        public PerfilAcessoViewModel()
+        {
+            NovoCommand = new DelegateCommand(Novo, CanNovo);
+            EditarCommand = new DelegateCommand(Editar, CanEditar);
+            SalvarCommand = new DelegateCommand(Salvar, CanSalvar);
+            ExcluirCommand = new DelegateCommand(Excluir, CanExcluir);
+            PesquisarCommand = new DelegateCommand(Pesquisar, CanPesquisar);
+            HerdarCommand = new DelegateCommand(Herdar, CanHerdar);
+        }
+
+        #region Propriedades
+
+        private string _strPalavraChave;
+        public string strPalavraChave
+        {
+            get { return this._strPalavraChave; }
+            set
+            {
+                this._strPalavraChave = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+        
+        private bool CanNovo(object objParam)
+        {
+            return true;
+        }
+        private void Novo(object objParam)
+        {
+
+        }
+
+        private bool CanEditar(object objParam)
+        {
+            return true;
+        }
+        private void Editar(object objParam)
+        {
+
+        }
+        
+        private bool CanSalvar(object objParam)
+        {
+            return true;
+        }
+        private void Salvar(object objParam)
+        {
+
+        }
+
+        private bool CanExcluir(object objParam)
+        {
+            return true;
+        }
+        private void Excluir(object objParam)
+        {
+            
+        }
+
+        private bool CanPesquisar(object objParam)
+        {
+            return true;
+        }
+        private void Pesquisar(object objParam)
+        {
+
+        }
+
+        private bool CanHerdar(object objParam)
+        {
+            return true;
+        }
+        private void Herdar(object objParam)
+        {
+  
+        }
+
+        #endregion Comandos
+
+
+
+        #region Eventos
+
+
+
+        #endregion Eventos
+
+
+
+        #region Métodos
+
+
+
+        #endregion Métodos
+    }
+}

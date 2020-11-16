@@ -1,0 +1,31 @@
+ped_codigo ================> OK
+ped_data ==================> OK
+ped_telefone ==============> OK
+ped_nomeCliente ===========> OK
+ped_logradouro ============> OK
+ped_numero ================> OK
+ped_cep ===================> OK
+ped_complemento ===========> OK
+ped_observacao ============> OK
+ped_origem ================> OK
+ped_status ================> OK
+ped_valorSubTotal =========> OK
+ped_valorTaxaEntrega ======> OK
+ped_valorDespesa ==========> OK
+ped_valorDesconto =========> OK
+ped_valorRecebido =========> OK
+ped_valorTroco ============> OK
+ped_valorTotal ============> OK
+cli_codigo ================> OK
+fun_codigo=================> OK
+fun_funcionarioEntregador => OK
+cid_codigo ================> OK
+est_codigo ================> OK
+bai_codigo ================> OK
+cai_codigo ================> OK
+fpg_codigo ================> OK
+ped_dataEntrega
+ped_tempoEntrega 
+ped_ordem 
+ped_quantidadePessoas 
+ped_numeroMesa 

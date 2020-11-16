@@ -1,0 +1,14 @@
+﻿using System.Collections.Generic;
+using System.Runtime.Serialization;
+
+namespace BSFoodServer.Models
+{
+    [DataContract(IsReference = true)]
+    public class EntityBase
+    {
+        public object Clone()
+        {
+            return MemberwiseClone();
+        }
+    }
+}

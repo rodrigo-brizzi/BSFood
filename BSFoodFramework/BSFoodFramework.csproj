@@ -1,0 +1,189 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{32912675-BED1-433B-9A1A-5FA22AAE834A}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>BSFoodFramework</RootNamespace>
+    <AssemblyName>BSFoodFramework</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Dapper, Version=1.50.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Dapper.1.50.2\lib\net45\Dapper.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServerCompact, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.SqlServerCompact.6.1.3\lib\net45\EntityFramework.SqlServerCompact.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.SqlServerCe, Version=4.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\lib\net40\System.Data.SqlServerCe.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Apoio\FrameworkUtil.cs" />
+    <Compile Include="Apoio\GerenciaCupom.cs" />
+    <Compile Include="Apoio\GerenciaTransacao.cs" />
+    <Compile Include="BusinessLogic\Auditoria.cs" />
+    <Compile Include="BusinessLogic\Bairros.cs" />
+    <Compile Include="BusinessLogic\Caixa.cs" />
+    <Compile Include="BusinessLogic\Cidades.cs" />
+    <Compile Include="BusinessLogic\ClienteGrupos.cs" />
+    <Compile Include="BusinessLogic\Clientes.cs" />
+    <Compile Include="BusinessLogic\Configuracao.cs" />
+    <Compile Include="BusinessLogic\Empresa.cs" />
+    <Compile Include="BusinessLogic\FormaPagamento.cs" />
+    <Compile Include="BusinessLogic\Fornecedores.cs" />
+    <Compile Include="BusinessLogic\Funcionarios.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IAuditoria.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IBairros.cs" />
+    <Compile Include="BusinessLogic\Interfaces\ICaixa.cs" />
+    <Compile Include="BusinessLogic\Interfaces\ICidades.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IClienteGrupos.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IClientes.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IConfiguracao.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IEmpresa.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IFormaPagamento.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IFornecedores.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IFuncionarios.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IMesa.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IPedidos.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IPerfilAcesso.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IProdutoGrupos.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IProdutos.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IRelatorios.cs" />
+    <Compile Include="BusinessLogic\Mesa.cs" />
+    <Compile Include="BusinessLogic\Pedidos.cs" />
+    <Compile Include="BusinessLogic\PerfilAcesso.cs" />
+    <Compile Include="BusinessLogic\ProdutoGrupos.cs" />
+    <Compile Include="BusinessLogic\Produtos.cs" />
+    <Compile Include="BusinessLogic\Relatorios.cs" />
+    <Compile Include="DataAccess\Config\tbAuditoriaConfig.cs" />
+    <Compile Include="DataAccess\Config\tbAuditoriaOperacaoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbBairroConfig.cs" />
+    <Compile Include="DataAccess\Config\tbCaixaConfig.cs" />
+    <Compile Include="DataAccess\Config\tbCaixaMovimentoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbCaixaOperacaoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbCidadeConfig.cs" />
+    <Compile Include="DataAccess\Config\tbClienteConfig.cs" />
+    <Compile Include="DataAccess\Config\tbClienteEnderecoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbClienteGrupoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbClienteTelefoneConfig.cs" />
+    <Compile Include="DataAccess\Config\tbConfiguracaoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbEmpresaConfig.cs" />
+    <Compile Include="DataAccess\Config\tbEstadoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbFormaPagamentoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbFormaPagamentoTipoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbFornecedorConfig.cs" />
+    <Compile Include="DataAccess\Config\tbFuncionarioConfig.cs" />
+    <Compile Include="DataAccess\Config\tbMenuConfig.cs" />
+    <Compile Include="DataAccess\Config\tbMesaConfig.cs" />
+    <Compile Include="DataAccess\Config\tbPedidoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbPedidoProdutoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbPerfilAcessoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbPerfilAcessoMenuConfig.cs" />
+    <Compile Include="DataAccess\Config\tbProdutoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbProdutoGrupoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbProdutoSubGrupoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbVendaConfig.cs" />
+    <Compile Include="DataAccess\Config\tbVendaProdutoConfig.cs" />
+    <Compile Include="DataAccess\EFContexto.cs" />
+    <Compile Include="DataAccess\EFContextoInitializer.cs" />
+    <Compile Include="DataTransfer\ConfigLocal.cs" />
+    <Compile Include="DataTransfer\ConfigStorage.cs" />
+    <Compile Include="DataTransfer\FechamentoCaixa.cs" />
+    <Compile Include="DataTransfer\FechamentoCaixaForma.cs" />
+    <Compile Include="DataTransfer\Retorno.cs" />
+    <Compile Include="Migrations\Configuration.cs" />
+    <Compile Include="Models\tbAuditoria.cs" />
+    <Compile Include="Models\tbAuditoriaOperacao.cs" />
+    <Compile Include="Models\tbBairro.cs" />
+    <Compile Include="Models\tbCaixa.cs" />
+    <Compile Include="Models\tbCaixaMovimento.cs" />
+    <Compile Include="Models\tbCaixaOperacao.cs" />
+    <Compile Include="Models\tbCidade.cs" />
+    <Compile Include="Models\tbCliente.cs" />
+    <Compile Include="Models\tbClienteEndereco.cs" />
+    <Compile Include="Models\tbClienteGrupo.cs" />
+    <Compile Include="Models\tbClienteTelefone.cs" />
+    <Compile Include="Models\tbConfiguracao.cs" />
+    <Compile Include="Models\tbEmpresa.cs" />
+    <Compile Include="Models\tbEstado.cs" />
+    <Compile Include="Models\tbFormaPagamento.cs" />
+    <Compile Include="Models\tbFormaPagamentoTipo.cs" />
+    <Compile Include="Models\tbFornecedor.cs" />
+    <Compile Include="Models\tbFuncionario.cs" />
+    <Compile Include="Models\tbMenu.cs" />
+    <Compile Include="Models\tbMesa.cs" />
+    <Compile Include="Models\tbPedido.cs" />
+    <Compile Include="Models\tbPedidoProduto.cs" />
+    <Compile Include="Models\tbPerfilAcesso.cs" />
+    <Compile Include="Models\tbPerfilAcessoMenu.cs" />
+    <Compile Include="Models\tbProduto.cs" />
+    <Compile Include="Models\tbProdutoGrupo.cs" />
+    <Compile Include="Models\tbProdutoSubGrupo.cs" />
+    <Compile Include="Models\tbVenda.cs" />
+    <Compile Include="Models\tbVendaProduto.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Models\App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>
+    if not exist "$(TargetDir)x86" md "$(TargetDir)x86"
+    xcopy /s /y "$(SolutionDir)packages\Microsoft.SqlServer.Compact.4.0.8876.1\NativeBinaries\x86\*.*" "$(TargetDir)x86"
+    if not exist "$(TargetDir)amd64" md "$(TargetDir)amd64"
+    xcopy /s /y "$(SolutionDir)packages\Microsoft.SqlServer.Compact.4.0.8876.1\NativeBinaries\amd64\*.*" "$(TargetDir)amd64"</PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

@@ -1,0 +1,45 @@
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="TesteAjax.aspx.cs" Inherits="BSFoodWEB.TesteAjax" %>
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title></title>
+    <script type="text/javascript" src="js/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript">
+        function getRemote() {
+            
+            return $.ajax({
+                type: "POST", //GET or POST or PUT or DELETE verb
+                url: "SVC/svcPessoas.svc/RetornaListaMenu", // Location of the service
+                data: '{"intCodigo": "1"}', //Data sent to server
+                contentType: "application/json; charset=utf-8", // content type sent to server
+                dataType: "xml", //Expected data format from server
+                processdata: true, //True or False
+                async: false
+            }).responseText;
+
+            //return $.ajax({
+            //    type: "POST",
+            //    url: "SVC/svcPessoas.svc/RetornaListaMenu",
+            //    dataType: "text",
+            //    processdata: false,
+            //    async: false
+            //}).responseText;
+        }
+        $(document).ready(
+            function () {
+                alert(getRemote());
+            }
+        );
+        alert("oi");
+    </script>
+</head>
+<body>
+    <form id="form1" runat="server">
+    <div>
+    
+    </div>
+    </form>
+</body>
+</html>

@@ -1,0 +1,27 @@
+﻿using BSFoodServer.Models;
+using System;
+using System.Collections.Generic;
+using System.Data.Entity.ModelConfiguration;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.DAL.Config
+{
+    public class PerfilAcessoConfig : EntityTypeConfiguration<PerfilAcesso>
+    {
+        public PerfilAcessoConfig()
+        {
+            this.ToTable("tbPerfilAcesso");
+            this.HasKey(e => e.Codigo);
+
+            this.Property(e => e.Codigo).HasColumnName("pac_codigo");
+            this.Property(e => e.Descricao).HasColumnName("pac_descricao").HasMaxLength(30);
+            this.Property(e => e.PermiteDesconto).HasColumnName("pac_permiteDesconto");
+            this.Property(e => e.PermiteCancelarItem).HasColumnName("pac_permiteCancelarItem");
+            this.Property(e => e.PermiteCancelarVenda).HasColumnName("pac_permiteCancelarVenda");
+            this.Property(e => e.PermiteVendaClienteBloqueado).HasColumnName("pac_permiteVendaClienteBloqueado");
+            this.Property(e => e.PermiteVendaClienteNegativo).HasColumnName("pac_permiteVendaClienteNegativo");
+        }
+    }
+}

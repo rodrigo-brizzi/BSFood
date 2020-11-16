@@ -1,0 +1,41 @@
+﻿using System;
+using System.Net;
+using System.ServiceModel;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+
+namespace BSFood.Apoio
+{
+    public enum enSvc { svcPessoas };
+    
+    public static class Util
+    {
+        public static string strServidor { get; set; }
+
+        //http://localhost:9090/svcPessoas.svc
+        public static EndpointAddress RetornaEndpointAddress(enSvc strServico)
+        {
+            // HtmlPage.Document.DocumentUri.Port //obtem a porta da URL
+            // Application.Current.Host.Source.DnsSafeHost //obtem o ip do hospedeiro da aplicação silverlight
+            EndpointAddress objEndereco = new EndpointAddress("http://" + Util.strServidor + "/" + strServico.ToString() + ".svc");
+            return objEndereco;
+        }
+
+        /// <summary>
+        /// Metodo para Finalizar o sistema
+        /// </summary>
+        public static void FinalizaSistema()
+        {
+            if (Application.Current.IsRunningOutOfBrowser)
+                Application.Current.MainWindow.Close();
+            else
+                System.Windows.Browser.HtmlPage.Window.Invoke("FinalizaSistema");            
+        }
+    }
+}

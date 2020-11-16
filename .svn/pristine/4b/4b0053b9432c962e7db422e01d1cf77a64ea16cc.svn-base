@@ -1,0 +1,17 @@
+﻿using BSFood.Apoio;
+using BSFood.DataTransfer;
+using BSFood.Models;
+
+namespace BSFood.BusinessLogic.Interfaces
+{
+    public interface IFormaPagamento
+    {
+        Retorno RetornaFormaPagamento(int intCodigo, enNavegacao? enDirecao);
+
+        Retorno RetornaListaFormaPagamento(string strParametro);
+
+        Retorno SalvarFormaPagamento(tbFormaPagamento objFormaPagamento, int intFunCodigo);
+
+        Retorno ExcluirFormaPagamento(int intCodigo);
+    }
+}

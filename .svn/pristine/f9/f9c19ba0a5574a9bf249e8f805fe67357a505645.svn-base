@@ -1,0 +1,35 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFood.Models
+{
+    public class tbEmpresa
+    {
+        public int emp_codigo { get; set; }
+        public string emp_nome { get; set; }
+        public string emp_nomeFantasia { get; set; }
+        public string emp_cnpj { get; set; }
+        public string emp_ie { get; set; }
+        public string emp_im { get; set; }
+        public string emp_assinaturaSat { get; set; }
+        public string emp_logradouro { get; set; }
+        public string emp_numero { get; set; }
+        public string emp_cep { get; set; }
+        public string emp_complemento { get; set; }
+
+        public int cid_codigo { get; set; }
+        public tbCidade tbCidade { get; set; }
+
+        public int est_codigo { get; set; }
+        public tbEstado tbEstado { get; set; }
+
+        public int cid_cidadePadrao { get; set; }
+        public tbCidade tbCidadePadrao { get; set; }
+
+        public int est_estadoPadrao { get; set; }
+        public tbEstado tbEstadoPadrao { get; set; }
+    }
+}

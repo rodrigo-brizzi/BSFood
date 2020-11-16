@@ -1,0 +1,136 @@
+﻿using BSFoodServer.Apoio;
+using BSFoodServer.SVC;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+
+namespace BSFoodServer.View
+{
+    /// <summary>
+    /// Interaction logic for winPrincipal.xaml
+    /// </summary>
+    public partial class winPrincipal : Window
+    {
+        public winPrincipal()
+        {
+            InitializeComponent();
+        }
+
+        #region Métodos
+
+        private void IniciaServicos()
+        {
+            btnIniciarServico.IsEnabled = false;
+            btnPararServico.IsEnabled = true;
+            HostingManager.CreateHosts();
+            HostingManager.StartHosts();
+        }
+
+        public void PararServicos()
+        {
+            btnIniciarServico.IsEnabled = true;
+            btnPararServico.IsEnabled = false;
+
+            HostingManager.StopHost(null);
+        }
+
+        #endregion Métodos
+
+        #region Eventos do menu e balão
+
+        private void MenuItemMostrar_Click(object sender, RoutedEventArgs e)
+        {
+            this.Show();
+            this.WindowState = WindowState.Normal;
+        }
+
+        private void MenuItemSair_Click(object sender, RoutedEventArgs e)
+        {
+            this.Show();
+            this.WindowState = WindowState.Normal;
+            this.Close();
+        }
+
+        //evento disparado quando é clicado duas vezes no icone do SysTray
+        private void MyNotifyIcon_TrayMouseDoubleClick(object sender, RoutedEventArgs e)
+        {
+            this.Show();
+            this.WindowState = WindowState.Normal;
+        }
+
+        //evento disparado quando é clicado na balão(notificação)
+        private void MyNotifyIcon_TrayBalloonTipClicked(object sender, RoutedEventArgs e)
+        {
+            this.Show();
+        }
+
+        public void ExibirBalaoInfo(string strMensagem)
+        {
+            this.MyNotifyIcon.ShowBalloonTip("BSFood Server", strMensagem, Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
+        }
+
+        public void ExibirBalaoAlerta(string strMensagem)
+        {
+            this.MyNotifyIcon.ShowBalloonTip("BSFood Server", strMensagem, Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Warning);
+        }
+
+        #endregion
+
+        #region Eventos da tela
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            lstLog.ItemsSource = App.arrLog;
+            IniciaServicos();
+            this.WindowState = WindowState.Minimized;
+            this.ExibirBalaoInfo("Serviços iniciados");
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (MessageBox.Show("Parar o BSFood Server irá interromper o funcionamento do sistema BSFood em todos os computadores, deseja continuar?", "ATENÇÃO", MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No) == MessageBoxResult.No)
+            {
+                e.Cancel = true;
+            }
+            else
+            {
+                PararServicos();
+            }
+        }
+
+        private void Window_StateChanged(object sender, EventArgs e)
+        {
+            //se a janela foi miminizada, esconde a janela para que ela seja fixada no SysTray
+            if (this.WindowState == System.Windows.WindowState.Minimized)
+            {
+                this.Hide();
+                this.ExibirBalaoInfo("Serviços aguardando conexão");
+            }
+        }
+
+        private void btnIniciarServico_Click(object sender, RoutedEventArgs e)
+        {
+            IniciaServicos();
+        }
+
+        private void btnPararServico_Click(object sender, RoutedEventArgs e)
+        {
+            PararServicos();
+        }
+
+        #endregion
+
+        
+
+    }
+}

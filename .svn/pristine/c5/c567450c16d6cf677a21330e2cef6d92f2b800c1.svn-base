@@ -1,0 +1,51 @@
+﻿<Application x:Class="BSFood.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:cv="clr-namespace:BSFood.Apoio.Converters">
+    <Application.Resources>
+        <ResourceDictionary>
+
+            <ResourceDictionary.MergedDictionaries>
+                
+
+            </ResourceDictionary.MergedDictionaries>
+
+            <cv:MultiValueConverter x:Key="MultiValueConverter" />
+            <cv:DoubleToVisibilityConverter x:Key="DoubleToVisibilityConverter" />
+            <cv:FalseToTrueConverter x:Key="FalseToTrueConverter" />
+            <cv:StringEmptyToZeroConverter x:Key="StringEmptyToZeroConverter" />
+            <cv:DecimalToStringConverter x:Key="DecimalToStringConverter" />
+            <cv:RadioButtonToStrConverter x:Key="RadioButtonToStrConverter" />
+            <cv:StatusCaixaToColorConverter x:Key="StatusCaixaToColorConverter" />
+            <cv:StatusPedidoToColorConverter x:Key="StatusPedidoToColorConverter" />
+            <cv:StatusPedidoToTextConverter x:Key="StatusPedidoToTextConverter" />
+            <cv:StatusMesaToImageConverter x:Key="StatusMesaToImageConverter" />
+            <cv:StatusMesaToColorConverter x:Key="StatusMesaToColorConverter" />
+
+            <Style TargetType="Label">
+                <Setter Property="HorizontalAlignment" Value="Right" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+                <Setter Property="HorizontalContentAlignment" Value="Right" />
+                <Setter Property="Width" Value="Auto" />
+                <Setter Property="Height" Value="23" />
+                <Setter Property="Padding" Value="0"/>
+            </Style>
+
+            <Style TargetType="TextBox">
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+                <Setter Property="Height" Value="23" />
+                <Style.Triggers>
+                    <Trigger Property="Validation.HasError" Value="true">
+                        <Setter Property="ToolTip" Value="{Binding RelativeSource={x:Static RelativeSource.Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+            
+            <Style TargetType="Button">
+                <Setter Property="Cursor" Value="Hand" />
+            </Style>
+
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

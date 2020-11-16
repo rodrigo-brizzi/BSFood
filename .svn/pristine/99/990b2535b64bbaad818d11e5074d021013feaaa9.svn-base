@@ -1,0 +1,68 @@
+﻿using BSFoodFramework.Models;
+
+namespace BSFood.ViewModel
+{
+    public class PerfilAcessoMenuViewModel : ViewModelBase
+    {
+        public PerfilAcessoMenuViewModel(tbPerfilAcessoMenu _objPerfilAcessoMenu)
+        {
+            this.objPerfilAcessoMenu = _objPerfilAcessoMenu;
+        }
+
+        #region Propriedades
+
+        public tbPerfilAcessoMenu objPerfilAcessoMenu { get; set; }
+        
+        public bool pam_permiteAlteracao
+        {
+            get { return this.objPerfilAcessoMenu.pam_permiteAlteracao; }
+            set
+            {
+                this.objPerfilAcessoMenu.pam_permiteAlteracao = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public bool pam_permiteExclusao
+        {
+            get { return this.objPerfilAcessoMenu.pam_permiteExclusao; }
+            set
+            {
+                this.objPerfilAcessoMenu.pam_permiteExclusao = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public bool pam_permiteInclusao
+        {
+            get { return this.objPerfilAcessoMenu.pam_permiteInclusao; }
+            set
+            {
+                this.objPerfilAcessoMenu.pam_permiteInclusao = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public bool pam_permiteVisualizacao
+        {
+            get { return this.objPerfilAcessoMenu.pam_permiteVisualizacao; }
+            set
+            {
+                this.objPerfilAcessoMenu.pam_permiteVisualizacao = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public bool pam_toolBar
+        {
+            get { return this.objPerfilAcessoMenu.pam_toolBar; }
+            set
+            {
+                this.objPerfilAcessoMenu.pam_toolBar = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        #endregion Propriedades
+    }
+}

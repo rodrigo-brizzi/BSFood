@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="d832736a09b241e19e4ac682e40a0851" Name="Diagram1">
+        <EntityTypeShape EntityType="BSFoodDAL.tbBairro" Width="1.5" PointX="3" PointY="10.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="BSFoodDAL.tbCidade" Width="1.5" PointX="3" PointY="5.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="BSFoodDAL.tbCliente" Width="1.5" PointX="3" PointY="12.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="BSFoodDAL.tbClienteEndereco" Width="1.5" PointX="5.25" PointY="5.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="BSFoodDAL.tbClienteTelefone" Width="1.5" PointX="5.25" PointY="13.25" IsExpanded="true" />
+        <EntityTypeShape EntityType="BSFoodDAL.tbConfiguracao" Width="1.5" PointX="5.75" PointY="9.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="BSFoodDAL.tbEmpresa" Width="1.5" PointX="8.25" PointY="5.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="BSFoodDAL.tbEstado" Width="1.5" PointX="0.75" PointY="5.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="BSFoodDAL.tbFuncionario" Width="1.5" PointX="5.25" PointY="1.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="BSFoodDAL.tbMenu" Width="1.5" PointX="7.75" PointY="1" IsExpanded="true" />
+        <EntityTypeShape EntityType="BSFoodDAL.tbPerfilAcesso" Width="1.5" PointX="3" PointY="1.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="BSFoodDAL.tbPerfilAcessoMenu" Width="1.5" PointX="10" PointY="1.375" IsExpanded="true" />
+        <AssociationConnector Association="BSFoodDAL.FK_tbClienteEndereco_tbBairro" ManuallyRouted="false" />
+        <AssociationConnector Association="BSFoodDAL.FK_tbCidade_tbEstado" ManuallyRouted="false" />
+        <AssociationConnector Association="BSFoodDAL.FK_tbClienteEndereco_tbCidade" ManuallyRouted="false" />
+        <AssociationConnector Association="BSFoodDAL.FK_tbEmpresa_tbCidade" ManuallyRouted="false" />
+        <AssociationConnector Association="BSFoodDAL.FK_tbEmpresa_tbCidade__Padrao" ManuallyRouted="false" />
+        <AssociationConnector Association="BSFoodDAL.FK_tbFuncionario_tbCidade" ManuallyRouted="false" />
+        <AssociationConnector Association="BSFoodDAL.FK_tbClienteEndereco_tbCliente" ManuallyRouted="false" />
+        <AssociationConnector Association="BSFoodDAL.FK_tbClienteTelefone_tbCliente" ManuallyRouted="false" />
+        <AssociationConnector Association="BSFoodDAL.FK_tbClienteEndereco_tbEstado" ManuallyRouted="false" />
+        <AssociationConnector Association="BSFoodDAL.FK_tbEmpresa_tbEstado" ManuallyRouted="false" />
+        <AssociationConnector Association="BSFoodDAL.FK_tbEmpresa_tbEstado__Padrao" ManuallyRouted="false" />
+        <AssociationConnector Association="BSFoodDAL.FK_tbFuncionario_tbEstado" ManuallyRouted="false" />
+        <AssociationConnector Association="BSFoodDAL.FK_tbFuncionario_tbPerfilAcesso" ManuallyRouted="false" />
+        <AssociationConnector Association="BSFoodDAL.FK_tbMenu_tbMenu__MenuPai" ManuallyRouted="false" />
+        <AssociationConnector Association="BSFoodDAL.FK_tbPerfilAcessoMenu_tbMenu" ManuallyRouted="false" />
+        <AssociationConnector Association="BSFoodDAL.FK_tbPerfilAcessoMenu_tbPerfilAcesso" ManuallyRouted="false" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

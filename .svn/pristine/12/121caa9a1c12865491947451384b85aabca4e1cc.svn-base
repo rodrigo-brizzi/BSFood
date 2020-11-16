@@ -1,0 +1,227 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.ServiceModel;
+using System.ServiceModel.Configuration;
+using System.Configuration;
+using BSFoodServer.BLL;
+using System.Configuration;
+
+//comando para instalar o serviço
+//-------------------------------
+//installUtil C:\Fontes\appLazaro\appLazaroHost\bin\Release\appLazaroHost.exe
+
+//comando para desinstalar o serviço
+//----------------------------------
+//installUtil /U C:\Fontes\appLazaro\appLazaroHost\bin\Release\appLazaroHost.exe
+
+//Recomendações
+//-------------
+//--Pare o serviço e feche a janela de serviços antes de instalar ou desinstalar um serviço;
+//--Após qualquer alteração no serviço sempre instale/desinstale o serviço novamente;
+//--Evite usar interface com o usuário nos serviços criados;
+namespace BSFoodServer.SVC
+{
+    public class HostingManager
+    {
+        public static Dictionary<string, ServiceHostBase> Hosts { get; set; }
+
+        static HostingManager()
+        {
+            Hosts = new Dictionary<string, ServiceHostBase>();
+        }
+
+        /// <summary>
+        /// A helper dictionary with all the service implementation types. 
+        /// </summary>
+        static Dictionary<string, Type> ServiceTypeResolver = new Dictionary<string, Type>()
+        {   
+            {"BSFoodServer.BLL.Pessoas", typeof(Pessoas)},
+            {"BSFoodServer.BLL.ClientAccessPolicy", typeof(ClientAccessPolicy)},
+        };
+
+        public static string[] ServicesTypes
+        {
+            get { return ServiceTypeResolver.Keys.ToArray(); }
+        }
+
+        /// <summary>
+        /// Create the ServiceHost objects that will host the wcf services. 
+        /// </summary>
+        public static void CreateHosts()
+        {
+            //LoggingManager.Logger.Log(LoggingCategory.Info, StringsResource.CreateHosts);
+
+            var cfg = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None).GetSectionGroup("system.serviceModel");
+
+            var servicesConfig = cfg.Sections["services"] as ServicesSection;
+            if (servicesConfig == null)
+                throw new HostingException("SevicesToHostNotFound");
+
+            // read the service configuration and use it to create a service host
+            foreach (ServiceElement item in servicesConfig.Services)
+            {
+                try
+                {
+                    Hosts[item.Name] = new ServiceHost(ServiceTypeResolver[item.Name]);
+                    // Add IExtentsion<ServicaHostBase> extentions to each host.
+                    //Hosts[item.Name].Extensions.Add(new ServerStateHostExtension()); // attach a memory state collection
+
+                    //LoggingManager.Logger.Log(LoggingCategory.Info, string.Format(StringsResource.HostCreated, item.Name));
+                    //Hosts[item.Name].Faulted += new EventHandler(HostingManager_Faulted);
+                }
+                catch (Exception ex)
+                {
+                   // LoggingManager.Logger.Log(LoggingCategory.Warning,
+                       // string.Format(StringsResource.HostCreationFailed, item.Name, ex.ToString()));
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Erro:" + ex.Message);
+                }
+
+            }
+
+            Console.WriteLine();
+
+        }
+
+        /// <summary>
+        /// Start the service hosts and begin listening on the channels
+        /// </summary>
+        public static void CreateHost(string name)
+        {
+            if (!Hosts.ContainsKey(name))
+                return;
+            try
+            {
+                
+
+                Hosts[name] = new ServiceHost(ServiceTypeResolver[name]);
+                //Hosts[name].Extensions.Add(new ServerStateHostExtension());
+                //Hosts[name].Extensions.Add(new CacheHostExtension());
+                //LoggingManager.Logger.Log(LoggingCategory.Info, string.Format(StringsResource.HostCreated, name));
+                //Hosts[name].Faulted += new EventHandler(HostingManager_Faulted);
+            }
+            catch (Exception ex)
+            {
+                //LoggingManager.Logger.Log(LoggingCategory.Warning,string.Format(StringsResource.HostCreationFailed, name, ex.ToString()));
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Erro:" + ex.Message);
+            }
+        }
+
+
+        public static void StartHosts()
+        {
+            ServiceHost err = null;
+            StringBuilder sb = new StringBuilder();
+            //LoggingManager.Logger.Log(LoggingCategory.Info, StringsResource.StatrtHosts);
+            foreach (ServiceHost host in Hosts.Values)
+            {
+                try
+                {
+
+                    err = host;
+                    host.Open();
+
+                    //if (host.State == CommunicationState.Opened)
+                    //{
+                    //    LoggingManager.Logger.Log(LoggingCategory.Info,string.Format(StringsResource.HostStarted,host.Description.Name));
+
+                    //    foreach (var dispatcher in host.ChannelDispatchers)
+                    //    {
+                    //        if ((dispatcher.Listener != null) && (dispatcher.Listener.Uri != null))
+                    //            sb.AppendLine(string.Format(StringsResource.ListentingAt, dispatcher.Listener.Uri.AbsoluteUri));
+                    //    }
+                    //    LoggingManager.Logger.Log(LoggingCategory.Info, sb.ToString());
+                    //    sb.Clear();
+                    //}
+                }
+                catch (Exception ex)
+                {
+                    //LoggingManager.Logger.Log(LoggingCategory.Warning,string.Format(StringsResource.HostStartFailed, err.Description.Name, ex.ToString()));
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Erro:" + ex.Message);
+
+                }
+            }
+        }
+
+
+        public static void StopHost(string name)
+        {
+            //LoggingManager.Logger.Log(LoggingCategory.Info, StringsResource.StoppingHosts);
+
+            if (name == null)
+            {
+                foreach (var host in Hosts.Values)
+                {
+                    if ((host != null) && (host.State == CommunicationState.Opened))
+                    {
+                        host.Close();
+                        //LoggingManager.Logger.Log(LoggingCategory.Info,string.Format(StringsResource.HostClosed, host.Description.Name));
+                    }
+                }
+            }
+            else
+            {
+                if (Hosts.ContainsKey(name) && Hosts[name] != null && Hosts[name].State == CommunicationState.Opened)
+                {
+                    Hosts[name].Close();
+                    //LoggingManager.Logger.Log(LoggingCategory.Info, string.Format(StringsResource.HostClosed, name));
+                }
+            }
+
+
+        }
+
+
+        public static void StartHost(string name)
+        {
+            StringBuilder sb = new StringBuilder();
+            try
+            {
+                if (Hosts.ContainsKey(name))
+                {
+                    CreateHost(name);
+                    Hosts[name].Open();
+                }
+
+                //if (Hosts[name].State == CommunicationState.Opened)
+                //{
+                //    LoggingManager.Logger.Log(LoggingCategory.Info,string.Format(StringsResource.HostStarted,Hosts[name].Description.Name));
+
+                //    foreach (var dispatcher in Hosts[name].ChannelDispatchers)
+                //    {
+                //        if ((dispatcher.Listener != null) && (dispatcher.Listener.Uri != null))
+                //            sb.AppendLine(string.Format(StringsResource.ListentingAt, dispatcher.Listener.Uri.AbsoluteUri));
+                //    }
+                //    LoggingManager.Logger.Log(LoggingCategory.Info, sb.ToString());
+                //    sb.Clear();
+                //}
+            }
+            catch (Exception ex)
+            {
+                //LoggingManager.Logger.Log(LoggingCategory.Warning,string.Format(StringsResource.HostStartFailed, name, ex.ToString()));
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Erro:" + ex.Message);
+            }
+
+        }
+
+
+        public static bool IsAlive(string name)
+        {
+            if (!Hosts.ContainsKey(name))
+                return false;
+
+            return ((Hosts[name].State == CommunicationState.Opened));
+        }
+
+        //static void HostingManager_Faulted(object sender, EventArgs e)
+        //{
+        //    //LoggingManager.Logger.Log(LoggingCategory.Error, string.Format(StringsResource.HostFalted, sender.ToString()));
+        //}
+
+    }
+}

@@ -1,0 +1,21 @@
+﻿using BSFood.DataTransfer;
+using BSFood.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFood.BusinessLogic.Interfaces
+{
+    public interface IConfiguracao
+    {
+        #region Parametrização
+
+        Retorno RetornaConfiguracao();
+
+        Retorno SalvarConfiguracao(tbConfiguracao objConfiguracao);
+
+        #endregion Parametrização
+    }
+}

@@ -1,0 +1,319 @@
+﻿using BSFood.View;
+using BSFood.Apoio;
+using BSFood.Models;
+using BSFood.BusinessLogic;
+using BSFood.DataTransfer;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
+using System.Windows.Threading;
+
+namespace BSFood.ViewModel
+{
+    public class EntregaViewModel : TelaViewModel
+    {
+        public ICommand FuncionarioEntregadorCommand { get; set; }
+        public ICommand AtualizarCommand { get; set; }
+        private DispatcherTimer timerAtualizaPedido;
+
+        public EntregaViewModel()
+        {
+            FuncionarioEntregadorCommand = new DelegateCommand(FuncionarioEntregador, CanFuncionarioEntregador);
+            AtualizarCommand = new DelegateCommand(Atualizar, CanAtualizar);
+            this.blnProducao = true;
+            this.blnEntrega = true;
+
+            this.FiltraPedido();
+
+            this.timerAtualizaPedido = new DispatcherTimer();
+            this.timerAtualizaPedido.Interval = new TimeSpan(0, 1, 0); // 1 minuto
+            this.timerAtualizaPedido.Tick += timerAtualizaPedido_Tick;
+            this.timerAtualizaPedido.Start();
+        }
+
+        
+
+        #region Propriedades
+
+        private int? _fun_funcionarioEntregador;
+        public int? fun_funcionarioEntregador
+        {
+            get { return this._fun_funcionarioEntregador; }
+            set
+            {
+                if (this._fun_funcionarioEntregador != value)
+                {
+                    Retorno objRetorno;
+                    using (var objBLL = new Funcionarios())
+                    {
+                        objRetorno = objBLL.RetornaFuncionario(value == null ? 0 : (int)value, null);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this._fun_funcionarioEntregador = ((tbFuncionario)objRetorno.objRetorno).fun_codigo;
+                        this._fun_nomeEntregador = ((tbFuncionario)objRetorno.objRetorno).fun_nome;
+                    }
+                    else
+                    {
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                        this._fun_funcionarioEntregador = null;
+                        this._fun_nomeEntregador = string.Empty;
+                    }
+                    RaisePropertyChanged("fun_funcionarioEntregador");
+                    RaisePropertyChanged("fun_nomeEntregador");
+                    FiltraPedido();
+                }
+            }
+        }
+        
+        private string _fun_nomeEntregador;
+        public string fun_nomeEntregador
+        {
+            get { return this._fun_nomeEntregador; }
+            set
+            {
+                if (this._fun_nomeEntregador != value)
+                {
+                    this._fun_nomeEntregador = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        private bool _blnProducao;
+        public bool blnProducao
+        {
+            get { return this._blnProducao; }
+            set
+            {
+                if (this._blnProducao != value)
+                {
+                    this._blnProducao = value;
+                    RaisePropertyChanged();
+                    this.FiltraPedido();
+                }
+            }
+        }
+
+        private bool _blnEntrega;
+        public bool blnEntrega
+        {
+            get { return this._blnEntrega; }
+            set
+            {
+                if (this._blnEntrega != value)
+                {
+                    this._blnEntrega = value;
+                    RaisePropertyChanged();
+                    this.FiltraPedido();
+                }
+            }
+        }
+
+        private bool _blnFinalizado;
+        public bool blnFinalizado
+        {
+            get { return this._blnFinalizado; }
+            set
+            {
+                if (this._blnFinalizado != value)
+                {
+                    this._blnFinalizado = value;
+                    RaisePropertyChanged();
+                    this.FiltraPedido();
+                }
+            }
+        }
+
+        private bool _blnExcluido;
+        public bool blnExcluido
+        {
+            get { return this._blnExcluido; }
+            set
+            {
+                if (this._blnExcluido != value)
+                {
+                    this._blnExcluido = value;
+                    RaisePropertyChanged();
+                    this.FiltraPedido();
+                }
+            }
+        }
+
+        private ObservableCollection<EntregaDetalheViewModel> _arrEntregaDetalheViewModel;
+        public ObservableCollection<EntregaDetalheViewModel> arrEntregaDetalheViewModel 
+        {
+            get { return this._arrEntregaDetalheViewModel; }
+            set
+            {
+                this._arrEntregaDetalheViewModel = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+        private bool CanFuncionarioEntregador(object objParam)
+        {
+            return true;
+        }
+        private void FuncionarioEntregador(object objParam)
+        {
+            if (objParam != null)
+            {
+                //if (objParam.ToString() == "Novo")
+                //{
+                //    winCadastro objTelaCadastro = new winCadastro();
+                //    FuncionarioViewModel objFuncionarioViewModel = new FuncionarioViewModel();
+                //    if (this._fun_funcionarioEntregador > 0)
+                //        objFuncionarioViewModel.fun_codigo = this._fun_funcionarioEntregador;
+                //    objFuncionarioViewModel.OnDispose += (sen1, eve1) => { objTelaCadastro.Close(); };
+                //    objTelaCadastro.Title = "Cadastro - " + objFuncionarioViewModel.strNomeTela;
+                //    objTelaCadastro.DataContext = objFuncionarioViewModel;
+                //    objTelaCadastro.Owner = (Window)Application.Current.MainWindow;
+                //    objTelaCadastro.Closed += (sen, eve) =>
+                //    {
+                //        if (objFuncionarioViewModel.fun_codigo != null)
+                //        {
+                //            this._fun_funcionarioEntregador = (int)objFuncionarioViewModel.fun_codigo;
+                //            RaisePropertyChanged("fun_funcionarioEntregador");
+                //            this._fun_nomeEntregador = objFuncionarioViewModel.fun_nome;
+                //            RaisePropertyChanged("fun_nomeEntregador");
+                //            FiltraPedido();
+                //        }
+                //        objFuncionarioViewModel = null;
+                //        objTelaCadastro = null;
+                //    };
+                //    objTelaCadastro.ShowDialog();
+                //}
+                //else if (objParam.ToString() == "Pesquisar")
+                //{
+                //    FuncionarioViewModel objFuncionarioViewModel = new FuncionarioViewModel();
+                //    objFuncionarioViewModel.OnPesquisa += (sen, eve) =>
+                //    {
+                //        if (objFuncionarioViewModel.fun_codigo != null)
+                //        {
+                //            this._fun_funcionarioEntregador = (int)objFuncionarioViewModel.fun_codigo;
+                //            RaisePropertyChanged("fun_funcionarioEntregador");
+                //            this._fun_nomeEntregador = objFuncionarioViewModel.fun_nome;
+                //            RaisePropertyChanged("fun_nomeEntregador");
+                //            FiltraPedido();
+                //        }
+                //        objFuncionarioViewModel.Dispose();
+                //    };
+                //    objFuncionarioViewModel.Pesquisar("AbrirTela");
+                //}
+                //else
+                //{
+                //    int intCodigo;
+                //    if (int.TryParse(objParam.ToString(), out intCodigo))
+                //        this.fun_funcionarioEntregador = intCodigo;
+                //    else
+                //        FuncionarioEntregador("Pesquisar");
+                //}
+            }
+        }
+
+        private bool CanAtualizar(object objParam)
+        {
+            return true;
+        }
+        private void Atualizar(object objParam)
+        {
+            this.FiltraPedido();
+        }
+
+        #endregion Comandos
+
+
+
+        #region Eventos
+
+        void timerAtualizaPedido_Tick(object sender, EventArgs e)
+        {
+            this.AtualizaPedido();
+        }
+
+        #endregion Eventos
+
+
+
+        #region Métodos
+
+        private void FiltraPedido()
+        {
+            Retorno objRetorno;
+            using (var objBLL = new Pedidos())
+            {
+                objRetorno = objBLL.RetornaListaPedido(string.Empty, enOrigemPedido.Entrega, this.blnProducao, this.blnEntrega, this.blnFinalizado, this.blnExcluido, this.fun_funcionarioEntregador, Util.objConfigStorage.intCaiCodigo);
+            }
+            if (objRetorno.intCodigoErro == 0)
+            {
+                ObservableCollection<EntregaDetalheViewModel> arrEntregaDetalheViewModelAux = new ObservableCollection<EntregaDetalheViewModel>();
+                foreach (tbPedido objPedido in (List<tbPedido>)objRetorno.objRetorno)
+                {
+                    if (objPedido.tbFuncionarioEntregador == null)
+                        objPedido.tbFuncionarioEntregador = new tbFuncionario();
+                    EntregaDetalheViewModel objEntregaDetalheViewModel = new EntregaDetalheViewModel(objPedido);
+                    if (objEntregaDetalheViewModel.objPedido.ped_dataEntrega == null)
+                        objEntregaDetalheViewModel.tsProducao = DateTime.Now.Subtract(objPedido.ped_data.Value);
+                    else
+                        objEntregaDetalheViewModel.tsProducao = objEntregaDetalheViewModel.objPedido.ped_dataEntrega.Value.Subtract(objPedido.ped_data.Value);
+                    arrEntregaDetalheViewModelAux.Add(objEntregaDetalheViewModel);
+                }
+                this.arrEntregaDetalheViewModel = arrEntregaDetalheViewModelAux;
+            }
+            else
+                MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+        }
+
+        private void AtualizaPedido()
+        {
+            Retorno objRetorno;
+            using (var objBLL = new Pedidos())
+            {
+                objRetorno = objBLL.RetornaListaPedido(string.Empty,enOrigemPedido.Entrega,this.blnProducao,this.blnEntrega,this.blnFinalizado,this.blnExcluido,this.fun_funcionarioEntregador, Util.objConfigStorage.intCaiCodigo);
+            }
+            if (objRetorno.intCodigoErro == 0)
+            {
+                //inclui novos pedidos
+                List<tbPedido> arrPedido = (List<tbPedido>)objRetorno.objRetorno;
+                var arrPedidoAtualizar = arrPedido.Where(p => this.arrEntregaDetalheViewModel.All(t => t.objPedido.ped_codigo != p.ped_codigo)).ToList();
+                foreach (tbPedido objPedido in arrPedidoAtualizar)
+                {
+                    if (objPedido.tbFuncionarioEntregador == null)
+                        objPedido.tbFuncionarioEntregador = new tbFuncionario();
+                    this.arrEntregaDetalheViewModel.Add(new EntregaDetalheViewModel(objPedido));
+                }
+
+                //atualiza a hora
+                for (int i = 0; i < this.arrEntregaDetalheViewModel.Count(); i++)
+                {
+                    if (this.arrEntregaDetalheViewModel[i].objPedido.ped_dataEntrega == null)
+                        this.arrEntregaDetalheViewModel[i].tsProducao = DateTime.Now.Subtract(this.arrEntregaDetalheViewModel[i].objPedido.ped_data.Value);
+                    else
+                        this.arrEntregaDetalheViewModel[i].tsProducao = this.arrEntregaDetalheViewModel[i].objPedido.ped_dataEntrega.Value.Subtract(this.arrEntregaDetalheViewModel[i].objPedido.ped_data.Value);
+                }
+            }
+            else
+                MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+        }
+
+        #endregion Métodos
+    }
+}

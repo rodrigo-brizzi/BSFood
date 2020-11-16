@@ -1,0 +1,29 @@
+﻿using BSFoodServer.Models;
+using System;
+using System.Collections.Generic;
+using System.Data.Entity.ModelConfiguration;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.DAL.Config
+{
+    public class ClienteConfig : EntityTypeConfiguration<Cliente>
+    {
+        public ClienteConfig()
+        {
+            this.ToTable("tbCliente");
+            this.HasKey(e => e.Codigo);
+
+            this.Property(e => e.Codigo).HasColumnName("cli_codigo");
+            this.Property(e => e.Nome).HasColumnName("cli_nome").HasMaxLength(100);
+            this.Property(e => e.NomeFantasia).HasColumnName("cli_nomeFantasia").HasMaxLength(100);
+            this.Property(e => e.Tipo).HasColumnName("cli_tipo").HasMaxLength(1);
+            this.Property(e => e.CpfCnpj).HasColumnName("cli_cpfCnpj").HasMaxLength(20);
+            this.Property(e => e.RgIe).HasColumnName("cli_rgIe").HasMaxLength(20);
+            this.Property(e => e.Sexo).HasColumnName("cli_sexo").HasMaxLength(1);
+            this.Property(e => e.Email).HasColumnName("cli_email").HasMaxLength(100);
+            this.Property(e => e.Observacao).HasColumnName("cli_observacao").HasMaxLength(250);
+        }
+    }
+}

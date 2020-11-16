@@ -1,0 +1,93 @@
+﻿using BSFoodServer.Models;
+using System;
+using System.Net;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+
+namespace BSFood.ViewModel
+{
+    public class PerfilAcessoMenuViewModel : ViewModelBase
+    {
+        public PerfilAcessoMenu objPerfilAcessoMenu;
+
+        public PerfilAcessoMenuViewModel(PerfilAcessoMenu _objPerfilAcessoMenu)
+        {
+            this.objPerfilAcessoMenu = _objPerfilAcessoMenu;
+        }
+        
+        #region Propriedades
+
+        public string strDescricao
+        {
+            get 
+            {
+                if (this.objPerfilAcessoMenu.Menu == null)
+                    return string.Empty;
+                else
+                    return this.objPerfilAcessoMenu.Menu.Ordem + " -" + this.objPerfilAcessoMenu.Menu.Cabecalho;
+            }
+            set
+            {
+                
+            }
+        }
+
+        public bool blnPermiteInclusao
+        {
+            get { return this.objPerfilAcessoMenu.PermiteInclusao; }
+            set
+            {
+                this.objPerfilAcessoMenu.PermiteInclusao = value;
+                RaisePropertyChanged("blnPermiteInclusao");
+            }
+        }
+
+        public bool blnPermiteAlteracao
+        {
+            get { return this.objPerfilAcessoMenu.PermiteAlteracao; }
+            set
+            {
+                this.objPerfilAcessoMenu.PermiteAlteracao = value;
+                RaisePropertyChanged("blnPermiteAlteracao");
+            }
+        }
+
+        public bool blnPermiteExclusao
+        {
+            get { return this.objPerfilAcessoMenu.PermiteExclusao; }
+            set
+            {
+                this.objPerfilAcessoMenu.PermiteExclusao = value;
+                RaisePropertyChanged("blnPermiteExclusao");
+            }
+        }
+
+        public bool blnPermiteVisualizacao
+        {
+            get { return this.objPerfilAcessoMenu.PermiteVisualizacao; }
+            set
+            {
+                this.objPerfilAcessoMenu.PermiteVisualizacao = value;
+                RaisePropertyChanged("blnPermiteVisualizacao");
+            }
+        }
+
+        public bool blnToolBar
+        {
+            get { return this.objPerfilAcessoMenu.ToolBar; }
+            set
+            {
+                this.objPerfilAcessoMenu.ToolBar = value;
+                RaisePropertyChanged("blnToolBar");
+            }
+        }
+
+        #endregion Propriedades
+    }
+}

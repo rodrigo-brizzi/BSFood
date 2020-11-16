@@ -1,0 +1,18 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.Models
+{
+    public class Configuracao
+    {
+        public int Codigo { get; set; }
+        public DateTime UltimoLogin { get; set; }
+        public string SenhaMaster { get; set; }
+
+        public int CodigoCidade { get; set; }
+        public Cidade Cidade { get; set; }
+    }
+}

@@ -1,0 +1,209 @@
+﻿using System;
+using System.Net;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+using System.Windows.Media.Imaging;
+using BSFood.Apoio;
+using BSFood.View;
+
+namespace BSFood.ViewModel
+{
+    public class MensagemViewModel : ViewModelBase
+    {
+
+public ICommand SimCommand { get; set; }
+
+        public ICommand NaoCommand { get; set; }
+
+        public enum enMsgResult { Sim, Nao}
+
+        public enum enMsgIcone { Ok = 0 , Error = 1, Exclamation = 2, Information = 3, Question = 4 }
+
+        public enum enMsgBotao { Ok, SimOuNao }
+
+
+        public MensagemViewModel()
+        {
+            SimCommand = new DelegateCommand(Sim, CanSim);
+            NaoCommand = new DelegateCommand(Nao, CanNao);
+        }
+
+
+
+        #region Propriedades
+
+        public ImageSource isIcone { get; set; }
+
+        public string strTitulo { get; set; }
+
+        public string strTextoMensagem { get; set; }
+
+        public string strSim { get; set; }
+
+        public string strNao { get; set; }
+
+        public bool blnMostraSim { get; set; }
+
+        public bool blnMostraNao { get; set; }
+
+        private bool _blnSimFocus = false;
+        public bool blnSimFocus
+        {
+            get
+            {
+                return _blnSimFocus;
+            }
+            set
+            {
+                if (value)
+                {
+                    _blnSimFocus = false;
+                    RaisePropertyChanged("blnSimFocus");
+                }
+                _blnSimFocus = value;
+                RaisePropertyChanged("blnSimFocus");
+            }
+        }
+
+        private bool _blnNaoFocus = false;
+        public bool blnNaoFocus
+        {
+            get
+            {
+                return _blnNaoFocus;
+            }
+            set
+            {
+                if (value)
+                {
+                    _blnNaoFocus = false;
+                    RaisePropertyChanged("blnNaoFocus");
+                }
+                _blnNaoFocus = value;
+                RaisePropertyChanged("blnNaoFocus");
+            }
+        }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+        private bool CanSim(object objParam)
+        {
+            return true;
+        }
+        private void Sim(object objParam)
+        {
+            (objParam as Mensagem).DialogResult = true;
+        }
+
+        private bool CanNao(object objParam)
+        {
+            return true;
+        }
+        private void Nao(object objParam)
+        {
+            (objParam as Mensagem).DialogResult = false;
+        }
+
+        #endregion Comandos
+
+
+
+        #region Métodos
+
+        public delegate void DelegateResult(enMsgResult MessageResult);
+
+        public static void Show(string strMensagem, string strTitulo, enMsgBotao enBotoes, int intIcone, DelegateResult funResult, string strTextoSim = "Sim", string strTextoNao = "Não")
+        {
+            enMsgIcone enIcone = enMsgIcone.Error;
+            string strNomeEnumIcone = Enum.GetName(typeof(enMsgIcone), intIcone);
+            if (!string.IsNullOrWhiteSpace(strNomeEnumIcone))
+            {
+                enIcone = (enMsgIcone) Enum.Parse(typeof(enMsgIcone), strNomeEnumIcone, true);        
+                if (!Enum.IsDefined(typeof(enMsgIcone), enIcone))
+                    enIcone = enMsgIcone.Error;
+            }
+            MensagemViewModel.Show(strMensagem, strTitulo, enBotoes, enIcone, funResult, strTextoSim, strTextoNao);            
+        }
+
+        public static void Show(string strMensagem, string strTitulo, enMsgBotao enBotoes, enMsgIcone enIcone, DelegateResult funResult, string strTextoSim = "Sim", string strTextoNao = "Não")
+        {
+            MensagemViewModel objMensagemViewModel = new MensagemViewModel();
+            objMensagemViewModel.strTitulo = strTitulo;
+            objMensagemViewModel.strTextoMensagem = strMensagem;
+            switch (enBotoes)
+            {
+                case enMsgBotao.Ok:
+                    objMensagemViewModel.blnMostraSim = true;
+                    objMensagemViewModel.blnMostraNao = false;
+                    objMensagemViewModel.strSim = "OK";
+                    objMensagemViewModel.blnSimFocus = true;
+                    break;
+                case enMsgBotao.SimOuNao:
+                    objMensagemViewModel.blnMostraSim = true;
+                    objMensagemViewModel.strSim = strTextoSim;
+                    objMensagemViewModel.blnSimFocus = false;
+
+                    objMensagemViewModel.blnMostraNao = true;
+                    objMensagemViewModel.strNao = strTextoNao;
+                    objMensagemViewModel.blnNaoFocus = true;
+                    break;
+                default:
+                    break;
+            }
+            string strImagem = "";
+            BitmapImage bmp = new BitmapImage();
+            switch (enIcone)
+            {
+                case enMsgIcone.Error:
+                    strImagem = "../Imagens/msgError64.png";
+                    break;
+                case enMsgIcone.Exclamation:
+                    strImagem = "../Imagens/msgExclamation64.png";
+                    break;
+                case enMsgIcone.Information:
+                    strImagem = "../Imagens/msgInformation64.png";
+                    break;
+                case enMsgIcone.Ok:
+                    strImagem = "../Imagens/msgOK64.png";
+                    break;
+                case enMsgIcone.Question:
+                    strImagem = "../Imagens/msgQuestion64.png";
+                    break;
+                default:
+                    break;
+            }
+            Uri uri = new Uri(strImagem, UriKind.Relative);
+            objMensagemViewModel.isIcone = new BitmapImage(uri);
+
+            Mensagem objTelaMensagem = new Mensagem();
+            objTelaMensagem.Loaded += (sen1, eve1) =>
+            {
+                objTelaMensagem.DataContext = objMensagemViewModel;
+            };
+            objTelaMensagem.Closed += (sen, eve) =>
+            {
+                if (funResult != null)
+                {
+                    if ((bool)objTelaMensagem.DialogResult)
+                        funResult(enMsgResult.Sim);
+                    else
+                        funResult(enMsgResult.Nao);
+                }
+            };
+            objTelaMensagem.Show();
+        }
+
+        #endregion
+
+    }
+}

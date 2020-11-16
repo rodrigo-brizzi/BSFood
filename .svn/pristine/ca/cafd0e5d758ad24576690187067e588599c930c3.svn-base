@@ -1,0 +1,79 @@
+﻿using BSFood.Apoio;
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.Net;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+
+namespace BSFood.ViewModel
+{
+    public class LoginViewModel : ViewModelBase
+    {
+        public ICommand AutenticaFuncionarioCommand { get; set; }
+
+        public LoginViewModel()
+        {
+            this._Login = string.Empty;
+            AutenticaFuncionarioCommand = new DelegateCommand(AutenticaFuncionario, CanAutenticaFuncionario);
+        }
+
+        #region Propriedades
+
+        private string _Login;
+        [Required(ErrorMessage = "Campo obrigatório")]
+        [StringLength(50, ErrorMessage = "É permitido apenas 50 caracteres")]
+        public string Login
+        {
+            get { return this._Login; }
+            set
+            {
+                if (this._Login != value)
+                {
+                    this._Login = value;
+                    RaisePropertyChanged("Login");
+                }
+                ClearError("Login");
+                try
+                {
+                    Validator.ValidateProperty(value, new ValidationContext(this, null, null) { MemberName = "Login" });
+                }
+                catch (ValidationException ve)
+                {
+                    SetError("Login", ve.Message);
+                }
+            }
+        }
+
+        #endregion Propriedades
+
+
+        #region Comandos
+
+        private void AutenticaFuncionario(object objParam)
+        {
+            //string filter = param as string ?? string.Empty;
+            //this.Products.Clear();
+            //var query = from p in this.AllProducts
+            //where p.ProductName.ToLower().StartsWith(filter.ToLower())
+            //select p;
+            //foreach (var item in query)
+            //{
+            //    this.Products.Add(item);
+            //}
+            MessageBox.Show("Bem vendo!");
+        }
+
+        private bool CanAutenticaFuncionario(object objParam)
+        {
+            return !string.IsNullOrWhiteSpace(this._Login);
+        }
+
+        #endregion Comandos
+    }
+}

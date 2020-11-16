@@ -1,0 +1,421 @@
+﻿using BSFood.View;
+using BSFood.Apoio;
+using BSFood.Models;
+using BSFood.BusinessLogic;
+using BSFood.DataTransfer;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
+
+namespace BSFood.ViewModel
+{
+    public class ClienteGrupoViewModel : ViewModelBase
+    {
+        public ICommand AnteriorCommand { get; set; }
+        public ICommand ProximoCommand { get; set; }
+        public ICommand NovoCommand { get; set; }
+        public ICommand EditarCommand { get; set; }
+        public ICommand SalvarCommand { get; set; }
+        public ICommand CancelarCommand { get; set; }
+        public ICommand ExcluirCommand { get; set; }
+        public ICommand PesquisarCommand { get; set; }
+        public ICommand LogCommand { get; set; }
+        public ICommand BuscarCommand { get; set; }
+
+        private winPesquisa objTelaPesquisa;
+
+        public ClienteGrupoViewModel()
+        {
+            AnteriorCommand = new DelegateCommand(Anterior, CanAnterior);
+            ProximoCommand = new DelegateCommand(Proximo, CanProximo);
+            NovoCommand = new DelegateCommand(Novo, CanNovo);
+            EditarCommand = new DelegateCommand(Editar, CanEditar);
+            SalvarCommand = new DelegateCommand(Salvar, CanSalvar);
+            CancelarCommand = new DelegateCommand(Cancelar, CanCancelar);
+            ExcluirCommand = new DelegateCommand(Excluir, CanExcluir);
+            PesquisarCommand = new DelegateCommand(Pesquisar, CanPesquisar);
+            LogCommand = new DelegateCommand(Log, CanLog);
+            BuscarCommand = new DelegateCommand(Buscar, CanBuscar);
+        }
+
+
+        #region Propriedades
+
+        public int? cgr_codigo
+        {
+            get
+            {
+                if (this.objClienteGrupo == null)
+                    return null;
+                else
+                    return this.objClienteGrupo.cgr_codigo;
+            }
+            set
+            {
+                if (this.objClienteGrupo == null || this.objClienteGrupo.cgr_codigo != value)
+                {
+                    Retorno objRetorno;
+                    using (Pessoas objBLL = new Pessoas())
+                    {
+                        objRetorno = objBLL.RetornaClienteGrupo(value == null ? 0 : (int)value, null);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objClienteGrupo = (tbClienteGrupo)objRetorno.objRetorno;
+                        base.enStatusTelaAtual = enStatusTela.Navegacao;
+                    }
+                    else
+                    {
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                        RaisePropertyChanged();
+                    }
+                }
+            }
+        }
+
+        [Required(ErrorMessage = "Nome da ClienteGrupo obrigatório")]
+        [StringLength(100, ErrorMessage = "É permitido apenas 100 caracteres")]
+        public string cgr_nome
+        {
+            get { return this.objClienteGrupo == null ? string.Empty : this.objClienteGrupo.cgr_nome; }
+            set
+            {
+                if (this.objClienteGrupo.cgr_nome != value)
+                {
+                    this.objClienteGrupo.cgr_nome = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [Range(0, 31, ErrorMessage = "Dia de fechamento inválido")]
+        public int cgr_fechamento 
+        {
+            get { return this.objClienteGrupo == null ? 0 : this.objClienteGrupo.cgr_fechamento; }
+            set
+            {
+                if (this.objClienteGrupo.cgr_fechamento != value)
+                {
+                    this.objClienteGrupo.cgr_fechamento = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [Range(0, 31, ErrorMessage = "Dia de vencimento inválido")]
+        public int cgr_vencimento 
+        {
+            get { return this.objClienteGrupo == null ? 0 : this.objClienteGrupo.cgr_vencimento; }
+            set
+            {
+                if (this.objClienteGrupo.cgr_vencimento != value)
+                {
+                    this.objClienteGrupo.cgr_vencimento = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        private tbClienteGrupo _objClienteGrupo;
+        public tbClienteGrupo objClienteGrupo
+        {
+            get { return this._objClienteGrupo; }
+            set
+            {
+                this._objClienteGrupo = value;
+                RaisePropertyChanged(null);
+            }
+        }
+
+        private List<tbClienteGrupo> _arrClienteGrupoPesquisa;
+        public List<tbClienteGrupo> arrClienteGrupoPesquisa
+        {
+            get { return this._arrClienteGrupoPesquisa; }
+            set
+            {
+                this._arrClienteGrupoPesquisa = value;
+                RaisePropertyChanged("arrClienteGrupoPesquisa", false);
+            }
+        }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+        private bool CanAnterior(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao || base.enStatusTelaAtual == enStatusTela.Padrao);
+        }
+        private void Anterior(object objParam)
+        {
+            Retorno objRetorno;
+            using (Pessoas objBLL = new Pessoas())
+            {
+                objRetorno = objBLL.RetornaClienteGrupo(this.objClienteGrupo == null ? 0 : this.objClienteGrupo.cgr_codigo, enNavegacao.Anterior);
+            }
+            if (objRetorno.intCodigoErro == 0)
+            {
+                this.objClienteGrupo = (tbClienteGrupo)objRetorno.objRetorno;
+                base.enStatusTelaAtual = enStatusTela.Navegacao;
+            }
+            else
+                MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+        }
+
+        private bool CanProximo(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao || base.enStatusTelaAtual == enStatusTela.Padrao);
+        }
+        private void Proximo(object objParam)
+        {
+            Retorno objRetorno;
+            using (Pessoas objBLL = new Pessoas())
+            {
+                objRetorno = objBLL.RetornaClienteGrupo(this.objClienteGrupo == null ? 0 : this.objClienteGrupo.cgr_codigo, enNavegacao.Proximo);
+            }
+            if (objRetorno.intCodigoErro == 0)
+            {
+                this.objClienteGrupo = (tbClienteGrupo)objRetorno.objRetorno;
+                base.enStatusTelaAtual = enStatusTela.Navegacao;
+            }
+            else
+                MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+        }
+
+        private bool CanNovo(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao || base.enStatusTelaAtual == enStatusTela.Padrao) && base.blnPermiteInclusaoRegistro;
+        }
+        private void Novo(object objParam)
+        {
+            tbClienteGrupo objClienteGrupoAux = new tbClienteGrupo();
+            this.objClienteGrupo = objClienteGrupoAux;
+            base.enStatusTelaAtual = enStatusTela.EmInclusaoOuAlteracao;
+        }
+
+        private bool CanEditar(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao && base.blnPermiteAlteracaoRegistro);
+        }
+        private void Editar(object objParam)
+        {
+            base.enStatusTelaAtual = enStatusTela.EmInclusaoOuAlteracao;
+        }
+
+        private bool CanSalvar(object objParam)
+        {
+            return base.enStatusTelaAtual == enStatusTela.EmInclusaoOuAlteracao;
+        }
+        private void Salvar(object objParam)
+        {
+            this.Validate();
+            if (!this.HasErrors)
+            {
+                Retorno objRetorno;
+                using (Pessoas objBLL = new Pessoas())
+                {
+                    objRetorno = objBLL.SalvarClienteGrupo(this.objClienteGrupo);
+                }
+                if (objRetorno.intCodigoErro == 0)
+                {
+                    this.objClienteGrupo = (tbClienteGrupo)objRetorno.objRetorno;
+                    base.enStatusTelaAtual = enStatusTela.Navegacao;
+                }
+                else
+                    MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+            }
+        }
+
+        private bool CanCancelar(object objParam)
+        {
+            return base.enStatusTelaAtual == enStatusTela.EmInclusaoOuAlteracao;
+        }
+        private void Cancelar(object objParam)
+        {
+            if (MessageBox.Show("Todas as alterações serão perdidas, deseja cancelar a edição?", "Atenção", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                if (this.objClienteGrupo.cgr_codigo > 0)
+                {
+                    Retorno objRetorno;
+                    using (Pessoas objBLL = new Pessoas())
+                    {
+                        objRetorno = objBLL.RetornaClienteGrupo(this.objClienteGrupo.cgr_codigo, null);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objClienteGrupo = (tbClienteGrupo)objRetorno.objRetorno;
+                        base.enStatusTelaAtual = enStatusTela.Navegacao;
+                    }
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                }
+                else
+                {
+                    this.objClienteGrupo = null;
+                    this.ClearAllErrorsAsync();
+                    base.enStatusTelaAtual = enStatusTela.Padrao;
+                }
+            }
+        }
+
+        private bool CanExcluir(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao && base.blnPermiteExclusaoRegistro);
+        }
+        private void Excluir(object objParam)
+        {
+            if (this.objClienteGrupo != null)
+            {
+                if (MessageBox.Show("Tem Certeza que deseja excluir o registro selecionado?", "Atenção", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                {
+                    Retorno objRetorno;
+                    using (Pessoas objBLL = new Pessoas())
+                    {
+                        objRetorno = objBLL.ExcluirClienteGrupo(this.objClienteGrupo.cgr_codigo);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objClienteGrupo = null;
+                        this.ClearAllErrorsAsync();
+                        base.enStatusTelaAtual = enStatusTela.Padrao;
+                    }
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                }
+            }
+        }
+
+        private bool CanPesquisar(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao || base.enStatusTelaAtual == enStatusTela.Padrao);
+        }
+        public void Pesquisar(object objParam)
+        {
+            if (objParam != null)
+            {
+                if (objParam.ToString() == "AbrirTela")
+                {
+                    this.objTelaPesquisa = new winPesquisa();
+                    this.objTelaPesquisa.Title = "Pesquisa - " + base.strNomeTela;
+                    this.objTelaPesquisa.DataContext = this;
+                    this.objTelaPesquisa.Owner = (Window)Application.Current.MainWindow;
+                    this.objTelaPesquisa.Closed += (sen, eve) =>
+                    {
+                        this.objTelaPesquisa = null;
+                        var handler = OnPesquisa;
+                        if (handler != null)
+                            handler(this, null);
+                    };
+                    this.objTelaPesquisa.ShowDialog();
+                }
+                else if (objParam.ToString() == "FecharTela")
+                {
+                    if (this.objTelaPesquisa != null)
+                        this.objTelaPesquisa.Close();
+                }
+                else if (objParam.GetType() == typeof(tbClienteGrupo))
+                {
+                    this.cgr_codigo = ((tbClienteGrupo)objParam).cgr_codigo;
+                    if (this.objTelaPesquisa != null)
+                        this.objTelaPesquisa.Close();
+                }
+                else
+                {
+                    Retorno objRetorno;
+                    using (Pessoas objBLL = new Pessoas())
+                    {
+                        objRetorno = objBLL.RetornaListaClienteGrupo(objParam.ToString());
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                        this.arrClienteGrupoPesquisa = (List<tbClienteGrupo>)objRetorno.objRetorno;
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                }
+            }
+        }
+
+        private bool CanLog(object objParam)
+        {
+            return base.enStatusTelaAtual == enStatusTela.Navegacao;
+        }
+        private void Log(object objParam)
+        {
+            if (objParam != null)
+            {
+                if (objParam.ToString() == "AbrirTela")
+                {
+                    Retorno objRetorno;
+                    using (Pessoas objBLL = new Pessoas())
+                    {
+                        objRetorno = objBLL.RetornaListaAuditoria(this.objClienteGrupo.cgr_codigo, this.objClienteGrupo);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        base.arrAuditoria = (List<tbAuditoria>)objRetorno.objRetorno;
+                        winAuditoria objTelaAuditoria = new winAuditoria();
+                        objTelaAuditoria.Title = "Auditoria - " + base.strNomeTela;
+                        objTelaAuditoria.DataContext = this;
+                        objTelaAuditoria.Owner = (Window)Application.Current.MainWindow;
+                        objTelaAuditoria.Closed += (sen, eve) =>
+                        {
+                            base.arrAuditoria = null;
+                            objTelaAuditoria = null;
+                        };
+                        objTelaAuditoria.ShowDialog();
+                    }
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                }
+                else if (objParam.GetType() == typeof(winAuditoria))
+                {
+                    ((Window)objParam).Close();
+                }
+            }
+        }
+
+        private bool CanBuscar(object objParam)
+        {
+            return true;
+        }
+        private void Buscar(object objParam)
+        {
+            if (objParam != null)
+            {
+                int intCodigo;
+                if (int.TryParse(objParam.ToString(), out intCodigo))
+                    this.cgr_codigo = intCodigo;
+            }
+        }
+
+        #endregion Comandos
+
+
+
+        #region Eventos
+
+        public event EventHandler OnPesquisa;
+
+        #endregion Eventos
+
+
+
+        #region Métodos
+
+
+
+        #endregion Métodos
+    }
+}

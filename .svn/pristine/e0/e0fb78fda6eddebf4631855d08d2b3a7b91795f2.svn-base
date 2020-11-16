@@ -1,0 +1,186 @@
+﻿using BSFoodWEB.BLL;
+using BSFoodWEB.DAL;
+using BSFoodWEB.DTO;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.ServiceModel;
+using System.Threading;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+using System.Windows.Threading;
+
+namespace BSFood
+{
+    public partial class MainPage : UserControl
+    {
+        ManualResetEvent resetEvent = new ManualResetEvent(false);
+        
+        IPessoasAsync service;
+        
+        public MainPage()
+        {
+            InitializeComponent();
+        }
+
+        private void UserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            //App.objSvcPessoa.RetornaListaMenuCompleted += (sen, eve) =>
+            //{
+            //    if (!eve.Result.blnTemErro)
+            //    {
+            //        lbMenu.ItemsSource = (List<tbMenu>)eve.Result.objRetorno;
+            //        resetEvent.Set();
+            //    }
+            //};
+            //App.objSvcPessoa.RetornaListaMenuAsync();
+            //resetEvent.WaitOne();
+            //List<tbMenu> arrRetorno = new List<tbMenu>();
+            //ThreadPool.QueueUserWorkItem(delegate
+            //{
+               
+            //});
+            //resetEvent.WaitOne();
+            //BasicHttpBinding objHttpBinding;
+            //objHttpBinding = new BasicHttpBinding(BasicHttpSecurityMode.None);
+            //objHttpBinding.MaxBufferSize = 2147483647;
+            //objHttpBinding.MaxReceivedMessageSize = 2147483647;
+            //objHttpBinding.CloseTimeout = new TimeSpan(0, 10, 0);
+            //objHttpBinding.OpenTimeout = new TimeSpan(0, 10, 0);
+            //objHttpBinding.ReceiveTimeout = new TimeSpan(0, 10, 0);
+            //objHttpBinding.SendTimeout = new TimeSpan(0, 10, 0);
+
+            //EndpointAddress objEndereco = new EndpointAddress("http://localhost/BSFoodWEB/svc/svcPessoas.svc");
+
+            ////var factory = new ChannelFactory<IPessoas>(objHttpBinding, objEndereco);
+            //var factory = new ChannelFactory<IPessoas>("*");
+            //IPessoas service = factory.CreateChannel();
+            //var result = service.BeginRetornaListaMenu(null, null);
+
+            //try
+            //{
+            //    var retorno = service.EndRetornaListaMenu(result);
+                
+            //    //arrRetorno = (List<tbMenu>)service.EndRetornaListaMenu(result).objRetorno;
+            //    //resetEvent.Set();
+            //}
+            //catch (Exception ex)
+            //{
+            //    //MessageBox.Show(string.Format("Unable to communicate with server. {0} {1}", ex.Message, ex.StackTrace));
+            //}
+            ////resetEvent.WaitOne();
+            //if (Dispatcher.CheckAccess())
+            //{
+            //    lbMenu.ItemsSource = arrRetorno;
+            //}
+            //else
+            //{
+            //    Dispatcher.BeginInvoke(delegate
+            //    {
+            //        lbMenu.ItemsSource = arrRetorno;
+            //    });
+            //}        
+
+            //ThreadPool.QueueUserWorkItem(delegate
+            //{
+            //    var factory = new ChannelFactory<IPessoasAsync>(new BasicHttpBinding(), new EndpointAddress("http://localhost/BSFoodWEB/svc/svcPessoas.svc"));
+            //    service = factory.CreateChannel();
+            //    service.BeginRetornaListaMenu((sen) =>
+            //    {
+            //        BSRetorno objRetorno = service.EndRetornaListaMenu(sen);
+            //        resetEvent.Set();
+            //        Dispatcher.BeginInvoke(delegate
+            //        {
+            //            lbMenu.ItemsSource = (List<tbMenu>)objRetorno.objRetorno;
+            //        });
+            //    }, null);
+            //    resetEvent.WaitOne();
+            //});
+
+            //resetEvent.WaitOne();
+
+        }
+
+        //void OnRetornaListaMenuCompleted(IAsyncResult ar)
+        //{
+        //    BSRetorno objRetorno = service.EndRetornaListaMenu(ar);
+        //    resetEvent.Set();
+        //    Dispatcher.BeginInvoke(delegate
+        //    {
+        //        lbMenu.ItemsSource = (List<tbMenu>)objRetorno.objRetorno;
+        //    });
+        //}
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            lbMenu.ItemsSource = null;
+
+            txtHoraInicio.Text = "1-" + DateTime.Now.Second + ":" + DateTime.Now.Millisecond;
+            
+            ThreadPool.QueueUserWorkItem(delegate
+            {
+                var factory = new ChannelFactory<IPessoasAsync>(new BasicHttpBinding(), new EndpointAddress("http://localhost/BSFoodWEB/svc/svcPessoas.svc"));
+                service = factory.CreateChannel();
+                service.BeginRetornaListaMenu((sen) =>
+                {
+                    BSRetorno objRetorno = service.EndRetornaListaMenu(sen);
+                    Dispatcher.BeginInvoke(delegate
+                    {
+                        List<tbMenu> arrRetorno = (List<tbMenu>)objRetorno.objRetorno;
+                        arrRetorno.First().men_nomeControle = "2-" + DateTime.Now.Second + ":" + DateTime.Now.Millisecond;
+                        lbMenu.ItemsSource = arrRetorno;
+                    });
+                    resetEvent.Set();
+                }, null);
+                resetEvent.WaitOne();
+            });
+            DispatcherTimer eventTimer = new DispatcherTimer();
+            eventTimer.Interval = new TimeSpan(0, 0, 0, 0, 500); // tick every 500 milliseconds
+            eventTimer.Tick += new EventHandler((sen, eve) =>
+            {
+                if (lbMenu.ItemsSource != null)
+                {
+                    txtHoraFim.Text = "3-" + DateTime.Now.Second + ":" + DateTime.Now.Millisecond;
+                }
+            });           
+
+            
+
+            //List<tbMenu> arrRetorno = new List<tbMenu>();
+            ////var factory = new ChannelFactory<IPessoas>(objHttpBinding, objEndereco);
+            //var factory = new ChannelFactory<IPessoas>("*");
+            //IPessoas service = factory.CreateChannel();
+            //var result = service.BeginRetornaListaMenu(null, null);
+
+            //try
+            //{
+            //    var retorno = service.EndRetornaListaMenu(result);
+
+            //    arrRetorno = (List<tbMenu>)retorno.objRetorno;
+            //    //resetEvent.Set();
+            //}
+            //catch (Exception ex)
+            //{
+            //    //MessageBox.Show(string.Format("Unable to communicate with server. {0} {1}", ex.Message, ex.StackTrace));
+            //}
+            ////resetEvent.WaitOne();
+            //if (Dispatcher.CheckAccess())
+            //{
+            //    lbMenu.ItemsSource = arrRetorno;
+            //}
+            //else
+            //{
+            //    Dispatcher.BeginInvoke(delegate
+            //    {
+            //        lbMenu.ItemsSource = arrRetorno;
+            //    });
+            //}        
+        }
+    }
+}

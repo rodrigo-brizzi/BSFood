@@ -1,0 +1,29 @@
+Camadas do projeto:
+
+DataAccess
+BusinessLogic
+DataTransfer
+Models
+View
+ViewModel
+
+
+                        <Setter.Value>
+                            <MultiBinding Converter="{StaticResource MultiValueConverter}">
+                                <Binding Path="men_nomeControle"/>
+                                <Binding Path="men_imagem"/>
+                                <Binding Path="men_cabecalho"/>
+                            </MultiBinding>
+                        </Setter.Value>
+
+			<Button.CommandParameter>
+                            <MultiBinding Converter="{StaticResource MultiValueConverter}">
+                                <Binding Path="men_nomeControle"/>
+                                <Binding Path="men_imagem"/>
+                                <Binding Path="men_cabecalho"/>
+                            </MultiBinding>
+                        </Button.CommandParameter>
+
+                //objConteudoTela.strImagemTela = arrParam[1].ToString();
+                //objConteudoTela.strNomeTela = arrParam[2].ToString();
+            //var arrParam = (object[])objParam;

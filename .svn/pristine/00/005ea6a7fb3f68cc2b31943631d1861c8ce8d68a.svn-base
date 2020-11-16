@@ -1,0 +1,247 @@
+﻿using BSFood.Apoio;
+using BSFood.BusinessLogic;
+using BSFood.DataTransfer;
+using BSFood.Models;
+using BSFood.View;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Input;
+
+namespace BSFood.ViewModel
+{
+    public class EntregaPedidoProdutoViewModel : ViewModelBase
+    {
+        public ICommand ProdutoCommand { get; set; }
+        public ICommand RemoveProdutoCommand { get; set; }
+        public EntregaPedidoProdutoViewModel(tbPedidoProduto _objPedidoProduto)
+        {
+            ProdutoCommand = new DelegateCommand(Produto, CanProduto);
+            RemoveProdutoCommand = new DelegateCommand(RemoveProduto, CanRemoveProduto);
+            this.objPedidoProduto = _objPedidoProduto;
+        }
+
+        #region Propriedades
+
+        public tbPedidoProduto objPedidoProduto { get; set; }
+
+        [Required(ErrorMessage = "Produto obrigatório")]
+        [Range(1, int.MaxValue, ErrorMessage = "Produto obrigatório")]
+        public int? pro_codigo
+        {
+            get
+            {
+                if (this.objPedidoProduto == null || this.objPedidoProduto.pro_codigo == 0)
+                    return null;
+                else
+                    return this.objPedidoProduto.pro_codigo;
+            }
+            set
+            {
+                if (this.objPedidoProduto == null || this.objPedidoProduto.pro_codigo != value)
+                {
+                    Retorno objRetorno;
+                    using (Produtos objBLL = new Produtos())
+                    {
+                        objRetorno = objBLL.RetornaProduto(value == null ? 0 : (int)value, null);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objPedidoProduto.pro_codigo = ((tbProduto)objRetorno.objRetorno).pro_codigo;
+                        this.objPedidoProduto.tbProduto.pro_nome = ((tbProduto)objRetorno.objRetorno).pro_nome;
+                        this.objPedidoProduto.ppr_descricao = ((tbProduto)objRetorno.objRetorno).pro_nome;
+                        this.objPedidoProduto.ppr_valorUnitario = ((tbProduto)objRetorno.objRetorno).pro_precoEntrega;
+                        this.objPedidoProduto.ppr_valorTotal = ((tbProduto)objRetorno.objRetorno).pro_precoEntrega;
+                        this.objPedidoProduto.ppr_quantidade = 1;
+                    }
+                    else
+                    {
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                        this.objPedidoProduto.pro_codigo = 0;
+                        this.objPedidoProduto.tbProduto.pro_nome = string.Empty;
+                        this.objPedidoProduto.ppr_descricao = string.Empty;
+                        this.objPedidoProduto.ppr_valorUnitario = 0;
+                        this.objPedidoProduto.ppr_valorTotal = 0;
+                        this.objPedidoProduto.ppr_quantidade = 0;
+                    }
+                    RaisePropertyChanged("pro_codigo");
+                    RaisePropertyChanged("pro_nome");
+                    RaisePropertyChanged("ppr_valorUnitario");
+                    RaisePropertyChanged("ppr_valorTotal");
+                    RaisePropertyChanged("ppr_quantidade");
+                }
+                else
+                    blnQuantidadeFoco = true;
+            }
+        }
+
+        public string pro_nome
+        {
+            get { return this.objPedidoProduto == null ? string.Empty : this.objPedidoProduto.tbProduto.pro_nome; }
+            set
+            {
+                if (this.objPedidoProduto.tbProduto.pro_nome != value)
+                {
+                    this.objPedidoProduto.tbProduto.pro_nome = value;
+                    this.objPedidoProduto.ppr_descricao = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [Required(ErrorMessage = "Quantidade obrigatória")]
+        [Range(0.1, double.MaxValue, ErrorMessage = "Quantidade inválida")]
+        public decimal ppr_quantidade
+        {
+            get { return this.objPedidoProduto == null ? 0 : this.objPedidoProduto.ppr_quantidade; }
+            set
+            {
+                if (this.objPedidoProduto.ppr_quantidade != value)
+                {
+                    this.objPedidoProduto.ppr_quantidade = value;
+                    this.ppr_valorTotal = value * this.ppr_valorUnitario;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        public decimal ppr_valorUnitario
+        {
+            get { return this.objPedidoProduto == null ? 0 : this.objPedidoProduto.ppr_valorUnitario; }
+            set
+            {
+                if (this.objPedidoProduto.ppr_valorUnitario != value)
+                {
+                    this.objPedidoProduto.ppr_valorUnitario = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        public decimal ppr_valorTotal
+        {
+            get { return this.objPedidoProduto == null ? 0 : this.objPedidoProduto.ppr_valorTotal; }
+            set
+            {
+                if (this.objPedidoProduto.ppr_valorTotal != value)
+                {
+                    this.objPedidoProduto.ppr_valorTotal = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        private bool _blnQuantidadeFoco;
+        public bool blnQuantidadeFoco
+        {
+            get { return this._blnQuantidadeFoco; }
+            set
+            {
+                this._blnQuantidadeFoco = value;
+                RaisePropertyChanged("blnQuantidadeFoco", false);
+            }
+        }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+        private bool CanProduto(object objParam)
+        {
+            return true;
+        }
+        private void Produto(object objParam)
+        {
+            //if (objParam != null)
+            //{
+            //    if (objParam.ToString() == "Novo")
+            //    {
+            //        winCadastro objTelaCadastro = new winCadastro();
+            //        ProdutoViewModel objProdutoViewModel = new ProdutoViewModel();
+            //        if (this.objPedidoProduto.pro_codigo > 0)
+            //            objProdutoViewModel.pro_codigo = this.objPedidoProduto.pro_codigo;
+            //        objProdutoViewModel.OnDispose += (sen1, eve1) => { objTelaCadastro.Close(); };
+            //        objTelaCadastro.Title = "Cadastro - " + objProdutoViewModel.strNomeTela;
+            //        objTelaCadastro.DataContext = objProdutoViewModel;
+            //        objTelaCadastro.Owner = (Window)Application.Current.MainWindow;
+            //        objTelaCadastro.Closed += (sen, eve) =>
+            //        {
+            //            if (objProdutoViewModel.pro_codigo != null)
+            //            {
+            //                this.objPedidoProduto.pro_codigo = (int)objProdutoViewModel.pro_codigo;
+            //                RaisePropertyChanged("pro_codigo");
+            //                this.objPedidoProduto.tbProduto.pro_nome = objProdutoViewModel.pro_nome;
+            //                this.objPedidoProduto.ppr_descricao = objProdutoViewModel.pro_nome;
+            //                RaisePropertyChanged("pro_nome");
+            //                this.objPedidoProduto.ppr_valorUnitario = objProdutoViewModel.objProduto.pro_precoEntrega;
+            //                RaisePropertyChanged("ppr_valorUnitario");
+            //                this.objPedidoProduto.ppr_valorTotal = objProdutoViewModel.objProduto.pro_precoEntrega;
+            //                RaisePropertyChanged("ppr_valorTotal");
+            //                this.objPedidoProduto.ppr_quantidade = 1;
+            //                RaisePropertyChanged("ppr_quantidade");
+            //            }
+            //            objProdutoViewModel = null;
+            //            objTelaCadastro = null;
+            //        };
+            //        objTelaCadastro.ShowDialog();
+            //    }
+            //    else if (objParam.ToString() == "Pesquisar")
+            //    {
+            //        ProdutoViewModel objProdutoViewModel = new ProdutoViewModel();
+            //        objProdutoViewModel.OnPesquisa += (sen, eve) =>
+            //        {
+            //            if (objProdutoViewModel.pro_codigo != null)
+            //            {
+            //                this.objPedidoProduto.pro_codigo = (int)objProdutoViewModel.pro_codigo;
+            //                RaisePropertyChanged("pro_codigo");
+            //                this.objPedidoProduto.tbProduto.pro_nome = objProdutoViewModel.pro_nome;
+            //                this.objPedidoProduto.ppr_descricao = objProdutoViewModel.pro_nome;
+            //                RaisePropertyChanged("pro_nome");
+            //                this.objPedidoProduto.ppr_valorUnitario = objProdutoViewModel.objProduto.pro_precoEntrega;
+            //                RaisePropertyChanged("ppr_valorUnitario");
+            //                this.objPedidoProduto.ppr_valorTotal = objProdutoViewModel.objProduto.pro_precoEntrega;
+            //                RaisePropertyChanged("ppr_valorTotal");
+            //                this.objPedidoProduto.ppr_quantidade = 1;
+            //                RaisePropertyChanged("ppr_quantidade");
+            //            }
+            //            objProdutoViewModel.Dispose();
+            //        };
+            //        objProdutoViewModel.Pesquisar("AbrirTela");
+            //    }
+            //    else
+            //    {
+            //        int intCodigo;
+            //        if (int.TryParse(objParam.ToString(), out intCodigo))
+            //            this.pro_codigo = intCodigo;
+            //        else
+            //            Produto("Pesquisar");
+            //    }
+            //}
+        }
+
+        private bool CanRemoveProduto(object objParam)
+        {
+            return true;
+        }
+        private void RemoveProduto(object objParam)
+        {
+            this.Dispose();
+        }
+
+        #endregion Comandos
+
+
+
+        #region Métodos
+
+
+
+        #endregion Métodos
+    }
+}

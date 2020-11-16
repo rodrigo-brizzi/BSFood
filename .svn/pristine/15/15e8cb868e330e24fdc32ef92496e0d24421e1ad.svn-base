@@ -1,0 +1,153 @@
+﻿using BSFoodServer.Migrations;
+using BSFoodServer.Models;
+using System;
+using System.Collections.Generic;
+using System.Data.Entity;
+using System.Data.Entity.Migrations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.DAL
+{
+    public class EFContextoInitializer : IDatabaseInitializer<EFContexto>
+    {
+
+        private readonly DbMigrationsConfiguration objDbMigrationsConfiguration;
+
+        public EFContextoInitializer()
+        {
+            objDbMigrationsConfiguration = new Configuration();
+        }
+
+        public void InitializeDatabase(EFContexto objCtx)
+        {
+            if (!objCtx.Database.Exists())
+            {
+                objCtx.Database.Create();
+                this.CargaInicial(objCtx);
+            }
+            else
+            {
+                var migrator = new DbMigrator(objDbMigrationsConfiguration);
+                if (migrator.GetPendingMigrations().Any())
+                    migrator.Update();
+            }
+        }
+
+        public void CargaInicial(EFContexto objCtx)
+        {
+            //Configuração
+            objCtx.Configuracoes.Add(new Configuracao { SenhaMaster = "023123" });
+
+            //Estados
+            objCtx.Estados.Add(new Estado { Sigla = "AC", Nome = "ACRE" });
+            objCtx.Estados.Add(new Estado { Sigla = "AL", Nome = "ALAGOAS" });
+            objCtx.Estados.Add(new Estado { Sigla = "AP", Nome = "AMAPÁ" });
+            objCtx.Estados.Add(new Estado { Sigla = "AM", Nome = "AMAZONAS" });
+            objCtx.Estados.Add(new Estado { Sigla = "BA", Nome = "BAHIA" });
+            objCtx.Estados.Add(new Estado { Sigla = "CE", Nome = "CEARÁ" });
+            objCtx.Estados.Add(new Estado { Sigla = "DF", Nome = "DISTRITO FEDERAL" });
+            objCtx.Estados.Add(new Estado { Sigla = "ES", Nome = "ESPÍRITO SANTO" });
+            objCtx.Estados.Add(new Estado { Sigla = "GO", Nome = "GOIÁS" });
+            objCtx.Estados.Add(new Estado { Sigla = "MA", Nome = "MARANHÃO" });
+            objCtx.Estados.Add(new Estado { Sigla = "MT", Nome = "MATO GROSSO" });
+            objCtx.Estados.Add(new Estado { Sigla = "MS", Nome = "MATO GROSSO DO SUL" });
+            objCtx.Estados.Add(new Estado { Sigla = "MG", Nome = "MINAS GERAIS" });
+            objCtx.Estados.Add(new Estado { Sigla = "PA", Nome = "PARÁ" });
+            objCtx.Estados.Add(new Estado { Sigla = "PB", Nome = "PARAÍBA" });
+            objCtx.Estados.Add(new Estado { Sigla = "PR", Nome = "PARANÁ" });
+            objCtx.Estados.Add(new Estado { Sigla = "PE", Nome = "PERNAMBUCO" });
+            objCtx.Estados.Add(new Estado { Sigla = "PI", Nome = "PIAUÍ" });
+            objCtx.Estados.Add(new Estado { Sigla = "RJ", Nome = "RIO DE JANEIRO" });
+            objCtx.Estados.Add(new Estado { Sigla = "RN", Nome = "RIO GRANDE DO NORTE" });
+            objCtx.Estados.Add(new Estado { Sigla = "RS", Nome = "RIO GRANDE DO SUL" });
+            objCtx.Estados.Add(new Estado { Sigla = "RO", Nome = "RONDÔNIA" });
+            objCtx.Estados.Add(new Estado { Sigla = "RR", Nome = "RORAIMA" });
+            objCtx.Estados.Add(new Estado { Sigla = "SC", Nome = "SANTA CATARINA" });
+            objCtx.Estados.Add(new Estado { Sigla = "SP", Nome = "SÃO PAULO" });
+            objCtx.Estados.Add(new Estado { Sigla = "SE", Nome = "SERGIPE" });
+            objCtx.Estados.Add(new Estado { Sigla = "TO", Nome = "TOCANTINS" });
+            objCtx.Estados.Add(new Estado { Sigla = "EX", Nome = "EXTERIOR" });
+            objCtx.SaveChanges();
+
+            //Cidade
+            objCtx.Cidades.Add(new Cidade { Nome = "PRESIDENTE PRUDENTE", Ibge = "3541406", CodigoEstado = 25 });
+
+            //PerfilAcesso
+            objCtx.PerfilAcessos.Add(new PerfilAcesso { Descricao = "ADMINISTRADOR", PermiteDesconto = true, PermiteCancelarItem = true, PermiteCancelarVenda = true, PermiteVendaClienteBloqueado = true, PermiteVendaClienteNegativo = true });
+
+            //Menu
+            objCtx.Menus.Add(new Menu { Nivel = 0, NomeControle = "tabCadastro", Cabecalho = "Cadastros", Ordem = "1", Imagem = null, Status = true, CodigoMenu = null });
+            objCtx.SaveChanges();
+            objCtx.Menus.Add(new Menu { Nivel = 1, NomeControle = "BSFood.View.cwBairros", Cabecalho = "Bairros", Ordem = "1.1", Imagem = "form16.png", Status = true, CodigoMenu = 1 });
+            objCtx.Menus.Add(new Menu { Nivel = 1, NomeControle = "BSFood.View.cwCidades", Cabecalho = "Cidades", Ordem = "1.2", Imagem = "form16.png", Status = true, CodigoMenu = 1 });
+            objCtx.Menus.Add(new Menu { Nivel = 1, NomeControle = "BSFood.View.cwClientes", Cabecalho = "Clientes", Ordem = "1.3", Imagem = "form16.png", Status = true, CodigoMenu = 1 });
+            objCtx.Menus.Add(new Menu { Nivel = 1, NomeControle = "BSFood.View.cwEstados", Cabecalho = "Estados", Ordem = "1.4", Imagem = "form16.png", Status = true, CodigoMenu = 1 });
+            objCtx.Menus.Add(new Menu { Nivel = 1, NomeControle = "BSFood.View.cwFornecedores", Cabecalho = "Fornecedores", Ordem = "1.5", Imagem = "form16.png", Status = true, CodigoMenu = 1 });
+            objCtx.Menus.Add(new Menu { Nivel = 1, NomeControle = "BSFood.View.cwFuncionarios", Cabecalho = "Funcionarios", Ordem = "1.6", Imagem = "form16.png", Status = true, CodigoMenu = 1 });
+            objCtx.Menus.Add(new Menu { Nivel = 1, NomeControle = "BSFood.View.cwGrupoCliente", Cabecalho = "Grupos de Clientes", Ordem = "1.7", Imagem = "form16.png", Status = true, CodigoMenu = 1 });
+            objCtx.Menus.Add(new Menu { Nivel = 1, NomeControle = "BSFood.View.cwGrupoProduto", Cabecalho = "Grupo de Produtos", Ordem = "1.8", Imagem = "form16.png", Status = true, CodigoMenu = 1 });
+            objCtx.Menus.Add(new Menu { Nivel = 1, NomeControle = "BSFood.View.cwProdutos", Cabecalho = "Produtos", Ordem = "1.9", Imagem = "form16.png", Status = true, CodigoMenu = 1 });
+
+            objCtx.Menus.Add(new Menu { Nivel = 0, NomeControle = "tabLancamento", Cabecalho = "Lançamentos", Ordem = "2", Imagem = null, Status = true, CodigoMenu = null });
+            objCtx.SaveChanges();
+            objCtx.Menus.Add(new Menu { Nivel = 1, NomeControle = "BSFood.View.cwCompras", Cabecalho = "Compras", Ordem = "2.1", Imagem = "form16.png", Status = true, CodigoMenu = 11 });
+            objCtx.Menus.Add(new Menu { Nivel = 1, NomeControle = null, Cabecalho = "Caixa", Ordem = "2.2", Imagem = "form16.png", Status = true, CodigoMenu = 11 });
+            objCtx.SaveChanges();
+            objCtx.Menus.Add(new Menu { Nivel = 3, NomeControle = "BSFood.View.cwCaixaAbertura", Cabecalho = "Abertura", Ordem = "2.2.1", Imagem = "form16.png", Status = true, CodigoMenu = 13 });
+            objCtx.Menus.Add(new Menu { Nivel = 3, NomeControle = "BSFood.View.cwCaixa", Cabecalho = "Caixa", Ordem = "2.2.2", Imagem = "form16.png", Status = true, CodigoMenu = 13 });
+            objCtx.Menus.Add(new Menu { Nivel = 3, NomeControle = "BSFood.View.cwCaixaFechamento", Cabecalho = "Fechamento", Ordem = "2.2.3", Imagem = "form16.png", Status = true, CodigoMenu = 13 });
+            objCtx.Menus.Add(new Menu { Nivel = 1, NomeControle = "BSFood.View.cwContasReceber", Cabecalho = "Contas a Receber", Ordem = "2.3", Imagem = "form16.png", Status = true, CodigoMenu = 11 });
+            objCtx.Menus.Add(new Menu { Nivel = 1, NomeControle = "BSFood.View.cwContasPagar", Cabecalho = "Contas a Pagar", Ordem = "2.4", Imagem = "form16.png", Status = true, CodigoMenu = 11 });
+            objCtx.Menus.Add(new Menu { Nivel = 1, NomeControle = "BSFood.View.cwMesas", Cabecalho = "Mesas", Ordem = "2.5", Imagem = "form16.png", Status = true, CodigoMenu = 11 });
+            objCtx.Menus.Add(new Menu { Nivel = 1, NomeControle = null, Cabecalho = "Pedidos", Ordem = "2.6", Imagem = "form16.png", Status = true, CodigoMenu = 11 });
+            objCtx.SaveChanges();
+            objCtx.Menus.Add(new Menu { Nivel = 3, NomeControle = "BSFood.View.cwComanda", Cabecalho = "Comanda", Ordem = "2.6.1", Imagem = "form16.png", Status = true, CodigoMenu = 20 });
+            objCtx.Menus.Add(new Menu { Nivel = 3, NomeControle = "BSFood.View.cwEntrega", Cabecalho = "Entrega", Ordem = "2.6.2", Imagem = "form16.png", Status = true, CodigoMenu = 20 });
+
+            objCtx.Menus.Add(new Menu { Nivel = 0, NomeControle = "tabRelatorio", Cabecalho = "Relatórios", Ordem = "3", Imagem = null, Status = true, CodigoMenu = null });
+            objCtx.SaveChanges();
+            objCtx.Menus.Add(new Menu { Nivel = 1, NomeControle = "BSFood.View.cwRelClientes", Cabecalho = "Clientes", Ordem = "3.1", Imagem = "form16.png", Status = true, CodigoMenu = 23 });
+            objCtx.Menus.Add(new Menu { Nivel = 1, NomeControle = "BSFood.View.cwRelCompras", Cabecalho = "Compras", Ordem = "3.2", Imagem = "form16.png", Status = true, CodigoMenu = 23 });
+            objCtx.Menus.Add(new Menu { Nivel = 1, NomeControle = "BSFood.View.cwRelCaixa", Cabecalho = "Caixa", Ordem = "3.3", Imagem = "form16.png", Status = true, CodigoMenu = 23 });
+            objCtx.Menus.Add(new Menu { Nivel = 1, NomeControle = "BSFood.View.cwRelContasReceber", Cabecalho = "Contas a Receber", Ordem = "3.4", Imagem = "form16.png", Status = true, CodigoMenu = 23 });
+            objCtx.Menus.Add(new Menu { Nivel = 1, NomeControle = "BSFood.View.cwRelContasPagar", Cabecalho = "Contas a Pagar", Ordem = "3.5", Imagem = "form16.png", Status = true, CodigoMenu = 23 });
+            objCtx.Menus.Add(new Menu { Nivel = 1, NomeControle = "BSFood.View.cwRelFornecedores", Cabecalho = "Fornecedores", Ordem = "3.6", Imagem = "form16.png", Status = true, CodigoMenu = 23 });
+            objCtx.Menus.Add(new Menu { Nivel = 1, NomeControle = null, Cabecalho = "Produtos", Ordem = "3.7", Imagem = "form16.png", Status = true, CodigoMenu = 23 });
+            objCtx.SaveChanges();
+            objCtx.Menus.Add(new Menu { Nivel = 3, NomeControle = "BSFood.View.cwRelEstoqueCardapio", Cabecalho = "Cardápio", Ordem = "3.7.1", Imagem = "form16.png", Status = true, CodigoMenu = 30 });
+            objCtx.Menus.Add(new Menu { Nivel = 3, NomeControle = "BSFood.View.cwRelEstoque", Cabecalho = "Estoque", Ordem = "3.7.2", Imagem = "form16.png", Status = true, CodigoMenu = 30 });
+            objCtx.Menus.Add(new Menu { Nivel = 3, NomeControle = "BSFood.View.cwRelEstoqueMovimentado", Cabecalho = "Movimentado", Ordem = "3.7.3", Imagem = "form16.png", Status = true, CodigoMenu = 30 });
+            objCtx.Menus.Add(new Menu { Nivel = 3, NomeControle = "BSFood.View.cwRelEstoqueParaCompra", Cabecalho = "Para Compra", Ordem = "3.7.4", Imagem = "form16.png", Status = true, CodigoMenu = 30 });
+            objCtx.Menus.Add(new Menu { Nivel = 3, NomeControle = "BSFood.View.cwRelEstoqueSemGiro", Cabecalho = "Sem Giro", Ordem = "3.7.5", Imagem = "form16.png", Status = true, CodigoMenu = 30 });
+            objCtx.Menus.Add(new Menu { Nivel = 1, NomeControle = null, Cabecalho = "Vendas", Ordem = "3.8", Imagem = "form16.png", Status = true, CodigoMenu = 23 });
+            objCtx.SaveChanges();
+            objCtx.Menus.Add(new Menu { Nivel = 3, NomeControle = "BSFood.View.cwRelVendaCliente", Cabecalho = "Cliente", Ordem = "3.8.1", Imagem = "form16.png", Status = true, CodigoMenu = 36 });
+            objCtx.Menus.Add(new Menu { Nivel = 3, NomeControle = "BSFood.View.cwRelVendaEntregador", Cabecalho = "Entregador", Ordem = "3.8.2", Imagem = "form16.png", Status = true, CodigoMenu = 36 });
+            objCtx.Menus.Add(new Menu { Nivel = 3, NomeControle = "BSFood.View.cwRelVendaEstatistica", Cabecalho = "Estatística", Ordem = "3.8.3", Imagem = "form16.png", Status = true, CodigoMenu = 36 });
+            objCtx.Menus.Add(new Menu { Nivel = 3, NomeControle = "BSFood.View.cwRelVendaFechamento", Cabecalho = "Fechamento", Ordem = "3.8.4", Imagem = "form16.png", Status = true, CodigoMenu = 36 });
+            objCtx.Menus.Add(new Menu { Nivel = 3, NomeControle = "BSFood.View.cwRelVendaGrupo", Cabecalho = "Grupo", Ordem = "3.8.5", Imagem = "form16.png", Status = true, CodigoMenu = 36 });
+            objCtx.Menus.Add(new Menu { Nivel = 3, NomeControle = "BSFood.View.cwRelVendaPeriodo", Cabecalho = "Período", Ordem = "3.8.6", Imagem = "form16.png", Status = true, CodigoMenu = 36 });
+
+            objCtx.Menus.Add(new Menu { Nivel = 0, NomeControle = "tabUtilitario", Cabecalho = "Utilitários", Ordem = "4", Imagem = null, Status = true, CodigoMenu = null });
+            objCtx.SaveChanges();
+            objCtx.Menus.Add(new Menu { Nivel = 1, NomeControle = "BSFood.View.cwBackup", Cabecalho = "Backup", Ordem = "4.1", Imagem = "form16.png", Status = true, CodigoMenu = 43 });
+            objCtx.Menus.Add(new Menu { Nivel = 1, NomeControle = "BSFood.View.cwConfiguracao", Cabecalho = "Configuração", Ordem = "4.2", Imagem = "form16.png", Status = true, CodigoMenu = 43 });
+            objCtx.Menus.Add(new Menu { Nivel = 1, NomeControle = "BSFood.View.cwPerfilAcesso", Cabecalho = "Perfil de acesso", Ordem = "4.3", Imagem = "form16.png", Status = true, CodigoMenu = 43 });
+            objCtx.Menus.Add(new Menu { Nivel = 1, NomeControle = "BSFood.View.cwSobre", Cabecalho = "Sobre", Ordem = "4.4", Imagem = "form16.png", Status = true, CodigoMenu = 43 });
+
+            objCtx.SaveChanges();
+
+            //PerfilAcessoMenu
+            for (int i = 1; i <= 47; i++)
+            {
+                objCtx.PerfilAcessoMenus.Add(new PerfilAcessoMenu { CodigoPerfilAcesso = 1, CodigoMenu = i, PermiteAlteracao = true, PermiteExclusao = true, PermiteInclusao = true, PermiteVisualizacao = true });
+            }
+            objCtx.SaveChanges();
+
+            objCtx.Funcionarios.Add(new Funcionario { Nome = "ADMINISTRADOR", Login = "ADM", Senha = "023123", Logradouro = "RUA GIACOMO DOMINGOS MUNGO", Numero = "206", Cep = "19041330", CodigoCidade = 1, CodigoEstado = 25, CodigoPerfilAcesso = 1 });
+            objCtx.SaveChanges();
+        }
+    }
+}

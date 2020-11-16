@@ -1,0 +1,741 @@
+﻿using BSFood.View;
+using BSFood.Apoio;
+using BSFood.Models;
+using BSFood.BusinessLogic;
+using BSFood.DataTransfer;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
+
+namespace BSFood.ViewModel
+{
+    public class FuncionarioViewModel : ViewModelBase
+    {
+        public ICommand AnteriorCommand { get; set; }
+        public ICommand ProximoCommand { get; set; }
+        public ICommand NovoCommand { get; set; }
+        public ICommand EditarCommand { get; set; }
+        public ICommand SalvarCommand { get; set; }
+        public ICommand CancelarCommand { get; set; }
+        public ICommand ExcluirCommand { get; set; }
+        public ICommand PesquisarCommand { get; set; }
+        public ICommand LogCommand { get; set; }
+        public ICommand BuscarCommand { get; set; }
+        public ICommand PerfilAcessoCommand { get; set; }
+        public ICommand CidadeCommand { get; set; }
+
+        private winPesquisa objTelaPesquisa;
+
+        public FuncionarioViewModel()
+        {
+            AnteriorCommand = new DelegateCommand(Anterior, CanAnterior);
+            ProximoCommand = new DelegateCommand(Proximo, CanProximo);
+            NovoCommand = new DelegateCommand(Novo, CanNovo);
+            EditarCommand = new DelegateCommand(Editar, CanEditar);
+            SalvarCommand = new DelegateCommand(Salvar, CanSalvar);
+            CancelarCommand = new DelegateCommand(Cancelar, CanCancelar);
+            ExcluirCommand = new DelegateCommand(Excluir, CanExcluir);
+            PesquisarCommand = new DelegateCommand(Pesquisar, CanPesquisar);
+            LogCommand = new DelegateCommand(Log, CanLog);
+            BuscarCommand = new DelegateCommand(Buscar, CanBuscar);
+            PerfilAcessoCommand = new DelegateCommand(PerfilAcesso, CanPerfilAcesso);
+            CidadeCommand = new DelegateCommand(Cidade, CanCidade);
+            CarregaComboEstado();
+        }
+
+
+        #region Propriedades
+
+        public int? fun_codigo
+        {
+            get
+            {
+                if (this.objFuncionario == null)
+                    return null;
+                else
+                    return this.objFuncionario.fun_codigo;
+            }
+            set
+            {
+                if (this.objFuncionario == null || this.objFuncionario.fun_codigo != value)
+                {
+                    Retorno objRetorno;
+                    using (Pessoas objBLL = new Pessoas())
+                    {
+                        objRetorno = objBLL.RetornaFuncionario(value == null ? 0 : (int)value, null);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objFuncionario = (tbFuncionario)objRetorno.objRetorno;
+                        base.enStatusTelaAtual = enStatusTela.Navegacao;
+                    }
+                    else
+                    {
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                        RaisePropertyChanged();
+                    }
+                }
+            }
+        }
+
+        [Required(ErrorMessage = "Perfil Acesso obrigatório")]
+        [Range(1, int.MaxValue, ErrorMessage = "Perfil Acesso obrigatório")]
+        public int? pac_codigo
+        {
+            get 
+            {
+                if (this.objFuncionario == null || this.objFuncionario.pac_codigo == 0)
+                    return null;
+                else
+                    return this.objFuncionario.pac_codigo;
+            }
+            set
+            {
+                if (this.objFuncionario == null || this.objFuncionario.pac_codigo != value)
+                {
+                    Retorno objRetorno;
+                    using (Pessoas objBLL = new Pessoas())
+                    {
+                        objRetorno = objBLL.RetornaPerfilAcesso(value == null ? 0 : (int)value, null);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objFuncionario.pac_codigo = ((tbPerfilAcesso)objRetorno.objRetorno).pac_codigo;
+                        this.objFuncionario.tbPerfilAcesso.pac_descricao = ((tbPerfilAcesso)objRetorno.objRetorno).pac_descricao;
+                    }
+                    else
+                    {
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                        this.objFuncionario.pac_codigo = 0;
+                        this.objFuncionario.tbPerfilAcesso.pac_descricao = string.Empty;
+                    }
+                    RaisePropertyChanged("pac_codigo");
+                    RaisePropertyChanged("pac_descricao");                        
+                }
+            }
+        }
+
+        public string pac_descricao
+        {
+            get { return this.objFuncionario == null ? string.Empty : this.objFuncionario.tbPerfilAcesso.pac_descricao; }
+            set
+            {
+                if (this.objFuncionario.tbPerfilAcesso.pac_descricao != value)
+                {
+                    this.objFuncionario.tbPerfilAcesso.pac_descricao = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [Required(ErrorMessage = "Nome do Funcionario obrigatório")]
+        [StringLength(100, ErrorMessage = "É permitido apenas 100 caracteres")]
+        public string fun_nome
+        {
+            get { return this.objFuncionario == null ? string.Empty : this.objFuncionario.fun_nome; }
+            set
+            {
+                if (this.objFuncionario.fun_nome != value)
+                {
+                    this.objFuncionario.fun_nome = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [Required(ErrorMessage = "Login obrigatório")]
+        [StringLength(20, ErrorMessage = "É permitido apenas 20 caracteres")]
+        public string fun_login
+        {
+            get { return this.objFuncionario == null ? string.Empty : this.objFuncionario.fun_login; }
+            set
+            {
+                if (this.objFuncionario.fun_login != value)
+                {
+                    this.objFuncionario.fun_login = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [Required(ErrorMessage = "Senha obrigatório")]
+        [StringLength(20, ErrorMessage = "É permitido apenas 20 caracteres")]
+        public string fun_senha
+        {
+            get { return this.objFuncionario == null ? string.Empty : this.objFuncionario.fun_senha; }
+            set
+            {
+                if (this.objFuncionario.fun_senha != value)
+                {
+                    this.objFuncionario.fun_senha = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [StringLength(200, ErrorMessage = "É permitido apenas 200 caracteres")]
+        public string fun_logradouro
+        {
+            get { return this.objFuncionario == null ? string.Empty : this.objFuncionario.fun_logradouro; }
+            set
+            {
+                if (this.objFuncionario.fun_logradouro != value)
+                {
+                    this.objFuncionario.fun_logradouro = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [StringLength(10, ErrorMessage = "É permitido apenas 10 caracteres")]
+        public string fun_numero
+        {
+            get { return this.objFuncionario == null ? string.Empty : this.objFuncionario.fun_numero; }
+            set
+            {
+                if (this.objFuncionario.fun_numero != value)
+                {
+                    this.objFuncionario.fun_numero = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [StringLength(100, ErrorMessage = "É permitido apenas 100 caracteres")]
+        public string fun_bairro
+        {
+            get { return this.objFuncionario == null ? string.Empty : this.objFuncionario.fun_bairro; }
+            set
+            {
+                if (this.objFuncionario.fun_bairro != value)
+                {
+                    this.objFuncionario.fun_bairro = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [StringLength(9, ErrorMessage = "É permitido apenas 9 caracteres")]
+        public string fun_cep
+        {
+            get { return this.objFuncionario == null ? string.Empty : this.objFuncionario.fun_cep; }
+            set
+            {
+                if (this.objFuncionario.fun_cep != value)
+                {
+                    this.objFuncionario.fun_cep = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [StringLength(150, ErrorMessage = "É permitido apenas 150 caracteres")]
+        public string fun_complemento
+        {
+            get { return this.objFuncionario == null ? string.Empty : this.objFuncionario.fun_complemento; }
+            set
+            {
+                if (this.objFuncionario.fun_complemento != value)
+                {
+                    this.objFuncionario.fun_complemento = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [Required(ErrorMessage = "Estado obrigatório")]
+        [Range(1, int.MaxValue, ErrorMessage = "Estado obrigatório")]
+        public int est_codigo
+        {
+            get { return this.objFuncionario == null ? 0 : this.objFuncionario.est_codigo; }
+            set
+            {
+                if (this.objFuncionario.est_codigo != value)
+                {
+                    this.objFuncionario.est_codigo = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [Required(ErrorMessage = "Cidade obrigatório")]
+        [Range(1, int.MaxValue, ErrorMessage = "Cidade obrigatório")]
+        public int cid_codigo
+        {
+            get 
+            {
+                if (this.objFuncionario == null)
+                    return 0;
+                else
+                {
+                    RaisePropertyChanged("est_codigo", false);
+                    return this.objFuncionario.cid_codigo;
+                }
+            }
+            set
+            {
+                if (this.objFuncionario.cid_codigo != value)
+                {
+                    this.objFuncionario.cid_codigo = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [StringLength(20, ErrorMessage = "É permitido apenas 20 caracteres")]
+        public string fun_telefone
+        {
+            get { return this.objFuncionario == null ? string.Empty : this.objFuncionario.fun_telefone; }
+            set
+            {
+                if (this.objFuncionario.fun_telefone != value)
+                {
+                    this.objFuncionario.fun_telefone = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [StringLength(20, ErrorMessage = "É permitido apenas 20 caracteres")]
+        public string fun_celular
+        {
+            get { return this.objFuncionario == null ? string.Empty : this.objFuncionario.fun_celular; }
+            set
+            {
+                if (this.objFuncionario.fun_celular != value)
+                {
+                    this.objFuncionario.fun_celular = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        private tbFuncionario _objFuncionario;
+        public tbFuncionario objFuncionario
+        {
+            get { return this._objFuncionario; }
+            set
+            {
+                this._objFuncionario = value;
+                RaisePropertyChanged(null);
+            }
+        }
+
+        private List<tbFuncionario> _arrFuncionarioPesquisa;
+        public List<tbFuncionario> arrFuncionarioPesquisa
+        {
+            get { return this._arrFuncionarioPesquisa; }
+            set
+            {
+                this._arrFuncionarioPesquisa = value;
+                RaisePropertyChanged("arrFuncionarioPesquisa", false);
+            }
+        }
+
+        private List<tbEstado> _arrEstado;
+        public List<tbEstado> arrEstado 
+        {
+            get { return this._arrEstado; }
+            set 
+            {
+                this._arrEstado = value;
+                RaisePropertyChanged("arrEstado", false); 
+            }
+        }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+        private bool CanAnterior(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao || base.enStatusTelaAtual == enStatusTela.Padrao);
+        }
+        private void Anterior(object objParam)
+        {
+            Retorno objRetorno;
+            using (Pessoas objBLL = new Pessoas())
+            {
+                objRetorno = objBLL.RetornaFuncionario(this.objFuncionario == null ? 0 : this.objFuncionario.fun_codigo, enNavegacao.Anterior);
+            }
+            if (objRetorno.intCodigoErro == 0)
+            {
+                this.objFuncionario = (tbFuncionario)objRetorno.objRetorno;
+                base.enStatusTelaAtual = enStatusTela.Navegacao;
+            }
+            else
+                MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+        }
+
+        private bool CanProximo(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao || base.enStatusTelaAtual == enStatusTela.Padrao);
+        }
+        private void Proximo(object objParam)
+        {
+            Retorno objRetorno;
+            using (Pessoas objBLL = new Pessoas())
+            {
+                objRetorno = objBLL.RetornaFuncionario(this.objFuncionario == null ? 0 : this.objFuncionario.fun_codigo, enNavegacao.Proximo);
+            }
+            if (objRetorno.intCodigoErro == 0)
+            {
+                this.objFuncionario = (tbFuncionario)objRetorno.objRetorno;
+                base.enStatusTelaAtual = enStatusTela.Navegacao;
+            }
+            else
+                MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+        }
+
+        private bool CanNovo(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao || base.enStatusTelaAtual == enStatusTela.Padrao) && base.blnPermiteInclusaoRegistro;
+        }
+        private void Novo(object objParam)
+        {
+            tbFuncionario objFuncionarioAux = new tbFuncionario();
+            objFuncionarioAux.tbPerfilAcesso = new tbPerfilAcesso();
+            objFuncionarioAux.est_codigo = Util.objConfigStorage.objEmpresa.est_codigo;
+            objFuncionarioAux.cid_codigo = Util.objConfigStorage.objEmpresa.cid_codigo;
+            this.objFuncionario = objFuncionarioAux;
+            base.enStatusTelaAtual = enStatusTela.EmInclusaoOuAlteracao;
+        }
+
+        private bool CanEditar(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao && base.blnPermiteAlteracaoRegistro);
+        }
+        private void Editar(object objParam)
+        {
+            base.enStatusTelaAtual = enStatusTela.EmInclusaoOuAlteracao;
+        }
+
+        private bool CanSalvar(object objParam)
+        {
+            return base.enStatusTelaAtual == enStatusTela.EmInclusaoOuAlteracao;
+        }
+        private void Salvar(object objParam)
+        {
+            var focusedElement = Keyboard.FocusedElement as FrameworkElement;
+            if (focusedElement is TextBox)
+            {
+                var expression = focusedElement.GetBindingExpression(TextBox.TextProperty);
+                if (expression != null && expression.ParentBinding.UpdateSourceTrigger == System.Windows.Data.UpdateSourceTrigger.LostFocus)
+                    expression.UpdateSource();
+            }            
+            
+            this.Validate();
+            if (!this.HasErrors)
+            {
+                Retorno objRetorno;
+                using (Pessoas objBLL = new Pessoas())
+                {
+                    objRetorno = objBLL.SalvarFuncionario(this.objFuncionario);
+                }
+                if (objRetorno.intCodigoErro == 0)
+                {
+                    this.objFuncionario = (tbFuncionario)objRetorno.objRetorno;
+                    base.enStatusTelaAtual = enStatusTela.Navegacao;
+                }
+                else
+                    MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+            }
+        }
+
+        private bool CanCancelar(object objParam)
+        {
+            return base.enStatusTelaAtual == enStatusTela.EmInclusaoOuAlteracao;
+        }
+        private void Cancelar(object objParam)
+        {
+            if (MessageBox.Show("Todas as alterações serão perdidas, deseja cancelar a edição?", "Atenção", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                if (this.objFuncionario.fun_codigo > 0)
+                {
+                    Retorno objRetorno;
+                    using (Pessoas objBLL = new Pessoas())
+                    {
+                        objRetorno = objBLL.RetornaFuncionario(this.objFuncionario.fun_codigo, null);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objFuncionario = (tbFuncionario)objRetorno.objRetorno;
+                        base.enStatusTelaAtual = enStatusTela.Navegacao;
+                    }
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                }
+                else
+                {
+                    this.objFuncionario = null;
+                    this.ClearAllErrorsAsync();
+                    base.enStatusTelaAtual = enStatusTela.Padrao;
+                }
+            }
+        }
+
+        private bool CanExcluir(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao && base.blnPermiteExclusaoRegistro);
+        }
+        private void Excluir(object objParam)
+        {
+            if (this.objFuncionario != null)
+            {
+                if (MessageBox.Show("Tem Certeza que deseja excluir o registro selecionado?", "Atenção", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                {
+                    Retorno objRetorno;
+                    using (Pessoas objBLL = new Pessoas())
+                    {
+                        objRetorno = objBLL.ExcluirFuncionario(this.objFuncionario.fun_codigo);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objFuncionario = null;
+                        this.ClearAllErrorsAsync();
+                        base.enStatusTelaAtual = enStatusTela.Padrao;
+                    }
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                }
+            }
+        }
+
+        private bool CanPesquisar(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao || base.enStatusTelaAtual == enStatusTela.Padrao);
+        }
+        public void Pesquisar(object objParam)
+        {
+            if (objParam != null)
+            {
+                if (objParam.ToString() == "AbrirTela")
+                {
+                    this.objTelaPesquisa = new winPesquisa();
+                    this.objTelaPesquisa.Title = "Pesquisa - " + base.strNomeTela;
+                    this.objTelaPesquisa.DataContext = this;
+                    this.objTelaPesquisa.Owner = (Window)Application.Current.MainWindow;
+                    this.objTelaPesquisa.Closed += (sen, eve) =>
+                    {
+                        this.objTelaPesquisa = null;
+                        var handler = OnPesquisa;
+                        if (handler != null)
+                            handler(this, null);
+                    };
+                    this.objTelaPesquisa.ShowDialog();
+                }
+                else if (objParam.ToString() == "FecharTela")
+                {
+                    if (this.objTelaPesquisa != null)
+                        this.objTelaPesquisa.Close();
+                }
+                else if (objParam.GetType() == typeof(tbFuncionario))
+                {
+                    this.fun_codigo = ((tbFuncionario)objParam).fun_codigo;
+                    if (this.objTelaPesquisa != null)
+                        this.objTelaPesquisa.Close();
+                }
+                else
+                {
+                    Retorno objRetorno;
+                    using (Pessoas objBLL = new Pessoas())
+                    {
+                        objRetorno = objBLL.RetornaListaFuncionario(objParam.ToString());
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                        this.arrFuncionarioPesquisa = (List<tbFuncionario>)objRetorno.objRetorno;
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                }
+            }
+        }
+
+        private bool CanLog(object objParam)
+        {
+            return base.enStatusTelaAtual == enStatusTela.Navegacao;
+        }
+        private void Log(object objParam)
+        {
+            if (objParam != null)
+            {
+                if (objParam.ToString() == "AbrirTela")
+                {
+                    Retorno objRetorno;
+                    using (Auditoria objBLL = new Auditoria())
+                    {
+                        objRetorno = objBLL.RetornaListaAuditoria(this.objFuncionario.fun_codigo, this.objFuncionario);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        base.arrAuditoria = (List<tbAuditoria>)objRetorno.objRetorno;
+                        winAuditoria objTelaAuditoria = new winAuditoria();
+                        objTelaAuditoria.Title = "Auditoria - " + base.strNomeTela;
+                        objTelaAuditoria.DataContext = this;
+                        objTelaAuditoria.Owner = (Window)Application.Current.MainWindow;
+                        objTelaAuditoria.Closed += (sen, eve) =>
+                        {
+                            base.arrAuditoria = null;
+                            objTelaAuditoria = null;
+                        };
+                        objTelaAuditoria.ShowDialog();
+                    }
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                }
+                else if (objParam.GetType() == typeof(winAuditoria))
+                {
+                    ((Window)objParam).Close();
+                }
+            }
+        }
+
+        private bool CanBuscar(object objParam)
+        {
+            return true;
+        }
+        private void Buscar(object objParam)
+        {
+            if (objParam != null)
+            {
+                int intCodigo;
+                if (int.TryParse(objParam.ToString(), out intCodigo))
+                    this.fun_codigo = intCodigo;
+            }
+        }
+
+        private bool CanPerfilAcesso(object objParam)
+        {
+            return true;
+        }
+        private void PerfilAcesso(object objParam)
+        {
+            if (objParam != null)
+            {
+                if (objParam.ToString() == "Novo")
+                {
+                    winCadastro objTelaCadastro = new winCadastro();
+                    PerfilAcessoViewModel objPerfilAcessoViewModel = new PerfilAcessoViewModel();
+                    if (this.objFuncionario.pac_codigo > 0)
+                        objPerfilAcessoViewModel.pac_codigo = this.objFuncionario.pac_codigo;
+                    objPerfilAcessoViewModel.OnDispose += (sen1, eve1) => { objTelaCadastro.Close(); };
+                    objTelaCadastro.Title = "Cadastro - " + objPerfilAcessoViewModel.strNomeTela;
+                    objTelaCadastro.DataContext = objPerfilAcessoViewModel;
+                    objTelaCadastro.Owner = (Window)Application.Current.MainWindow;
+                    objTelaCadastro.Closed += (sen, eve) =>
+                    {
+                        if (objPerfilAcessoViewModel.pac_codigo != null)
+                        {
+                            this.objFuncionario.pac_codigo = (int)objPerfilAcessoViewModel.pac_codigo;
+                            RaisePropertyChanged("pac_codigo");
+                            this.objFuncionario.tbPerfilAcesso.pac_descricao = objPerfilAcessoViewModel.pac_descricao;
+                            RaisePropertyChanged("pac_descricao");                          
+                        }
+                        objPerfilAcessoViewModel = null;
+                        objTelaCadastro = null;
+                    };
+                    objTelaCadastro.ShowDialog();
+                }
+                else if (objParam.ToString() == "Pesquisar")
+                {
+                    PerfilAcessoViewModel objPerfilAcessoViewModel = new PerfilAcessoViewModel();
+                    objPerfilAcessoViewModel.OnPesquisa += (sen, eve) =>
+                    {
+                        if (objPerfilAcessoViewModel.pac_codigo != null)
+                        {
+                            this.objFuncionario.pac_codigo = (int)objPerfilAcessoViewModel.pac_codigo;
+                            RaisePropertyChanged("pac_codigo");
+                            this.objFuncionario.tbPerfilAcesso.pac_descricao = objPerfilAcessoViewModel.pac_descricao;
+                            RaisePropertyChanged("pac_descricao");
+                        }
+                        objPerfilAcessoViewModel.Dispose();
+                    };
+                    objPerfilAcessoViewModel.Pesquisar("AbrirTela");
+                }
+                else
+                {
+                    int intCodigo;
+                    if (int.TryParse(objParam.ToString(), out intCodigo))
+                        this.pac_codigo = intCodigo;
+                }
+            }
+        }
+
+        private bool CanCidade(object objParam)
+        {
+            return true;
+        }
+        private void Cidade(object objParam)
+        {
+            if (objParam != null)
+            {
+                if (objParam.ToString() == "Novo")
+                {
+                    winCadastro objTelaCadastro = new winCadastro();
+                    CidadeViewModel objCidadeViewModel = new CidadeViewModel();
+                    if (this.objFuncionario.cid_codigo > 0)
+                        objCidadeViewModel.cid_codigo = this.objFuncionario.cid_codigo;
+                    objCidadeViewModel.OnDispose += (sen1, eve1) => { objTelaCadastro.Close(); };
+                    objTelaCadastro.Title = "Cadastro - " + objCidadeViewModel.strNomeTela;
+                    objTelaCadastro.DataContext = objCidadeViewModel;
+                    objTelaCadastro.Owner = (Window)Application.Current.MainWindow;
+                    objTelaCadastro.Closed += (sen, eve) =>
+                    {
+                        if (objCidadeViewModel.cid_codigo != null)
+                        {
+                            CarregaComboEstado();
+                            this.objFuncionario.est_codigo = (int)objCidadeViewModel.est_codigo;
+                            RaisePropertyChanged("est_codigo");
+                            this.objFuncionario.cid_codigo = (int)objCidadeViewModel.cid_codigo;
+                            RaisePropertyChanged("cid_codigo");
+                        }
+                        objCidadeViewModel = null;
+                        objTelaCadastro = null;
+                    };
+                    objTelaCadastro.ShowDialog();
+                }
+            }
+        }
+
+        #endregion Comandos
+
+
+
+        #region Eventos
+
+        public event EventHandler OnPesquisa;
+
+        #endregion Eventos
+
+
+
+        #region Métodos
+
+        private void CarregaComboEstado()
+        {
+            Retorno objRetorno;
+            using (Pessoas objBLL = new Pessoas())
+            {
+                objRetorno = objBLL.RetornaListaEstado();
+            }
+            if (objRetorno.intCodigoErro == 0)
+                this.arrEstado = (List<tbEstado>)objRetorno.objRetorno;
+            else
+                MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+        }
+
+        #endregion Métodos
+    }
+}

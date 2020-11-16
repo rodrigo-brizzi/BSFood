@@ -1,0 +1,338 @@
+﻿using BSFood.Apoio;
+using BSFood.View;
+using BSFoodServer.BLL.Interfaces;
+using BSFoodServer.DTO;
+using BSFoodServer.Models;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Net;
+using System.ServiceModel;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+using System.Linq;
+
+namespace BSFood.ViewModel
+{
+    public class PerfilAcessoViewModel : ViewModelBase
+    {
+        public ICommand NovoCommand { get; set; }
+        public ICommand EditarCommand { get; set; }
+        public ICommand SalvarCommand { get; set; }
+        public ICommand ExcluirCommand { get; set; }
+        public ICommand PesquisarCommand { get; set; }
+        private List<BSFoodServer.Models.Menu> arrMenu { get; set; }
+
+        public PerfilAcessoViewModel()
+        {
+            this.PropertyChanged += PerfilAcessoViewModel_PropertyChanged;
+            NovoCommand = new DelegateCommand(Novo, CanNovo);
+            EditarCommand = new DelegateCommand(Editar, CanEditar);
+            SalvarCommand = new DelegateCommand(Salvar, CanSalvar);
+            ExcluirCommand = new DelegateCommand(Excluir, CanExcluir);
+            PesquisarCommand = new DelegateCommand(Pesquisar, CanPesquisar);
+            this.strPalavraChave = string.Empty;
+            this.arrMenu = new List<BSFoodServer.Models.Menu>();
+            this.RetornaMenu();
+        }
+
+        
+
+        #region Propriedades
+
+        private PerfilAcesso _objPerfilAcesso;
+        public PerfilAcesso objPerfilAcesso
+        {
+            get
+            {
+                return this._objPerfilAcesso;
+            }
+            set
+            {
+                this._objPerfilAcesso = value;
+                RaisePropertyChanged("objPerfilAcesso");
+            }
+        }
+
+        private PagedCollectionView _arrPerfilAcesso;
+        public PagedCollectionView arrPerfilAcesso 
+        {
+            get 
+            {
+                return this._arrPerfilAcesso;
+            }
+            set
+            {
+                this._arrPerfilAcesso = value;
+                RaisePropertyChanged("arrPerfilAcesso");
+            }
+        }
+
+        private string _strPalavraChave;
+        public string strPalavraChave
+        {
+            get
+            {
+                return this._strPalavraChave;
+            }
+            set
+            {
+                this._strPalavraChave = value;
+                RaisePropertyChanged("strPalavraChave");
+            }
+        }
+
+        [Required(ErrorMessage = "Campo obrigatório")]
+        [StringLength(30, ErrorMessage = "É permitido apenas 50 caracteres")]
+        public string strDescricao 
+        {
+            get { return this.objPerfilAcesso == null ? string.Empty : this.objPerfilAcesso.Descricao; }
+            set
+            {
+                if (this.objPerfilAcesso.Descricao != value)
+                {
+                    this.objPerfilAcesso.Descricao = value;
+                    RaisePropertyChanged("strDescricao");
+                }
+            }
+        }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+        private bool CanNovo(object objParam)
+        {
+            return true;
+        }
+        private void Novo(object objParam)
+        {
+            this.objPerfilAcesso = new PerfilAcesso();
+            this.objPerfilAcesso.PerfilAcessoMenus = new List<PerfilAcessoMenu>();
+            this.PreparaPerfilAcessoMenu();
+            PerfilAcessoForm objPerfilAcessoForm = new PerfilAcessoForm();
+            objPerfilAcessoForm.Loaded += (sen1, eve1) =>
+            {
+                this.blnConsulta = true;
+                objPerfilAcessoForm.DataContext = this;
+            };
+            objPerfilAcessoForm.Closed += (sen, eve) =>
+            {
+                this.Pesquisar(null);
+            };
+            objPerfilAcessoForm.Show();
+        }
+
+        private bool CanEditar(object objParam)
+        {
+            return true;
+        }
+        private void Editar(object objParam)
+        {
+            this.blnConsulta = false;
+            var factory = new ChannelFactory<IPessoasAsync>(App.objHttpBinding, Util.RetornaEndpointAddress(enSvc.svcPessoas));
+            IPessoasAsync service = factory.CreateChannel();
+            service.BeginRetornaPerfilAcesso(Convert.ToInt32(objParam), (sen) =>
+            {
+                Deployment.Current.Dispatcher.BeginInvoke((Action)(() =>
+                {
+                    Retorno objRetorno = service.EndRetornaPerfilAcesso(sen);
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objPerfilAcesso = (PerfilAcesso)objRetorno.objRetorno;
+                        this.PreparaPerfilAcessoMenu();
+                        PerfilAcessoForm objPerfilAcessoForm = new PerfilAcessoForm();
+                        objPerfilAcessoForm.Loaded += (sen1, eve1) => 
+                        {
+                            this.blnConsulta = true;
+                            objPerfilAcessoForm.DataContext = this;
+                        };
+                        objPerfilAcessoForm.Closed += (sen2, eve) =>
+                        {
+                            this.Pesquisar(null);
+                        };
+                        objPerfilAcessoForm.Show();
+                    }
+                    else
+                    {
+                        cwMensagem.Show(objRetorno.strMsgErro, "Atenção", cwMensagem.enMsgBotao.Ok, objRetorno.intCodigoErro, (result) =>
+                        {
+                            this.blnConsulta = true;
+                        });
+                    }
+                }));
+            }, null);
+        }
+
+        private bool CanSalvar(object objParam)
+        {
+            return true;
+        }
+        private void Salvar(object objParam)
+        {
+            this.blnConsulta = false;
+            var factory = new ChannelFactory<IPessoasAsync>(App.objHttpBinding, Util.RetornaEndpointAddress(enSvc.svcPessoas));
+            IPessoasAsync service = factory.CreateChannel();
+            service.BeginSalvarPerfilAcesso(this.objPerfilAcesso, (sen) =>
+            {
+                Deployment.Current.Dispatcher.BeginInvoke((Action)(() =>
+                {
+                    Retorno objRetorno = service.EndSalvarPerfilAcesso(sen);
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.blnConsulta = true;
+                        (objParam as PerfilAcessoForm).DialogResult = true;
+                    }
+                    else
+                    {
+                        cwMensagem.Show(objRetorno.strMsgErro, "Atenção", cwMensagem.enMsgBotao.Ok, objRetorno.intCodigoErro, (result) =>
+                        {
+                            this.blnConsulta = true;
+                        });
+                    }
+                }));
+            }, null);            
+        }
+
+        private bool CanExcluir(object objParam)
+        {
+            return true;
+        }
+        private void Excluir(object objParam)
+        {
+            cwMensagem.Show("Tem Certeza que deseja excluir o registro selecionado?", "Atenção", cwMensagem.enMsgBotao.SimOuNao,cwMensagem.enMsgIcone.Question, (result) =>
+            {
+                if (result == cwMensagem.enMsgResult.Sim)
+                {
+                    this.blnConsulta = false;
+                    var factory = new ChannelFactory<IPessoasAsync>(App.objHttpBinding, Util.RetornaEndpointAddress(enSvc.svcPessoas));
+                    IPessoasAsync service = factory.CreateChannel();
+                    service.BeginExcluirPerfilAcesso(Convert.ToInt32(objParam), (sen) =>
+                    {
+                        Deployment.Current.Dispatcher.BeginInvoke((Action)(() =>
+                        {
+                            Retorno objRetorno = service.EndExcluirPerfilAcesso(sen);
+                            if (objRetorno.intCodigoErro == 0)
+                            {
+                                this.blnConsulta = true;
+                                this.Pesquisar(null);
+                            }
+                            else
+                            {
+                                cwMensagem.Show(objRetorno.strMsgErro, "Atenção", cwMensagem.enMsgBotao.Ok, objRetorno.intCodigoErro, (resultErr) =>
+                                {
+                                    this.blnConsulta = true;
+                                });
+                            }
+                        }));
+                    }, null);
+                }
+            });
+        }
+
+        private bool CanPesquisar(object objParam)
+        {
+            return true;
+        }
+        private void Pesquisar(object objParam)
+        {
+            this.blnConsulta = false;
+            var factory = new ChannelFactory<IPessoasAsync>(App.objHttpBinding, Util.RetornaEndpointAddress(enSvc.svcPessoas));
+            IPessoasAsync service = factory.CreateChannel();
+            service.BeginRetornaListaPerfilAcesso(this.strPalavraChave, (sen) =>
+            {
+                Deployment.Current.Dispatcher.BeginInvoke((Action)(() =>
+                {
+                    Retorno objRetorno = service.EndRetornaListaPerfilAcesso(sen);
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.arrPerfilAcesso = new PagedCollectionView((List<PerfilAcesso>)objRetorno.objRetorno);
+                        this.blnConsulta = true;
+                    }
+                    else
+                    {
+                        cwMensagem.Show(objRetorno.strMsgErro, "Atenção", cwMensagem.enMsgBotao.Ok, objRetorno.intCodigoErro, (result) =>
+                        {
+                            this.blnConsulta = true;
+                            (objParam as PerfilAcessoPesquisa).Focus();
+                        });
+                    }
+                }));
+            }, null);
+        }
+
+        #endregion Comandos
+
+
+
+        #region Eventos
+
+        void PerfilAcessoViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != "blnConsulta")
+            {
+                ClearError(e.PropertyName);
+                try
+                {
+                    Validator.ValidateProperty(((PerfilAcessoViewModel)sender).GetType().GetProperty(e.PropertyName).GetValue((sender as PerfilAcessoViewModel), null), new ValidationContext(this, null, null) { MemberName = e.PropertyName });
+                }
+                catch (ValidationException ve)
+                {
+                    SetError(e.PropertyName, ve.Message);
+                }
+            }
+        }
+
+        #endregion Eventos
+
+
+
+        #region Métodos
+
+        private void RetornaMenu()
+        {
+            var factory = new ChannelFactory<IPessoasAsync>(App.objHttpBinding, Util.RetornaEndpointAddress(enSvc.svcPessoas));
+            IPessoasAsync service = factory.CreateChannel();
+            service.BeginRetornaListaMenu((sen) =>
+            {
+                Deployment.Current.Dispatcher.BeginInvoke((Action)(() =>
+                {
+                    Retorno objRetorno = service.EndRetornaListaMenu(sen);
+                    if (objRetorno.intCodigoErro == 0)
+                        this.arrMenu = (List<BSFoodServer.Models.Menu>)objRetorno.objRetorno;
+                    else
+                        cwMensagem.Show(objRetorno.strMsgErro, "Atenção", cwMensagem.enMsgBotao.Ok, objRetorno.intCodigoErro, null);
+                }));
+            }, null);
+        }
+
+        private void PreparaPerfilAcessoMenu()
+        {
+            if (this.objPerfilAcesso.PerfilAcessoMenus.Count() == 0)
+            {
+                foreach (BSFoodServer.Models.Menu objMenu in this.arrMenu)
+                    this.objPerfilAcesso.PerfilAcessoMenus.Add(new PerfilAcessoMenu { CodigoPerfilAcesso = this.objPerfilAcesso.Codigo, CodigoMenu = objMenu.Codigo, PermiteAlteracao = false, PermiteExclusao = false, PermiteInclusao = false, PermiteVisualizacao = false, ToolBar = false, Menu = objMenu });
+            }
+            else
+            {
+                foreach (BSFoodServer.Models.Menu objMenu in this.arrMenu)
+                {
+                    if (this.objPerfilAcesso.PerfilAcessoMenus.Where(per => per.CodigoMenu == objMenu.Codigo).Count() <= 0)
+                        this.objPerfilAcesso.PerfilAcessoMenus.Add(new PerfilAcessoMenu { CodigoPerfilAcesso = this.objPerfilAcesso.Codigo, CodigoMenu = objMenu.Codigo, PermiteAlteracao = false, PermiteExclusao = false, PermiteInclusao = false, PermiteVisualizacao = false, ToolBar = false, Menu = objMenu });
+                }
+            }
+            this.objPerfilAcesso.PerfilAcessoMenus = this.objPerfilAcesso.PerfilAcessoMenus.OrderBy(per => per.Menu.Ordem).ToList();
+        }
+
+        #endregion Métodos
+    }
+}

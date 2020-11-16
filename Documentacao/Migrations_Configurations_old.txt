@@ -1,0 +1,43 @@
+//No modo manual, para cada alteração nas classes model e na configuração delas no banco é necessário adicionar
+//uma versao de banco utilizando o comando:
+//PM> Add-Migragion "Nome da versao"
+//será criada uma classe com o nome e com as alterações necessárias no banco, e é possível adicionar scripts extras de modificação
+//Outros comandos:
+//PM> Update-DataBase –script //gera um arquivo com o script sql de alteração.
+//PM> Update-DataBase –target “CriacaoBanco” //volta o banco para a versão específica informada
+//No modo automatico, como está atualmente, ele mantem o banco atualizado automaticamente.
+
+
+namespace BSFood.Migrations
+{
+    using System;
+    using System.Data.Entity;
+    using System.Data.Entity.Migrations;
+    using System.Linq;
+    //public class Configuration : DbMigrationsConfiguration<BSFood.DataAccess.EFContexto> //Modo Automatico
+    internal sealed class Configuration : DbMigrationsConfiguration<BSFood.DataAccess.EFContexto>
+    {
+        public Configuration()
+        {
+            AutomaticMigrationsEnabled = true;
+            ContextKey = "BSFood.DataAccess.EFContexto";
+        }
+
+        protected override void Seed(BSFood.DataAccess.EFContexto context)
+        {
+            //  This method will be called after migrating to the latest version.
+
+            //  You can use the DbSet<T>.AddOrUpdate() helper extension method 
+            //  to avoid creating duplicate seed data. E.g.
+            //
+            //    context.People.AddOrUpdate(
+            //      p => p.FullName,
+            //      new Person { FullName = "Andrew Peters" },
+            //      new Person { FullName = "Brice Lambson" },
+            //      new Person { FullName = "Rowan Miller" }
+            //    );
+            //
+            context.tbMenu.Where(men => men.men_codigo == 37).First().men_cabecalho = "Pedidos";
+        }
+    }
+}

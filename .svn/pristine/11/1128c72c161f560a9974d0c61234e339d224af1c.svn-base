@@ -1,0 +1,28 @@
+﻿using BSFood.Apoio;
+using BSFood.DataTransfer;
+using BSFood.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFood.BusinessLogic.Interfaces
+{
+    public interface IProdutos
+    {
+
+        #region Produto Grupo
+
+        Retorno RetornaProdutoGrupo(int intCodigo, enNavegacao? enDirecao);
+
+        Retorno RetornaListaProdutoGrupo(string strParametro);
+
+        Retorno SalvarProdutoGrupo(tbProdutoGrupo objProdutoGrupo);
+
+        Retorno ExcluirProdutoGrupo(int intCodigo);
+
+        #endregion Produto Grupo
+
+    }
+}

@@ -1,0 +1,18 @@
+﻿using BSFoodFramework.Apoio;
+using System.Windows;
+
+namespace BSFood
+{
+    /// <summary>
+    /// Interaction logic for App.xaml
+    /// </summary>
+    public partial class App : Application
+    {
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            FrameworkUtil.CarregarConfiguracao();
+            FrameworkUtil.objGerenciaCupom = new GerenciaCupom();
+            this.StartupUri = new System.Uri("View/winPrincipal.xaml", System.UriKind.Relative);
+        }
+    }
+}

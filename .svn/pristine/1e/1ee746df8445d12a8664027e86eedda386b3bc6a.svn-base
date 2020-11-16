@@ -1,0 +1,399 @@
+﻿using BSFood.Apoio;
+using BSFood.BusinessLogic;
+using BSFood.DataTransfer;
+using BSFood.Models;
+using BSFood.View;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Input;
+
+namespace BSFood.ViewModel
+{
+    public class ClienteEnderecoViewModel : ViewModelBase
+    {
+        public ICommand BairroCommand { get; set; }
+        public ICommand CidadeCommand { get; set; }
+        public ICommand RemoveEnderecoCommand { get; set; }
+        public ClienteEnderecoViewModel(tbClienteEndereco _objClienteEndereco)
+        {
+            BairroCommand = new DelegateCommand(Bairro);
+            CidadeCommand = new DelegateCommand(Cidade);
+            RemoveEnderecoCommand = new DelegateCommand(RemoveEndereco, CanRemoveEndereco);
+            CarregaComboEstado();
+            this.objClienteEndereco = _objClienteEndereco;
+        }
+
+        #region Propriedades
+        
+        public tbClienteEndereco objClienteEndereco { get; set; }
+
+        public int cen_codigo
+        {
+            get { return this.objClienteEndereco.cen_codigo; }
+            set
+            {
+                this.objClienteEndereco.cen_codigo = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        [Required(ErrorMessage = "Campo obrigatório")]
+        [StringLength(200, ErrorMessage = "É permitido apenas 200 caracteres")]
+        public string cen_logradouro 
+        {
+            get { return this.objClienteEndereco.cen_logradouro; }
+            set
+            {
+                this.objClienteEndereco.cen_logradouro = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        [Required(ErrorMessage = "Campo obrigatório")]
+        [StringLength(10, ErrorMessage = "É permitido apenas 10 caracteres")]
+        public string cen_numero 
+        {
+            get { return this.objClienteEndereco.cen_numero; }
+            set
+            {
+                this.objClienteEndereco.cen_numero = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        [StringLength(9, ErrorMessage = "É permitido apenas 9 caracteres")]
+        [Range(0, double.MaxValue, ErrorMessage = "Informe apenas números")]
+        public string cen_cep 
+        {
+            get { return this.objClienteEndereco.cen_cep; }
+            set
+            {
+                this.objClienteEndereco.cen_cep = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        [StringLength(150, ErrorMessage = "É permitido apenas 150 caracteres")]
+        public string cen_complemento 
+        {
+            get { return this.objClienteEndereco.cen_complemento; }
+            set
+            {
+                this.objClienteEndereco.cen_complemento = value;
+                RaisePropertyChanged();
+            }
+        }
+        
+        [Required(ErrorMessage = "Bairro obrigatório")]
+        [Range(1, int.MaxValue, ErrorMessage = "Bairro obrigatório")]
+        public int? bai_codigo
+        {
+            get
+            {
+                if (this.objClienteEndereco == null || this.objClienteEndereco.bai_codigo == 0)
+                    return null;
+                else
+                    return this.objClienteEndereco.bai_codigo;
+            }
+            set
+            {
+                if (this.objClienteEndereco.bai_codigo != value)
+                {
+                    this.objClienteEndereco.bai_codigo = value == null ? 0 : (int)value;
+                    Bairro(this.objClienteEndereco.bai_codigo);
+                }
+                //if (this.objClienteEndereco == null || this.objClienteEndereco.bai_codigo != value)
+                //{
+                //    Retorno objRetorno;
+                //    using (var objBLL = new Bairros())
+                //    {
+                //        objRetorno = objBLL.RetornaBairro(value == null ? 0 : (int)value, null);
+                //    }
+                //    if (objRetorno.intCodigoErro == 0)
+                //    {
+                //        this.objClienteEndereco.bai_codigo = ((tbBairro)objRetorno.objRetorno).bai_codigo;
+                //        this.objClienteEndereco.tbBairro.bai_nome = ((tbBairro)objRetorno.objRetorno).bai_nome;
+                //        this.objClienteEndereco.tbBairro.bai_realizaEntrega = ((tbBairro)objRetorno.objRetorno).bai_realizaEntrega;
+                //    }
+                //    else
+                //    {
+                //        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                //        this.objClienteEndereco.bai_codigo = 0;
+                //        this.objClienteEndereco.tbBairro.bai_nome = string.Empty;
+                //        this.objClienteEndereco.tbBairro.bai_realizaEntrega = false;
+                //    }
+                //    RaisePropertyChanged("bai_codigo");
+                //    RaisePropertyChanged("bai_nome");
+                //}
+            }
+        }
+        
+        public string bai_nome
+        {
+            get { return this.objClienteEndereco == null ? string.Empty : this.objClienteEndereco.tbBairro.bai_nome; }
+            set
+            {
+                if (this.objClienteEndereco.tbBairro.bai_nome != value)
+                {
+                    this.objClienteEndereco.tbBairro.bai_nome = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        public string bai_entrega
+        {
+            get { return this.objClienteEndereco == null ? string.Empty : this.objClienteEndereco.tbBairro.bai_realizaEntrega == true ? string.Empty : "NÃO ENTREGA"; }
+            set { }
+        }
+        
+        [Required(ErrorMessage = "Estado obrigatório")]
+        [Range(1, int.MaxValue, ErrorMessage = "Estado obrigatório")]
+        public int est_codigo
+        {
+            get { return this.objClienteEndereco == null ? 0 : this.objClienteEndereco.est_codigo; }
+            set
+            {
+                if (this.objClienteEndereco.est_codigo != value)
+                {
+                    this.objClienteEndereco.est_codigo = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+        
+        [Required(ErrorMessage = "Cidade obrigatório")]
+        [Range(1, int.MaxValue, ErrorMessage = "Cidade obrigatório")]
+        public int cid_codigo
+        {
+            get 
+            {
+                if (this.objClienteEndereco == null)
+                    return 0;
+                else
+                {
+                    RaisePropertyChanged("est_codigo", false);
+                    return this.objClienteEndereco.cid_codigo; 
+                }
+            }
+            set
+            {
+                if (this.objClienteEndereco.cid_codigo != value)
+                {
+                    this.objClienteEndereco.cid_codigo = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        private List<tbEstado> _arrEstado;
+        public List<tbEstado> arrEstado
+        {
+            get { return this._arrEstado; }
+            set
+            {
+                this._arrEstado = value;
+                RaisePropertyChanged("arrEstado", false);
+            }
+        }
+
+        private bool _blnSelecionado;
+        public bool blnSelecionado 
+        {
+            get { return this._blnSelecionado; }
+            set
+            {
+                this._blnSelecionado = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+        private void Bairro(object objParam)
+        {
+            int intCodigo;
+            if (objParam != null)
+            {
+                if (objParam.GetType() == typeof(tbBairro))
+                {
+                    if(((tbBairro)objParam).bai_codigo > 0)
+                    {
+                        this.objClienteEndereco.bai_codigo = ((tbBairro)objParam).bai_codigo;
+                        this.objClienteEndereco.tbBairro.bai_nome = ((tbBairro)objParam).bai_nome;
+                        this.objClienteEndereco.tbBairro.bai_realizaEntrega = ((tbBairro)objParam).bai_realizaEntrega;
+                    }
+                    else
+                    {
+                        this.objClienteEndereco.bai_codigo = 0;
+                        this.objClienteEndereco.tbBairro.bai_nome = string.Empty;
+                        this.objClienteEndereco.tbBairro.bai_realizaEntrega = false;
+                    }
+                    RaisePropertyChanged("bai_codigo");
+                    RaisePropertyChanged("bai_nome");
+                    RaisePropertyChanged("bai_realizaEntrega");
+                }
+                else if (objParam.ToString() == "Pesquisar")
+                {
+                    winCadastro objTelaCadastro = new winCadastro();
+                    BairroViewModel objBairroViewModel = new BairroViewModel();
+                    objBairroViewModel.OnDispose += (sen1, eve1) => { objTelaCadastro.Close(); };
+                    objBairroViewModel.blnJanela = true;
+                    objTelaCadastro.Title = "Cadastro - " + objBairroViewModel.strNomeTela;
+                    objTelaCadastro.DataContext = objBairroViewModel;
+                    objTelaCadastro.Owner = (Window)Application.Current.MainWindow;
+                    objTelaCadastro.Closed += (sen, eve) =>
+                    {
+                        Bairro(objBairroViewModel.objBairro);
+                    };
+                    objTelaCadastro.ShowDialog();
+                }
+                else if (int.TryParse(objParam.ToString(), out intCodigo))
+                {
+                    Retorno objRetorno;
+                    using (var objBLL = new Bairros())
+                    {
+                        objRetorno = objBLL.RetornaBairro(intCodigo, null);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        Bairro((tbBairro)objRetorno.objRetorno);
+                    }
+                    else
+                    {
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                        Bairro(new tbBairro());
+                    }
+                }
+                else
+                    Bairro("Pesquisar");
+            }
+            //if (objParam != null)
+            //{
+            //    if (objParam.ToString() == "Novo")
+            //    {
+            //        winCadastro objTelaCadastro = new winCadastro();
+            //        BairroViewModel objBairroViewModel = new BairroViewModel();
+            //        if (this.objClienteEndereco.bai_codigo > 0)
+            //            objBairroViewModel.bai_codigo = this.objClienteEndereco.bai_codigo;
+            //        objBairroViewModel.OnDispose += (sen1, eve1) => { objTelaCadastro.Close(); };
+            //        objTelaCadastro.Title = "Cadastro - " + objBairroViewModel.strNomeTela;
+            //        objTelaCadastro.DataContext = objBairroViewModel;
+            //        objTelaCadastro.Owner = (Window)Application.Current.MainWindow;
+            //        objTelaCadastro.Closed += (sen, eve) =>
+            //        {
+            //            if (objBairroViewModel.bai_codigo != null)
+            //            {
+            //                this.objClienteEndereco.bai_codigo = (int)objBairroViewModel.bai_codigo;
+            //                RaisePropertyChanged("bai_codigo");
+            //                this.objClienteEndereco.tbBairro.bai_nome = objBairroViewModel.bai_nome;
+            //                RaisePropertyChanged("bai_nome");
+            //                this.objClienteEndereco.tbBairro.bai_realizaEntrega = objBairroViewModel.objBairro.bai_realizaEntrega;
+            //                RaisePropertyChanged("bai_realizaEntrega");
+            //            }
+            //            objBairroViewModel = null;
+            //            objTelaCadastro = null;
+            //        };
+            //        objTelaCadastro.ShowDialog();
+            //    }
+            //    else if (objParam.ToString() == "Pesquisar")
+            //    {
+            //        BairroViewModel objBairroViewModel = new BairroViewModel();
+            //        objBairroViewModel.OnPesquisa += (sen, eve) =>
+            //        {
+            //            if (objBairroViewModel.bai_codigo != null)
+            //            {
+            //                this.objClienteEndereco.bai_codigo = (int)objBairroViewModel.bai_codigo;
+            //                RaisePropertyChanged("bai_codigo");
+            //                this.objClienteEndereco.tbBairro.bai_nome = objBairroViewModel.bai_nome;
+            //                RaisePropertyChanged("bai_nome");
+            //                this.objClienteEndereco.tbBairro.bai_realizaEntrega = objBairroViewModel.objBairro.bai_realizaEntrega;
+            //                RaisePropertyChanged("bai_realizaEntrega");
+            //            }
+            //            objBairroViewModel.Dispose();
+            //        };
+            //        objBairroViewModel.Pesquisar("AbrirTela");
+            //    }
+            //    else
+            //    {
+            //        int intCodigo;
+            //        if (int.TryParse(objParam.ToString(), out intCodigo))
+            //            this.bai_codigo = intCodigo;
+            //        else
+            //            Bairro("Pesquisar");
+            //    }
+            //}
+        }
+
+        private void Cidade(object objParam)
+        {
+            if (objParam != null)
+            {
+                if (objParam.ToString() == "Novo")
+                {
+                    winCadastro objTelaCadastro = new winCadastro();
+                    CidadeViewModel objCidadeViewModel = new CidadeViewModel();
+                    if (this.objClienteEndereco.cid_codigo > 0)
+                        objCidadeViewModel.cid_codigo = this.objClienteEndereco.cid_codigo;
+                    objCidadeViewModel.OnDispose += (sen1, eve1) => { objTelaCadastro.Close(); };
+                    objTelaCadastro.Title = "Cadastro - " + objCidadeViewModel.strNomeTela;
+                    objTelaCadastro.DataContext = objCidadeViewModel;
+                    objTelaCadastro.Owner = (Window)Application.Current.MainWindow;
+                    objTelaCadastro.Closed += (sen, eve) =>
+                    {
+                        if (objCidadeViewModel.cid_codigo != null)
+                        {
+                            CarregaComboEstado();
+                            this.objClienteEndereco.est_codigo = (int)objCidadeViewModel.est_codigo;
+                            RaisePropertyChanged("est_codigo");
+                            this.objClienteEndereco.cid_codigo = (int)objCidadeViewModel.cid_codigo;
+                            RaisePropertyChanged("cid_codigo");
+                        }
+                        objCidadeViewModel = null;
+                        objTelaCadastro = null;
+                    };
+                    objTelaCadastro.ShowDialog();
+                }
+            }
+        }
+
+        private bool CanRemoveEndereco(object objParam)
+        {
+            return true;
+        }
+        private void RemoveEndereco(object objParam)
+        {
+            this.Dispose();
+        }
+
+        #endregion Comandos
+
+
+
+        #region Métodos
+
+        private void CarregaComboEstado()
+        {
+            Retorno objRetorno;
+            using (var objBLL = new Cidades())
+            {
+                objRetorno = objBLL.RetornaListaEstado();
+            }
+            if (objRetorno.intCodigoErro == 0)
+                this.arrEstado = (List<tbEstado>)objRetorno.objRetorno;
+            else
+                MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+        }
+
+        #endregion Métodos
+    }
+}

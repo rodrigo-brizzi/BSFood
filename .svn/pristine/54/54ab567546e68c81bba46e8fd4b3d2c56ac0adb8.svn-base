@@ -1,0 +1,40 @@
+﻿<UserControl
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk" xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit" x:Class="BSFood.MainPage"
+    mc:Ignorable="d"
+    d:DesignHeight="300" d:DesignWidth="400" Loaded="UserControl_Loaded">
+
+    <Grid x:Name="LayoutRoot" Background="White" Margin="0,10,0,0">
+
+        <sdk:DataGrid x:Name="lbMenu" HorizontalAlignment="Left" Height="98" Margin="10,89,0,0" VerticalAlignment="Top" Width="380"/>
+        <toolkit:ContextMenuService.ContextMenu>
+            <toolkit:ContextMenu>
+                <toolkit:MenuItem x:Name="MenuVisibility" Header="Show Main Menu" Command="{Binding OnMainMenuActivatedCommand, Mode=TwoWay}" Visibility="{Binding MainMenuVisible, Mode=TwoWay}" VerticalContentAlignment="Bottom" VerticalAlignment="Bottom">
+                    <toolkit:MenuItem.Icon>
+                        <Image Source="Imagens/editar16.png" Height="20" />
+                    </toolkit:MenuItem.Icon>
+                </toolkit:MenuItem>
+                <toolkit:MenuItem Header="Hide Main Menu" Command="{Binding OnMainMenuDeActivatedCommand, Mode=TwoWay}" Visibility="{Binding MainMenuCollapsed}" VerticalAlignment="Bottom" VerticalContentAlignment="Bottom">
+                    <toolkit:MenuItem.Icon>
+                        <Image Source="Imagens/editar16.png" Height="20" />
+                    </toolkit:MenuItem.Icon>
+                </toolkit:MenuItem>
+                <toolkit:MenuItem Header="Show Sub Menu" Command="{Binding OnSubMenuActivatedCommand, Mode=TwoWay}" VerticalContentAlignment="Bottom" VerticalAlignment="Bottom" Visibility="{Binding Path=SubMenuVisible, Mode=TwoWay}">
+                    <toolkit:MenuItem.Icon>
+                        <Image Source="Imagens/editar16.png" Height="20" />
+                    </toolkit:MenuItem.Icon>
+                </toolkit:MenuItem>
+                <toolkit:MenuItem Header="Hide Sub Menu" Command="{Binding OnSubMenuDeActivatedCommand, Mode=TwoWay}" VerticalAlignment="Bottom" VerticalContentAlignment="Bottom" Visibility="{Binding Path=SubMenuCollapsed, Mode=TwoWay}">
+                    <toolkit:MenuItem.Icon>
+                        <Image Source="Imagens/editar16.png" Height="20" />
+                    </toolkit:MenuItem.Icon>
+                </toolkit:MenuItem>
+            </toolkit:ContextMenu>
+        </toolkit:ContextMenuService.ContextMenu>
+
+
+    </Grid>
+</UserControl>

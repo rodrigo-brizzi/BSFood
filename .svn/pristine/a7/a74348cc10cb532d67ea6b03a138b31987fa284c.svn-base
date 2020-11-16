@@ -1,0 +1,102 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.Models
+{
+    public class PerfilAcessoMenu : EntityBase, INotifyPropertyChanged
+    {
+        private bool _PermiteInclusao;
+        public bool PermiteInclusao
+        {
+            get 
+            {
+                return this._PermiteInclusao;
+            }
+            set 
+            {
+                this._PermiteInclusao = value;
+                RaisePropertyChanged("PermiteInclusao");
+            }
+        }
+
+        private bool _PermiteAlteracao;
+        public bool PermiteAlteracao
+        {
+            get 
+            {
+                return this._PermiteAlteracao;
+            }
+            set 
+            {
+                this._PermiteAlteracao = value;
+                RaisePropertyChanged("PermiteAlteracao");
+            }
+        }
+
+        private bool _PermiteExclusao;
+        public bool PermiteExclusao
+        {
+            get
+            {
+                return this._PermiteExclusao;
+            }
+            set
+            {
+                this._PermiteExclusao = value;
+                RaisePropertyChanged("PermiteExclusao");
+            }
+        }
+
+        private bool _PermiteVisualizacao;
+        public bool PermiteVisualizacao
+        {
+            get
+            {
+                return this._PermiteVisualizacao;
+            }
+            set
+            {
+                this._PermiteVisualizacao = value;
+                RaisePropertyChanged("PermiteVisualizacao");
+            }
+        }
+
+        private bool _ToolBar;
+        public bool ToolBar
+        {
+            get
+            {
+                return this._ToolBar;
+            }
+            set
+            {
+                this._ToolBar = value;
+                RaisePropertyChanged("ToolBar");
+            }
+        }
+
+        public int CodigoMenu { get; set; }
+        public Menu Menu { get; set; }
+
+        public int CodigoPerfilAcesso { get; set; }
+        public PerfilAcesso PerfilAcesso { get; set; }
+
+        public event PropertyChangedEventHandler PropertyChanged = delegate { };
+
+        /// <summary>
+        /// Notifica que a propriedade informada foi alterada. Se não informado a propriedade, todas as propriedades serão marcadas como alterada
+        /// </summary>
+        protected void RaisePropertyChanged(string propertyName)
+        {
+            if (!string.IsNullOrWhiteSpace(propertyName))
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+    }
+}

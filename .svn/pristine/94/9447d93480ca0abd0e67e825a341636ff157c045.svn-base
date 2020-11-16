@@ -1,0 +1,45 @@
+﻿<controls:ChildWindow
+           xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+           xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+           xmlns:controls="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls"
+           xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk" x:Class="BSFood.View.CidadeForm"
+           xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+           xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
+           xmlns:Apoio="clr-namespace:BSFood.Apoio"
+           Width="700" Height="173" x:Name="cwCidadeForm"
+           Title="Cadastro de Cidades" IsEnabled="{Binding blnConsulta, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+    <Canvas x:Name="LayoutRoot" Margin="2">
+        <sdk:Label Canvas.Left="10" Canvas.Top="14" Content="Código:" Width="62" HorizontalContentAlignment="Right" />
+        <TextBox Canvas.Left="77" Canvas.Top="10" Width="120" Text="{Binding objCidade.Codigo}" IsEnabled="False" />
+
+        <sdk:Label Canvas.Left="10" Canvas.Top="43" Content="Nome:" Width="62" HorizontalContentAlignment="Right" />
+        <TextBox Canvas.Left="77" Canvas.Top="39" Width="414" 
+                 Text="{Binding strNome, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+            <i:Interaction.Behaviors>
+                <Apoio:UpperCaseBehaviour />
+            </i:Interaction.Behaviors>
+        </TextBox>
+
+        <sdk:Label Canvas.Left="496" Canvas.Top="43" Content="Ibge:" Width="45" HorizontalContentAlignment="Right" />
+        <TextBox Canvas.Left="546" Canvas.Top="39" Width="122" 
+                 Text="{Binding objCidade.Ibge, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+            <i:Interaction.Behaviors>
+                <Apoio:UpperCaseBehaviour />
+            </i:Interaction.Behaviors>
+        </TextBox>
+
+        <sdk:Label Canvas.Left="10" Canvas.Top="70" Content="Estado:" Width="62" HorizontalContentAlignment="Right" />
+        <ComboBox Canvas.Left="77" Canvas.Top="68" Width="120"
+                  SelectedValue="{Binding intCodigoEstado, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"    
+                  SelectedValuePath="Codigo" DisplayMemberPath="Sigla"
+                  ItemsSource="{Binding arrEstado, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <Button Canvas.Left="593" Canvas.Top="102" Width="75"
+			Command="{Binding SalvarCommand}" CommandParameter="{Binding ElementName=cwCidadeForm}">
+            <StackPanel Orientation="Horizontal">
+                <Image Source="/BSFood;component/Imagens/gravar.png" Width="16" />
+                <TextBlock Text="Salvar"/>
+            </StackPanel>
+        </Button>
+    </Canvas>
+</controls:ChildWindow>

@@ -1,0 +1,43 @@
+﻿using BSFoodServer.Models;
+using System;
+using System.Collections.Generic;
+using System.Data.Entity.ModelConfiguration;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.DAL.Config
+{
+    public class EmpresaConfig : EntityTypeConfiguration<Empresa>
+    {
+        public EmpresaConfig()
+        {
+            this.ToTable("tbEmpresa");
+            this.HasKey(e => e.Codigo);
+
+            this.Property(e => e.Codigo).HasColumnName("emp_codigo");
+            this.Property(e => e.Nome).HasColumnName("emp_nome").HasMaxLength(100);
+            this.Property(e => e.NomeFantasia).HasColumnName("emp_nomeFantasia").HasMaxLength(100);
+            this.Property(e => e.Cnpj).HasColumnName("emp_cnpj").HasMaxLength(20);
+            this.Property(e => e.Ie).HasColumnName("emp_ie").HasMaxLength(20);
+            this.Property(e => e.Im).HasColumnName("emp_im").HasMaxLength(20);
+            this.Property(e => e.AssinaturaSat).HasColumnName("emp_assinaturaSat").HasMaxLength(256);
+            this.Property(e => e.Logradouro).HasColumnName("emp_logradouro").HasMaxLength(200);
+            this.Property(e => e.Numero).HasColumnName("emp_numero").HasMaxLength(10);
+            this.Property(e => e.Cep).HasColumnName("emp_cep").HasMaxLength(9);
+            this.Property(e => e.Complemento).HasColumnName("emp_complemento").HasMaxLength(150);
+            
+            this.HasRequired(e => e.Cidade).WithMany(e => e.Empresas).HasForeignKey(e => e.CodigoCidade);
+            this.Property(e => e.CodigoCidade).HasColumnName("cid_codigo");
+            
+            this.HasRequired(e => e.Estado).WithMany(e => e.Empresas).HasForeignKey(e => e.CodigoEstado);
+            this.Property(e => e.CodigoEstado).HasColumnName("est_codigo");
+            
+            this.HasRequired(e => e.CidadePadrao).WithMany(e => e.EmpresasPadroes).HasForeignKey(e => e.CodigoCidadePadrao);
+            this.Property(e => e.CodigoCidadePadrao).HasColumnName("cid_cidadePadrao");
+            
+            this.HasRequired(e => e.EstadoPadrao).WithMany(e => e.EmpresasPadroes).HasForeignKey(e => e.CodigoEstadoPadrao);
+            this.Property(e => e.CodigoEstadoPadrao).HasColumnName("est_estadoPadrao");
+        }
+    }
+}

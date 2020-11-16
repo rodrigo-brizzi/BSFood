@@ -1,0 +1,116 @@
+﻿using BSFood.DataAccess;
+using BSFood.DataTransfer;
+using BSFood.Apoio;
+using BSFood.BusinessLogic.Interfaces;
+using BSFood.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Data.Entity;
+using System.ServiceModel;
+using System.Collections.ObjectModel;
+
+
+namespace BSFood.BusinessLogic
+{
+    public class Auditoria : IAuditoria, IDisposable
+    {
+        private bool blnFecharCon;
+        private EFContexto objCtx;
+        private GerenciaTransacao objTransacao;
+
+
+        public Auditoria()
+            : base()
+        {
+            this.objCtx = new EFContexto();
+            this.objTransacao = new GerenciaTransacao(ref this.objCtx);
+            blnFecharCon = true;
+        }
+
+        public Auditoria(ref EFContexto _objCtx, ref GerenciaTransacao _objTransacao)
+            : base()
+        {
+            this.objCtx = _objCtx;
+            this.objTransacao = _objTransacao;
+            blnFecharCon = false;
+        }
+
+
+        #region Auditoria
+
+
+        /// <summary>
+        /// Retorna os registros de auditoria do registro especificado
+        /// </summary>
+        /// <param name="intCodRegistro">Int com o Código do registro auditado</param>
+        /// <param name="objTabela">Object com aTabela onde se encontra o registro</param>
+        /// <returns>Retorno com a lista de registros do tipo tbAuditoria</returns>
+        public Retorno RetornaListaAuditoria(int intCodRegistro, object objTabela)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                string strNomeTabela = objTabela.GetType().Name.ToString().Split('_')[0];
+                List<tbAuditoria> arrAuditoria = this.objCtx.tbAuditoria
+                                                .Include(audo => audo.tbAuditoriaOperacao)
+                                                .Include(fun => fun.tbFuncionario).AsNoTracking()
+                                                .Where(aud => aud.aud_nomeTabela == strNomeTabela && aud.aud_codigoRegistro == intCodRegistro)
+                                                .OrderBy(aud => aud.aud_codigo)
+                                                .ToList();
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = arrAuditoria;
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        /// <summary>
+        /// Salva o registro da auditoria
+        /// </summary>
+        /// <param name="intCodRegistro">Int com o Código do registro</param>
+        /// <param name="enAcao">enOperação com a ação que está sendo realizada</param>
+        /// <param name="objTabela">object com a tabela afetada</param>
+        public void SalvarAuditoria(int intCodRegistro, enOperacao enAcao, object objTabela)
+        {
+            try
+            {
+                tbAuditoria objAuditoria = new tbAuditoria()
+                {
+                    aud_codigoRegistro = intCodRegistro,
+                    aud_data = DateTime.Now,
+                    aud_nomeTabela = objTabela.GetType().Name.ToString().Split('_')[0],
+                    aud_login = Util.objConfigStorage.objFuncionario.fun_login,
+                    fun_codigo = Util.objConfigStorage.objFuncionario.fun_codigo,
+                    audo_codigo = (int)enAcao
+                };
+                this.objCtx.tbAuditoria.Add(objAuditoria);
+                this.objCtx.SaveChanges();
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        #endregion Auditoria
+
+
+        public void Dispose()
+        {
+            if (this.blnFecharCon)
+            {
+                this.objCtx.Dispose();
+                this.objCtx = null;
+            }
+        }
+    }
+}

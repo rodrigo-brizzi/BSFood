@@ -1,0 +1,72 @@
+﻿using BSFoodServer.Apoio;
+using BSFoodServer.BLL.Interfaces;
+using BSFoodServer.DAL;
+using BSFoodServer.DTO;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.BLL
+{
+    public class Configuracao : IConfiguracao, IDisposable
+    {
+        private bool blnFecharCon;
+        private EFContexto objCtx;
+        private GerenciaTransacao objTransacao;
+
+
+        public Configuracao()
+            : base()
+        {
+            this.objCtx = new EFContexto();
+            this.objTransacao = new GerenciaTransacao(ref this.objCtx);
+            blnFecharCon = true;
+        }
+
+        public Configuracao(ref EFContexto _objCtx, ref GerenciaTransacao _objTransacao)
+            : base()
+        {
+            this.objCtx = _objCtx;
+            this.objTransacao = _objTransacao;
+            blnFecharCon = false;
+        }
+
+        #region Atualizacao
+
+        public Retorno RetornaVersaoServer()
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                Assembly objAssembly = Assembly.GetExecutingAssembly();
+                string strVersaoServer = objAssembly.FullName.Split(',')[1];
+                strVersaoServer = strVersaoServer.Replace("Version=", "");
+                int intVersaoServer = Convert.ToInt32(strVersaoServer.Split('.').Last());
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = intVersaoServer;
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 1;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        #endregion Atualizacao
+
+        public void Dispose()
+        {
+            if (this.blnFecharCon)
+            {
+                this.objCtx.Dispose();
+                this.objCtx = null;
+            }
+        }
+    }
+}

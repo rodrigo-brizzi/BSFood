@@ -1,0 +1,36 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.Models
+{
+    public class Empresa : EntityBase
+    {
+        public int Codigo { get; set; }
+        public string Nome { get; set; }
+        public string NomeFantasia { get; set; }
+        public string Cnpj { get; set; }
+        public string Ie { get; set; }
+        public string Im { get; set; }
+        public string AssinaturaSat { get; set; }
+        public string Logradouro { get; set; }
+        public string Numero { get; set; }
+        public string Cep { get; set; }
+        public string Complemento { get; set; }
+
+        public int CodigoCidade { get; set; }
+        public Cidade Cidade { get; set; }
+
+        public int CodigoEstado { get; set; }
+        public Estado Estado { get; set; }
+
+        public int CodigoCidadePadrao { get; set; }
+        public Cidade CidadePadrao { get; set; }
+
+        public int CodigoEstadoPadrao { get; set; }
+        public Estado EstadoPadrao { get; set; }
+    }
+}

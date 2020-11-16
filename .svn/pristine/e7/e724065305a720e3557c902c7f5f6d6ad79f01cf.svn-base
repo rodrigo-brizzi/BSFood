@@ -1,0 +1,244 @@
+﻿using BSFood.View;
+using BSFood.Apoio;
+using BSFood.Models;
+using BSFood.BusinessLogic;
+using BSFood.DataTransfer;
+using System;
+using System.Windows;
+using System.Windows.Input;
+using System.ComponentModel.DataAnnotations;
+
+namespace BSFood.ViewModel
+{
+    public class RelPedidoEntregadorViewModel : TelaViewModel
+    {
+
+        public ICommand GerarRelatorioCommand { get; set; }
+        public ICommand FuncionarioEntregadorCommand { get; set; }
+
+        public RelPedidoEntregadorViewModel()
+        {
+            GerarRelatorioCommand = new DelegateCommand(GerarRelatorio, CanGerarRelatorio);
+            FuncionarioEntregadorCommand = new DelegateCommand(FuncionarioEntregador, CanFuncionarioEntregador);
+            this.dtDataInicial = DateTime.Now.Date;
+            this.dtDataFinal = DateTime.Now.Date;
+        }
+
+
+        #region Propriedades
+
+        private DateTime _dtDataInicial;
+        [Required(ErrorMessage = "Data Inicial Obrigatória")]
+        public DateTime dtDataInicial
+        {
+            get { return this._dtDataInicial; }
+            set
+            {
+                if (this._dtDataInicial != value)
+                {
+                    this._dtDataInicial = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        private DateTime _dtDataFinal;
+        [Required(ErrorMessage = "Data Final Obrigatória")]
+        public DateTime dtDataFinal
+        {
+            get { return this._dtDataFinal; }
+            set
+            {
+                if (this._dtDataFinal != value)
+                {
+                    this._dtDataFinal = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        private int _intCaiCodigo;
+        public int intCaiCodigo
+        {
+            get { return this._intCaiCodigo; }
+            set
+            {
+                if (this._intCaiCodigo != value)
+                {
+                    this._intCaiCodigo = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        private int? _fun_funcionarioEntregador;
+        [Required(ErrorMessage = "Entregador Obrigatório")]
+        public int? fun_funcionarioEntregador
+        {
+            get
+            {
+                if (this._fun_funcionarioEntregador == null || this._fun_funcionarioEntregador == 0)
+                    return null;
+                else
+                    return this._fun_funcionarioEntregador;
+            }
+            set
+            {
+                if (this._fun_funcionarioEntregador != value)
+                {
+                    Retorno objRetorno;
+                    using (var objBLL = new Funcionarios())
+                    {
+                        objRetorno = objBLL.RetornaFuncionario(value == null ? 0 : (int)value, null);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this._fun_funcionarioEntregador = ((tbFuncionario)objRetorno.objRetorno).fun_codigo;
+                        this._fun_nomeEntregador = ((tbFuncionario)objRetorno.objRetorno).fun_nome;
+                    }
+                    else
+                    {
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                        this._fun_funcionarioEntregador = 0;
+                        this._fun_nomeEntregador = string.Empty;
+                    }
+                    RaisePropertyChanged("fun_funcionarioEntregador");
+                    RaisePropertyChanged("fun_nomeEntregador", false);
+                }
+            }
+        }
+
+        private string _fun_nomeEntregador;
+        public string fun_nomeEntregador
+        {
+            get { return this._fun_nomeEntregador; }
+            set
+            {
+                if (this._fun_nomeEntregador != value)
+                {
+                    this._fun_nomeEntregador = value;
+                    RaisePropertyChanged("fun_nomeEntregador", false);
+                }
+            }
+        }
+
+        private string _strConteudo;
+        public string strConteudo 
+        {
+            get { return this._strConteudo; }
+            set
+            {
+                if (this._strConteudo != value)
+                {
+                    this._strConteudo = value;
+                    RaisePropertyChanged("strConteudo", false);
+                }
+            }
+        }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+        private bool CanGerarRelatorio(object objParam)
+        {
+            return true;
+        }
+        private void GerarRelatorio(object objParam)
+        {
+            Retorno objRetorno;
+            using (Relatorios objBLL = new Relatorios())
+            {
+                objRetorno = objBLL.RetornaPedidoPorEntregador(dtDataInicial, dtDataFinal, fun_funcionarioEntregador, intCaiCodigo, Util.objConfigStorage.objEmpresa.emp_nomeFantasia);
+            }
+            if (objRetorno.intCodigoErro == 0)
+            {
+                this.strConteudo = (string)objRetorno.objRetorno;
+            }
+            else
+            {
+                MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                this.strConteudo = string.Empty;
+            }
+        }
+
+        private bool CanFuncionarioEntregador(object objParam)
+        {
+            return true;
+        }
+        private void FuncionarioEntregador(object objParam)
+        {
+            if (objParam != null)
+            {
+                if (objParam.ToString() == "Novo")
+                {
+                    winCadastro objTelaCadastro = new winCadastro();
+                    FuncionarioViewModel objFuncionarioViewModel = new FuncionarioViewModel();
+                    if (this._fun_funcionarioEntregador > 0)
+                        objFuncionarioViewModel.fun_codigo = _fun_funcionarioEntregador;
+                    objFuncionarioViewModel.OnDispose += (sen1, eve1) => { objTelaCadastro.Close(); };
+                    objTelaCadastro.Title = "Cadastro - " + objFuncionarioViewModel.strNomeTela;
+                    objTelaCadastro.DataContext = objFuncionarioViewModel;
+                    objTelaCadastro.Owner = (Window)Application.Current.MainWindow;
+                    objTelaCadastro.Closed += (sen, eve) =>
+                    {
+                        if (objFuncionarioViewModel.fun_codigo != null)
+                        {
+                            this._fun_funcionarioEntregador = (int)objFuncionarioViewModel.fun_codigo;
+                            RaisePropertyChanged("fun_funcionarioEntregador");
+                            this._fun_nomeEntregador = objFuncionarioViewModel.fun_nome;
+                            RaisePropertyChanged("fun_nomeEntregador");
+                        }
+                        objFuncionarioViewModel = null;
+                        objTelaCadastro = null;
+                    };
+                    objTelaCadastro.ShowDialog();
+                }
+                else if (objParam.ToString() == "Pesquisar")
+                {
+                    FuncionarioViewModel objFuncionarioViewModel = new FuncionarioViewModel();
+                    objFuncionarioViewModel.OnPesquisa += (sen, eve) =>
+                    {
+                        if (objFuncionarioViewModel.fun_codigo != null)
+                        {
+                            this._fun_funcionarioEntregador = (int)objFuncionarioViewModel.fun_codigo;
+                            RaisePropertyChanged("fun_funcionarioEntregador");
+                            this._fun_nomeEntregador = objFuncionarioViewModel.fun_nome;
+                            RaisePropertyChanged("fun_nomeEntregador");
+                        }
+                        objFuncionarioViewModel.Dispose();
+                    };
+                    objFuncionarioViewModel.Pesquisar("AbrirTela");
+                }
+                else
+                {
+                    int intCodigo;
+                    if (int.TryParse(objParam.ToString(), out intCodigo))
+                        this.fun_funcionarioEntregador = intCodigo;
+                    else
+                        FuncionarioEntregador("Pesquisar");
+                }
+            }
+        }
+
+        #endregion Comandos
+
+
+
+        #region Eventos
+
+
+
+        #endregion Eventos
+
+
+
+        #region Métodos
+
+        
+
+        #endregion Métodos
+    }
+}

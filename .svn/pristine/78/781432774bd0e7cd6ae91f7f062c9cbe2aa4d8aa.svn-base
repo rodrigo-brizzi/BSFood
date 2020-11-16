@@ -1,0 +1,691 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{F12A7F04-F747-4A58-99BF-1EDBDA1957F6}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>BSFood</RootNamespace>
+    <AssemblyName>BSFood</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <WarningLevel>4</WarningLevel>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>1</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <PublishWizardCompleted>true</PublishWizardCompleted>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Imagens\icone.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestCertificateThumbprint>51B96961EA6750F3DC3B0DD0A501A55BAC6645F7</ManifestCertificateThumbprint>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestKeyFile>BSFood_TemporaryKey.pfx</ManifestKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <GenerateManifests>true</GenerateManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TargetZone>LocalIntranet</TargetZone>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignManifests>true</SignManifests>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="EntityFramework">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServerCompact, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\EntityFramework.SqlServerCompact.6.1.3\lib\net45\EntityFramework.SqlServerCompact.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.SqlServerCe, Version=4.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\lib\net40\System.Data.SqlServerCe.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.ServiceModel.Web" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Xaml">
+      <RequiredTargetFramework>4.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="WindowsBase" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <Compile Include="Apoio\Behavior\BrowserBehavior.cs" />
+    <Compile Include="Apoio\Converters\DecimalToStringConverter.cs" />
+    <Compile Include="Apoio\Converters\StatusCaixaToColorConverter.cs" />
+    <Compile Include="Apoio\Converters\StatusMesaToColorConverter.cs" />
+    <Compile Include="Apoio\Converters\StatusMesaToImageConverter.cs" />
+    <Compile Include="Apoio\Converters\StatusPedidoToColorConverter.cs" />
+    <Compile Include="Apoio\Converters\StatusPedidoToTextConverter.cs" />
+    <Compile Include="Apoio\DelegateCommand.cs" />
+    <Compile Include="Apoio\Converters\DoubleToVisibilityConverter.cs" />
+    <Compile Include="Apoio\Converters\FalseToTrueConverter.cs" />
+    <Compile Include="Apoio\Behavior\FocusExtension.cs" />
+    <Compile Include="Apoio\GerenciaCupom.cs" />
+    <Compile Include="Apoio\Converters\MultiValueConverter.cs" />
+    <Compile Include="Apoio\Behavior\PasswordHelper.cs" />
+    <Compile Include="Apoio\Converters\RadioButtonToStrConverter.cs" />
+    <Compile Include="Apoio\RequiredIfAttribute.cs" />
+    <Compile Include="Apoio\Converters\StringEmptyToZeroConverter.cs" />
+    <Compile Include="Apoio\Behavior\TextBoxService.cs" />
+    <Compile Include="BusinessLogic\Auditoria.cs" />
+    <Compile Include="BusinessLogic\Bairros.cs" />
+    <Compile Include="BusinessLogic\Caixa.cs" />
+    <Compile Include="BusinessLogic\Cidades.cs" />
+    <Compile Include="BusinessLogic\ClienteGrupos.cs" />
+    <Compile Include="BusinessLogic\Clientes.cs" />
+    <Compile Include="BusinessLogic\Configuracao.cs" />
+    <Compile Include="BusinessLogic\Empresa.cs" />
+    <Compile Include="BusinessLogic\FormaPagamento.cs" />
+    <Compile Include="BusinessLogic\Fornecedores.cs" />
+    <Compile Include="BusinessLogic\Funcionarios.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IAuditoria.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IBairros.cs" />
+    <Compile Include="BusinessLogic\Interfaces\ICaixa.cs" />
+    <Compile Include="BusinessLogic\Interfaces\ICidades.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IClienteGrupos.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IClientes.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IConfiguracao.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IEmpresa.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IFormaPagamento.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IFornecedores.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IFuncionarios.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IMesa.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IPedidos.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IPerfilAcesso.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IProdutoGrupos.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IProdutos.cs" />
+    <Compile Include="BusinessLogic\Interfaces\IRelatorios.cs" />
+    <Compile Include="BusinessLogic\Mesa.cs" />
+    <Compile Include="BusinessLogic\Pedidos.cs" />
+    <Compile Include="BusinessLogic\PerfilAcesso.cs" />
+    <Compile Include="BusinessLogic\ProdutoGrupos.cs" />
+    <Compile Include="BusinessLogic\Produtos.cs" />
+    <Compile Include="BusinessLogic\Relatorios.cs" />
+    <Compile Include="DataAccess\Config\tbAuditoriaConfig.cs" />
+    <Compile Include="DataAccess\Config\tbAuditoriaOperacaoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbBairroConfig.cs" />
+    <Compile Include="DataAccess\Config\tbCaixaConfig.cs" />
+    <Compile Include="DataAccess\Config\tbCaixaMovimentoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbCaixaOperacaoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbCidadeConfig.cs" />
+    <Compile Include="DataAccess\Config\tbClienteConfig.cs" />
+    <Compile Include="DataAccess\Config\tbClienteEnderecoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbClienteGrupoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbClienteTelefoneConfig.cs" />
+    <Compile Include="DataAccess\Config\tbConfiguracaoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbEmpresaConfig.cs" />
+    <Compile Include="DataAccess\Config\tbEstadoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbFormaPagamentoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbFornecedorConfig.cs" />
+    <Compile Include="DataAccess\Config\tbFuncionarioConfig.cs" />
+    <Compile Include="DataAccess\Config\tbMenuConfig.cs" />
+    <Compile Include="DataAccess\Config\tbMesaConfig.cs" />
+    <Compile Include="DataAccess\Config\tbPedidoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbPedidoProdutoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbPerfilAcessoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbPerfilAcessoMenuConfig.cs" />
+    <Compile Include="DataAccess\Config\tbProdutoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbProdutoSubGrupoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbProdutoGrupoConfig.cs" />
+    <Compile Include="DataAccess\Config\tbVendaConfig.cs" />
+    <Compile Include="DataAccess\Config\tbVendaProdutoConfig.cs" />
+    <Compile Include="DataTransfer\ConfigLocal.cs" />
+    <Compile Include="DataTransfer\FechamentoCaixa.cs" />
+    <Compile Include="DataTransfer\FechamentoCaixaForma.cs" />
+    <Compile Include="Models\tbAuditoria.cs" />
+    <Compile Include="Models\tbAuditoriaOperacao.cs" />
+    <Compile Include="Models\tbBairro.cs" />
+    <Compile Include="Models\tbCaixa.cs" />
+    <Compile Include="Models\tbCaixaMovimento.cs" />
+    <Compile Include="Models\tbCaixaOperacao.cs" />
+    <Compile Include="Models\tbCidade.cs" />
+    <Compile Include="Models\tbCliente.cs" />
+    <Compile Include="Models\tbClienteEndereco.cs" />
+    <Compile Include="Models\tbClienteGrupo.cs" />
+    <Compile Include="Models\tbClienteTelefone.cs" />
+    <Compile Include="Models\tbConfiguracao.cs" />
+    <Compile Include="Models\tbEmpresa.cs" />
+    <Compile Include="Models\tbEstado.cs" />
+    <Compile Include="Models\tbFormaPagamento.cs" />
+    <Compile Include="Models\tbFornecedor.cs" />
+    <Compile Include="Models\tbFuncionario.cs" />
+    <Compile Include="Models\tbMenu.cs" />
+    <Compile Include="Models\tbMesa.cs" />
+    <Compile Include="Models\tbPedido.cs" />
+    <Compile Include="Models\tbPedidoProduto.cs" />
+    <Compile Include="Models\tbPerfilAcesso.cs" />
+    <Compile Include="Models\tbPerfilAcessoMenu.cs" />
+    <Compile Include="Models\tbProduto.cs" />
+    <Compile Include="Models\tbProdutoGrupo.cs" />
+    <Compile Include="Models\tbProdutoSubGrupo.cs" />
+    <Compile Include="Models\tbVenda.cs" />
+    <Compile Include="Models\tbVendaProduto.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AssemblyInfo.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ViewModel\BairroViewModel.cs" />
+    <Compile Include="ViewModel\CaixaAberturaViewModel.cs" />
+    <Compile Include="ViewModel\CaixaFechamentoViewModel.cs" />
+    <Compile Include="ViewModel\CaixaMovimentoViewModel.cs" />
+    <Compile Include="ViewModel\CidadeViewModel.cs" />
+    <Compile Include="ViewModel\ClienteEnderecoViewModel.cs" />
+    <Compile Include="ViewModel\ClienteGrupoViewModel.cs" />
+    <Compile Include="ViewModel\ClienteTelefoneViewModel.cs" />
+    <Compile Include="ViewModel\ClienteViewModel.cs" />
+    <Compile Include="ViewModel\ConfiguracaoLocalViewModel.cs" />
+    <Compile Include="ViewModel\ConfiguracaoViewModel.cs" />
+    <Compile Include="ViewModel\EmpresaViewModel.cs" />
+    <Compile Include="ViewModel\EntregaDetalheViewModel.cs" />
+    <Compile Include="ViewModel\EntregaPedidoProdutoViewModel.cs" />
+    <Compile Include="ViewModel\EntregaPedidoViewModel.cs" />
+    <Compile Include="ViewModel\EntregaViewModel.cs" />
+    <Compile Include="ViewModel\FormaPagamentoViewModel.cs" />
+    <Compile Include="ViewModel\FornecedorViewModel.cs" />
+    <Compile Include="ViewModel\FuncionarioViewModel.cs" />
+    <Compile Include="ViewModel\LoginViewModel.cs" />
+    <Compile Include="ViewModel\MesaProdutoViewModel.cs" />
+    <Compile Include="ViewModel\MesaViewModel.cs" />
+    <Compile Include="ViewModel\PerfilAcessoMenuViewModel.cs" />
+    <Compile Include="ViewModel\PerfilAcessoViewModel.cs" />
+    <Compile Include="ViewModel\PrincipalViewModel.cs" />
+    <Compile Include="ViewModel\ProdutoGrupoViewModel.cs" />
+    <Compile Include="ViewModel\ProdutoSubGrupoViewModel.cs" />
+    <Compile Include="ViewModel\ProdutoViewModel.cs" />
+    <Compile Include="ViewModel\RelPedidoEntregadorViewModel.cs" />
+    <Compile Include="ViewModel\ViewModelBase.cs" />
+    <Compile Include="View\ucBairro.xaml.cs">
+      <DependentUpon>ucBairro.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucBairroPesquisa.xaml.cs">
+      <DependentUpon>ucBairroPesquisa.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucCaixaAbertura.xaml.cs">
+      <DependentUpon>ucCaixaAbertura.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucCaixaFechamento.xaml.cs">
+      <DependentUpon>ucCaixaFechamento.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucCidade.xaml.cs">
+      <DependentUpon>ucCidade.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucCidadePesquisa.xaml.cs">
+      <DependentUpon>ucCidadePesquisa.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucCliente.xaml.cs">
+      <DependentUpon>ucCliente.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucClienteGrupo.xaml.cs">
+      <DependentUpon>ucClienteGrupo.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucClienteGrupoPesquisa.xaml.cs">
+      <DependentUpon>ucClienteGrupoPesquisa.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucClientePesquisa.xaml.cs">
+      <DependentUpon>ucClientePesquisa.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucConfiguracao.xaml.cs">
+      <DependentUpon>ucConfiguracao.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucEmpresa.xaml.cs">
+      <DependentUpon>ucEmpresa.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucEntrega.xaml.cs">
+      <DependentUpon>ucEntrega.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucEntregaPedido.xaml.cs">
+      <DependentUpon>ucEntregaPedido.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucEntregaPedidoPesquisa.xaml.cs">
+      <DependentUpon>ucEntregaPedidoPesquisa.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucFormaPagamento.xaml.cs">
+      <DependentUpon>ucFormaPagamento.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucFormaPagamentoPesquisa.xaml.cs">
+      <DependentUpon>ucFormaPagamentoPesquisa.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucFornecedor.xaml.cs">
+      <DependentUpon>ucFornecedor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucFornecedorPesquisa.xaml.cs">
+      <DependentUpon>ucFornecedorPesquisa.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucFuncionario.xaml.cs">
+      <DependentUpon>ucFuncionario.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucFuncionarioPesquisa.xaml.cs">
+      <DependentUpon>ucFuncionarioPesquisa.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucMesa.xaml.cs">
+      <DependentUpon>ucMesa.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucPerfilAcesso.xaml.cs">
+      <DependentUpon>ucPerfilAcesso.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucPerfilAcessoPesquisa.xaml.cs">
+      <DependentUpon>ucPerfilAcessoPesquisa.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucProduto.xaml.cs">
+      <DependentUpon>ucProduto.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucProdutoGrupo.xaml.cs">
+      <DependentUpon>ucProdutoGrupo.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucProdutoGrupoPesquisa.xaml.cs">
+      <DependentUpon>ucProdutoGrupoPesquisa.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucProdutoPesquisa.xaml.cs">
+      <DependentUpon>ucProdutoPesquisa.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ucRelPedidoEntregador.xaml.cs">
+      <DependentUpon>ucRelPedidoEntregador.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\winAuditoria.xaml.cs">
+      <DependentUpon>winAuditoria.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\winCadastro.xaml.cs">
+      <DependentUpon>winCadastro.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\winConfiguracaoLocal.xaml.cs">
+      <DependentUpon>winConfiguracaoLocal.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\winLogin.xaml.cs">
+      <DependentUpon>winLogin.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\winMotivoExclusaoPedido.xaml.cs">
+      <DependentUpon>winMotivoExclusaoPedido.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\winPesquisa.xaml.cs">
+      <DependentUpon>winPesquisa.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\winPrincipal.xaml.cs">
+      <DependentUpon>winPrincipal.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Apoio\GerenciaTransacao.cs" />
+    <Compile Include="Apoio\Util.cs" />
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DataAccess\EFContexto.cs" />
+    <Compile Include="DataAccess\EFContextoInitializer.cs" />
+    <Compile Include="DataTransfer\ConfigStorage.cs" />
+    <Compile Include="DataTransfer\Retorno.cs" />
+    <Page Include="View\ucBairro.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucBairroPesquisa.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucCaixaAbertura.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucCaixaFechamento.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucCidade.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucCidadePesquisa.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucCliente.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucClienteGrupo.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucClienteGrupoPesquisa.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucClientePesquisa.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucConfiguracao.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucEmpresa.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucEntrega.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucEntregaPedido.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucEntregaPedidoPesquisa.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucFormaPagamento.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucFormaPagamentoPesquisa.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucFornecedor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucFornecedorPesquisa.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucFuncionario.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucFuncionarioPesquisa.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucMesa.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucPerfilAcesso.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucPerfilAcessoPesquisa.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucProduto.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucProdutoGrupo.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucProdutoGrupoPesquisa.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucProdutoPesquisa.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ucRelPedidoEntregador.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\winAuditoria.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\winCadastro.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\winConfiguracaoLocal.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\winLogin.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\winMotivoExclusaoPedido.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\winPesquisa.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\winPrincipal.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Migrations\Configuration.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <None Include="BSFood_TemporaryKey.pfx" />
+    <None Include="packages.config" />
+    <None Include="Properties\app.manifest" />
+    <None Include="Properties\AssemblyInfo.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AssemblyInfo.cs</LastGenOutput>
+    </None>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Imagens\icone.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Imagens\editar16.png" />
+    <Resource Include="Imagens\entrar16.png" />
+    <Resource Include="Imagens\excluir16.png" />
+    <Resource Include="Imagens\gravar16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Imagens\logo255.png" />
+    <Resource Include="Imagens\logo5000.png" />
+    <Resource Include="Imagens\Menu\48.png" />
+    <Resource Include="Imagens\novo16.png" />
+    <Resource Include="Imagens\pesquisar16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Imagens\fechar16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Imagens\configurar16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Imagens\Menu\10.png" />
+    <Resource Include="Imagens\Menu\12.png" />
+    <Resource Include="Imagens\Menu\13.png" />
+    <Resource Include="Imagens\Menu\14.png" />
+    <Resource Include="Imagens\Menu\15.png" />
+    <Resource Include="Imagens\Menu\16.png" />
+    <Resource Include="Imagens\Menu\17.png" />
+    <Resource Include="Imagens\Menu\18.png" />
+    <Resource Include="Imagens\Menu\19.png" />
+    <Resource Include="Imagens\Menu\2.png" />
+    <Resource Include="Imagens\Menu\20.png" />
+    <Resource Include="Imagens\Menu\21.png" />
+    <Resource Include="Imagens\Menu\22.png" />
+    <Resource Include="Imagens\Menu\24.png" />
+    <Resource Include="Imagens\Menu\25.png" />
+    <Resource Include="Imagens\Menu\26.png" />
+    <Resource Include="Imagens\Menu\27.png" />
+    <Resource Include="Imagens\Menu\28.png" />
+    <Resource Include="Imagens\Menu\29.png" />
+    <Resource Include="Imagens\Menu\3.png" />
+    <Resource Include="Imagens\Menu\30.png" />
+    <Resource Include="Imagens\Menu\31.png" />
+    <Resource Include="Imagens\Menu\32.png" />
+    <Resource Include="Imagens\Menu\33.png" />
+    <Resource Include="Imagens\Menu\34.png" />
+    <Resource Include="Imagens\Menu\35.png" />
+    <Resource Include="Imagens\Menu\36.png" />
+    <Resource Include="Imagens\Menu\37.png" />
+    <Resource Include="Imagens\Menu\38.png" />
+    <Resource Include="Imagens\Menu\39.png" />
+    <Resource Include="Imagens\Menu\4.png" />
+    <Resource Include="Imagens\Menu\40.png" />
+    <Resource Include="Imagens\Menu\41.png" />
+    <Resource Include="Imagens\Menu\42.png" />
+    <Resource Include="Imagens\Menu\44.png" />
+    <Resource Include="Imagens\Menu\45.png" />
+    <Resource Include="Imagens\Menu\46.png" />
+    <Resource Include="Imagens\Menu\47.png" />
+    <Resource Include="Imagens\Menu\5.png" />
+    <Resource Include="Imagens\Menu\6.png" />
+    <Resource Include="Imagens\Menu\7.png" />
+    <Resource Include="Imagens\Menu\8.png" />
+    <Resource Include="Imagens\Menu\9.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Imagens\Menu\1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Imagens\Menu\11.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Imagens\Menu\23.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Imagens\Menu\43.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="AssemblyVersion.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Imagens\atualizar16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Imagens\anterior16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Imagens\proximo16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Imagens\imprimir16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Imagens\Menu\49.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.5">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.5 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Imagens\mesalivre450.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Imagens\mesaocupada450.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Dependencia\RelTemplate.html" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

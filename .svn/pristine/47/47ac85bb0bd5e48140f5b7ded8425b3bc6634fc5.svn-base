@@ -1,0 +1,69 @@
+﻿using BSFoodServer.Apoio;
+using BSFoodServer.BLL.Interfaces;
+using BSFoodServer.DAL;
+using BSFoodServer.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.BLL
+{
+    public class Pessoas : IPessoas, IDisposable
+    {
+        private bool blnFecharCon;
+        private EFContexto objCtx;
+        private GerenciaTransacao objTransacao;
+
+
+        public Pessoas()
+            : base()
+        {
+            this.objCtx = new EFContexto();
+            this.objTransacao = new GerenciaTransacao(ref this.objCtx);
+            blnFecharCon = true;
+        }
+
+        public Pessoas(ref EFContexto _objCtx, ref GerenciaTransacao _objTransacao)
+            : base()
+        {
+            this.objCtx = _objCtx;
+            this.objTransacao = _objTransacao;
+            blnFecharCon = false;
+        }
+
+        #region Endereços
+
+        public Retorno RetornaListaEstado()
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                List<Estado> arrEstado = null;
+                arrEstado = this.objCtx.Estados.OrderBy(est => est.Nome).ToList();
+                objRetorno.blnTemErro = false;
+                objRetorno.objRetorno = arrEstado;
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.blnTemErro = true;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        #endregion
+
+        public void Dispose()
+        {
+            if (this.blnFecharCon)
+            {
+                this.objCtx.Dispose();
+                this.objCtx = null;
+            }
+        }
+    }
+}

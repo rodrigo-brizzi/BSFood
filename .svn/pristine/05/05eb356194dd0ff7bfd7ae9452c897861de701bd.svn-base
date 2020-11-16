@@ -1,0 +1,48 @@
+﻿using BSFoodServer.Models;
+using System;
+using System.Collections.Generic;
+using System.Data.Entity;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.DAL.Contexto
+{
+    public class EFContextoInitializer : CreateDatabaseIfNotExists<EFContexto>
+    {
+        protected override void Seed(EFContexto objCtx)
+        {
+            //Populando a tabela de estados
+            objCtx.Estados.Add(new Estado { Sigla = "AC", Nome = "ACRE" });
+            objCtx.Estados.Add(new Estado { Sigla = "AL", Nome = "ALAGOAS" });
+            objCtx.Estados.Add(new Estado { Sigla = "AP", Nome = "AMAPÁ" });
+            objCtx.Estados.Add(new Estado { Sigla = "AM", Nome = "AMAZONAS" });
+            objCtx.Estados.Add(new Estado { Sigla = "BA", Nome = "BAHIA" });
+            objCtx.Estados.Add(new Estado { Sigla = "CE", Nome = "CEARÁ" });
+            objCtx.Estados.Add(new Estado { Sigla = "DF", Nome = "DISTRITO FEDERAL" });
+            objCtx.Estados.Add(new Estado { Sigla = "ES", Nome = "ESPÍRITO SANTO" });
+            objCtx.Estados.Add(new Estado { Sigla = "GO", Nome = "GOIÁS" });
+            objCtx.Estados.Add(new Estado { Sigla = "MA", Nome = "MARANHÃO" });
+            objCtx.Estados.Add(new Estado { Sigla = "MT", Nome = "MATO GROSSO" });
+            objCtx.Estados.Add(new Estado { Sigla = "MS", Nome = "MATO GROSSO DO SUL" });
+            objCtx.Estados.Add(new Estado { Sigla = "MG", Nome = "MINAS GERAIS" });
+            objCtx.Estados.Add(new Estado { Sigla = "PA", Nome = "PARÁ" });
+            objCtx.Estados.Add(new Estado { Sigla = "PB", Nome = "PARAÍBA" });
+            objCtx.Estados.Add(new Estado { Sigla = "PR", Nome = "PARANÁ" });
+            objCtx.Estados.Add(new Estado { Sigla = "PE", Nome = "PERNAMBUCO" });
+            objCtx.Estados.Add(new Estado { Sigla = "PI", Nome = "PIAUÍ" });
+            objCtx.Estados.Add(new Estado { Sigla = "RJ", Nome = "RIO DE JANEIRO" });
+            objCtx.Estados.Add(new Estado { Sigla = "RN", Nome = "RIO GRANDE DO NORTE" });
+            objCtx.Estados.Add(new Estado { Sigla = "RS", Nome = "RIO GRANDE DO SUL" });
+            objCtx.Estados.Add(new Estado { Sigla = "RO", Nome = "RONDÔNIA" });
+            objCtx.Estados.Add(new Estado { Sigla = "RR", Nome = "RORAIMA" });
+            objCtx.Estados.Add(new Estado { Sigla = "SC", Nome = "SANTA CATARINA" });
+            objCtx.Estados.Add(new Estado { Sigla = "SP", Nome = "SÃO PAULO" });
+            objCtx.Estados.Add(new Estado { Sigla = "SE", Nome = "SERGIPE" });
+            objCtx.Estados.Add(new Estado { Sigla = "TO", Nome = "TOCANTINS" });
+            objCtx.Estados.Add(new Estado { Sigla = "EX", Nome = "EXTERIOR" });
+
+            base.Seed(objCtx);
+        }
+    }
+}

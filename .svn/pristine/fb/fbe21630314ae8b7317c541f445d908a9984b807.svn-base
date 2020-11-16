@@ -1,0 +1,140 @@
+﻿<?xml version="1.0"?>
+<doc>
+<assembly>
+<name>
+IcBoxClassLibrary
+</name>
+</assembly>
+<members>
+<member name="P:IcBoxClassLibrary.My.Resources.Resources.ResourceManager">
+	<summary>
+  Returns the cached ResourceManager instance used by this class.
+</summary>
+</member><member name="P:IcBoxClassLibrary.My.Resources.Resources.Culture">
+	<summary>
+  Overrides the current thread's CurrentUICulture property for all
+  resource lookups using this strongly typed resource class.
+</summary>
+</member><member name="T:IcBoxClassLibrary.My.Resources.Resources">
+	<summary>
+  A strongly-typed resource class, for looking up localized strings, etc.
+</summary>
+</member><member name="M:IcBoxClassLibrary.IcBox.GetPorts">
+	<summary>
+ Retorna um Array com o nome das portas detectadas pelo componente SerialPort.
+ Em alguns casos, a porta já pode estar ocupada  e/ou não ser listada por esta função
+ </summary>
+	<returns> Retorna <c>Array de Strings</c> com o nome das portas </returns>
+</member><member name="M:IcBoxClassLibrary.IcBox.initialize(System.String)">
+	<param name="portName">Nome da porta a ser aberta. Este parametro pode ser vazio.</param>
+	<summary>
+ Inicializa a o componente SeriaPort com o parametros para acessar o IcBox.
+ A chamada desta função é obrigatória para acessar o IcBox
+ </summary>
+	<returns> Retorna <c>True</c> se a operação for concluída com sucesso </returns>
+</member><member name="M:IcBoxClassLibrary.IcBox.openCom(System.String)">
+	<param name="portName">Nome da porta a ser aberta.</param>
+	<summary>
+ Abra a porta COM para acessar o IcBox.
+ A chamada desta função é obrigatória para acessar o IcBox
+ </summary>
+	<returns>Retorna <c>True</c> se a operação for concluída com sucesso </returns>
+</member><member name="M:IcBoxClassLibrary.IcBox.closeCom">
+	<summary>
+ Fecha a porta COM 
+ A chamada desta função é obrigatória para acessar o IcBox
+ </summary>
+	<returns>Retorna <c>True</c> se a operação for concluída com sucesso </returns>
+</member><member name="M:IcBoxClassLibrary.IcBox.isConnected">
+	<summary>
+ Verifica se o componente SerialPort esta com a porta "Aberta"
+ Confia somente no estado indicado pelo componente SerialPort 
+ É mais rápido que o comando "CheckConnection", porém menos confiável
+ </summary>
+	<returns>Retorna <c>True</c> se o componente indicar que a porta esta aberta </returns>
+</member><member name="M:IcBoxClassLibrary.IcBox.getVersionInfo">
+	<summary>
+ Retorna a versão do firmware do Icbox.
+ Pode ser usado para testar a comunicação com o IcBox
+ </summary>
+	<returns>Retorna uma String com a versão de firmware interno do IcBox</returns>
+</member><member name="M:IcBoxClassLibrary.IcBox.getOnHook">
+	<summary>
+ Informa se o Icbox detectou o fone no gancho ou fora do gancho.
+ Se a linha telefônica estiver desconectada do IcBox, indicará fora do gancho
+ </summary>
+	<returns>Retorna <c>True</c> se o fone estiver no gancho ou a linha telefônica desconectada</returns>
+</member><member name="M:IcBoxClassLibrary.IcBox.checkConnectionStatus">
+	<summary>
+ Verifica o estado do canal de comunicação com o IcBox
+ Um comando é enviado e a resposta é testada com o valor esperado
+ </summary>
+	<returns>Retorna <c>True</c> se a comunicação com o IcBox estiver Ok</returns>
+</member><member name="M:IcBoxClassLibrary.IcBox.dialNumber(System.String)">
+	<param name="numero"> String com o número a ser discado, máximo 22 dígitos</param>
+	<summary>
+ Comando para o IcBox  gerar o DTMF com um número especificado
+ Para pausa de 500mSecs, adicione a letra P.
+ Antes de enviar este comando, é recomendado verificar o estado do gancho, pois 
+ o DTMF deve ser gerado com o fone fora do gancho.
+ </summary>
+	<returns>Retorna <c>True</c> se o IcBox receber o comando com sucesso</returns>
+</member><member name="M:IcBoxClassLibrary.IcBox.getEvent(System.Int32)">
+	<param name="msecsTimeout">Tempo em milisegundos para timeout.</param>
+	<summary>
+ Comando para capturar informações de evento de ligação. Deve ser usada através de um pooling da aplicação host
+ Quando estiver em modo de programação (configuração do IcBox) este comando não deve ser usado sob
+ pena da resposta do comando ser interceptada.
+ </summary>
+	<returns>Retorna a cadeia de String com o evento detectado </returns>
+</member><member name="M:IcBoxClassLibrary.IcBox.getRXLevel">
+	<summary>
+ Faz a leitura do nível de RX em uso gravado no IcBox.
+ Os valores estão no intervalo de 1 (menos sensível) até 8 ( mais sensível)
+ O valor default é 4
+ </summary>
+	<returns>Retorna  um Integer com o valor armazenado</returns>
+</member><member name="M:IcBoxClassLibrary.IcBox.setRXLevel(System.Int32)">
+	<param name="RXlevel"> Valor do nível a ser configurado.</param>
+	<summary>
+ Configura o nivel RX no IcBox 
+ Os valores estão no intervalo de 1 (menos sensível) até 8 ( mais sensível)
+ A configuração do nível de RX deve ser realizada quando o número identicado apresenta
+ erros como número faltantes ou repetidos
+ </summary>
+	<returns>Retorna <c>True</c> se a operação for concluída com sucesso </returns>
+</member><member name="M:IcBoxClassLibrary.IcBox.getRXMode">
+	<summary>
+ Faz a leitura do modo de RX configurado e gravado no IcBox
+ Retorna 1- automático, 2 - DTMF  e 3-FSK
+ </summary>
+	<returns>Retorna um Integer com o valor configurado </returns>
+</member><member name="M:IcBoxClassLibrary.IcBox.setRXMode(System.Int32)">
+	<param name="RXmode"> Valor do modo a ser configurado.</param>
+	<summary>
+ Configura e grava o modo de Detecção do identificador de chamadas 
+ Valores possíveis 1- automático, 2 - DTMF  e 3-FSK
+ Valor default : 1
+ </summary>
+	<returns>Retorna <c>True</c> se a operação for concluída com sucesso </returns>
+</member><member name="M:IcBoxClassLibrary.IcBox.getId">
+	<summary>
+ Recupera o Id gravado no Icbox
+ Este Id é útil quando existe mais de um IcBox conectado no mesmo computador
+ 
+ </summary>
+	<returns>Retorna uma String com o Id em 3 caracteres</returns>
+</member><member name="M:IcBoxClassLibrary.IcBox.setId(System.String)">
+	<param name="id"> Valor do Id a ser configurado.</param>
+	<summary>
+ Configura O id para identificação única no IcBox 
+ Os valores podem ser dentro do intervalo de 001 até 999, sempre em 3 caracteres
+ </summary>
+	<returns>Retorna <c>True</c> se a operação for concluída com sucesso </returns>
+</member><member name="T:IcBoxClassLibrary.IcBox">
+	<summary>
+ Construtor.
+ </summary>
+</member>
+</members>
+</doc>

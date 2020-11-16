@@ -1,0 +1,147 @@
+﻿<UserControl x:Class="BSFood.View.ucProdutoGrupo"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:bh="clr-namespace:BSFood.Apoio.Behavior"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300" Width="700" Height="450">
+    <UserControl.InputBindings>
+        <KeyBinding Key="F2" Command="{Binding Path=AnteriorCommand}" />
+        <KeyBinding Key="F3" Command="{Binding Path=ProximoCommand}" />
+        <KeyBinding Key="F4" Command="{Binding Path=NovoCommand}" />
+        <KeyBinding Key="F5" Command="{Binding Path=EditarCommand}" />
+        <KeyBinding Key="F6" Command="{Binding Path=SalvarCommand}" />
+        <KeyBinding Key="F7" Command="{Binding Path=CancelarCommand}" />
+        <KeyBinding Key="F8" Command="{Binding Path=ExcluirCommand}" />
+        <KeyBinding Key="F9" Command="{Binding Path=PesquisarCommand}" CommandParameter="AbrirTela" />
+        <KeyBinding Key="F10" Command="{Binding Path=LogCommand}" CommandParameter="AbrirTela" />
+        <KeyBinding Key="Escape" Command="{Binding FecharCommand}" />
+    </UserControl.InputBindings>
+    <Canvas>
+        <Label Content="Código:" Canvas.Left="10" Canvas.Top="10" Width="68"/>
+        <TextBox x:Name="txtCodigo" Canvas.Left="83" Canvas.Top="10" Width="120" bh:TextBoxService.IsNumericOnly="true"
+                 Text="{Binding pgr_codigo, Mode=TwoWay, UpdateSourceTrigger=LostFocus, Converter={StaticResource StringEmptyToZeroConverter}}"
+                 IsEnabled="{Binding Path=IsEnabled, ElementName=btnGravar, Converter={StaticResource FalseToTrueConverter}}"
+                 bh:FocusExtension.IsFocused="{Binding Path=IsEnabled, ElementName=btnGravar, Converter={StaticResource FalseToTrueConverter}}">
+            <TextBox.InputBindings>
+                <KeyBinding Key="Enter" Command="{Binding BuscarCommand}" CommandParameter="{Binding Path=Text, ElementName=txtCodigo}" />
+            </TextBox.InputBindings>
+        </TextBox>
+
+        <Canvas IsEnabled="{Binding Path=IsEnabled, ElementName=btnGravar}">
+            <Label Content="Nome:" Canvas.Left="10" Canvas.Top="38" Width="68"/>
+            <TextBox Canvas.Left="83" Canvas.Top="38" Width="607" CharacterCasing="Upper"
+                Text="{Binding pgr_nome, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     bh:FocusExtension.IsFocused="{Binding Path=IsEnabled, ElementName=btnGravar}"/>
+
+            <Label Content="Sub Grupos:" Canvas.Left="10" Canvas.Top="66" Width="68"/>
+            <DataGrid Height="318" Canvas.Top="66" Canvas.Left="83" Width="578" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+                                  ItemsSource="{Binding arrProdutoSubGrupoViewModel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="Nome" Width="270">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid FocusManager.FocusedElement="{Binding ElementName=txtPsgrNome}">
+                                    <TextBox x:Name="txtPsgrNome" CharacterCasing="Upper"
+                                        Text="{Binding psgr_nome, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="Exibe no fechamento de caixa" Width="180">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox HorizontalAlignment="Center" Margin="0,4,0,0" IsChecked="{Binding psgr_exibeRelatorio, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Width="80">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Width="24" Height="24" Canvas.Top="10" Canvas.Left="576" ToolTipService.ToolTip="Excluir"
+                                    Command="{Binding RemoveSubGrupoCommand}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Image Source="../Imagens/excluir16.png" Width="16" />
+                                    </StackPanel>
+                                </Button>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+            <Button Width="24" Height="24" Canvas.Top="66" Canvas.Left="666" ToolTipService.ToolTip="Novo"
+                            Command="{Binding AdicionaSubGrupoCommand}">
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="../Imagens/novo16.png" Width="16" />
+                </StackPanel>
+            </Button>
+        </Canvas>
+
+        <Button Width="24" Height="24" Canvas.Top="416" Canvas.Left="10" ToolTipService.ToolTip="F2"
+                Command="{Binding AnteriorCommand}">
+            <StackPanel Orientation="Horizontal">
+                <Image Source="../Imagens/anterior16.png" Width="16" />
+            </StackPanel>
+        </Button>
+        <Button Width="24" Height="24" Canvas.Top="416" Canvas.Left="34" ToolTipService.ToolTip="F3"
+                Command="{Binding ProximoCommand}">
+            <StackPanel Orientation="Horizontal">
+                <Image Source="../Imagens/proximo16.png" Width="16" />
+            </StackPanel>
+        </Button>
+        <Button Width="88" Height="31" Canvas.Left="72" Canvas.Top="409" ToolTipService.ToolTip="F4"
+                Command="{Binding NovoCommand}">
+            <StackPanel Orientation="Horizontal">
+                <Image Source="../Imagens/novo16.png" Width="16" />
+                <TextBlock Text="Incluir" Margin="5,0,0,0" />
+            </StackPanel>
+        </Button>
+        <Button Width="88" Height="31" Canvas.Left="165" Canvas.Top="409" ToolTipService.ToolTip="F5"
+                Command="{Binding EditarCommand}">
+            <StackPanel Orientation="Horizontal">
+                <Image Source="../Imagens/editar16.png" Width="16" />
+                <TextBlock Text="Alterar" Margin="5,0,0,0" />
+            </StackPanel>
+        </Button>
+        <Button x:Name="btnGravar" Width="88" Height="31" Canvas.Left="258" Canvas.Top="409" ToolTipService.ToolTip="F6"
+                Command="{Binding SalvarCommand}">
+            <StackPanel Orientation="Horizontal">
+                <Image Source="../Imagens/gravar16.png" Width="16" />
+                <TextBlock Text="Gravar" Margin="5,0,0,0" />
+            </StackPanel>
+        </Button>
+        <Button Width="88" Height="31" Canvas.Left="351" Canvas.Top="409" ToolTipService.ToolTip="F7"
+                Command="{Binding CancelarCommand}">
+            <StackPanel Orientation="Horizontal">
+                <Image Source="../Imagens/fechar16.png" Width="16" />
+                <TextBlock Text="Cancelar" Margin="5,0,0,0" />
+            </StackPanel>
+        </Button>
+        <Button Width="88" Height="31" Canvas.Left="444" Canvas.Top="409" ToolTipService.ToolTip="F8"
+                Command="{Binding ExcluirCommand}">
+            <StackPanel Orientation="Horizontal">
+                <Image Source="../Imagens/excluir16.png" Width="16" />
+                <TextBlock Text="Excluir" Margin="5,0,0,0" />
+            </StackPanel>
+        </Button>
+        <Button Width="88" Height="31" Canvas.Left="537" Canvas.Top="409" ToolTipService.ToolTip="F9"
+                Command="{Binding PesquisarCommand}"
+                CommandParameter="AbrirTela">
+            <StackPanel Orientation="Horizontal">
+                <Image Source="../Imagens/pesquisar16.png" Width="16" />
+                <TextBlock Text="Pesquisar" Margin="5,0,0,0" />
+            </StackPanel>
+        </Button>
+        <Button Width="60" Height="31" Canvas.Left="630" Canvas.Top="409" ToolTipService.ToolTip="F10"
+                Command="{Binding LogCommand}"
+                CommandParameter="AbrirTela">
+            <StackPanel Orientation="Horizontal">
+                <Image Source="../Imagens/novo16.png" Width="16" />
+                <TextBlock Text="Log" Margin="5,0,0,0" />
+            </StackPanel>
+        </Button>
+    </Canvas>
+</UserControl>

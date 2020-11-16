@@ -1,0 +1,334 @@
+﻿using BSFood.Apoio;
+using BSFood.View;
+using BSFood.BLL.Interfaces;
+using BSFood.DTO;
+using BSFood.Models;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Net;
+using System.ServiceModel;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+
+namespace BSFood.ViewModel
+{
+    public class CidadeViewModel : ViewModelBase
+    {
+        public ICommand NovoCommand { get; set; }
+        public ICommand EditarCommand { get; set; }
+        public ICommand SalvarCommand { get; set; }
+        public ICommand ExcluirCommand { get; set; }
+        public ICommand PesquisarCommand { get; set; }
+
+        public CidadeViewModel()
+        {
+            this.PropertyChanged += CidadeViewModel_PropertyChanged;
+            NovoCommand = new DelegateCommand(Novo, CanNovo);
+            EditarCommand = new DelegateCommand(Editar, CanEditar);
+            SalvarCommand = new DelegateCommand(Salvar, CanSalvar);
+            ExcluirCommand = new DelegateCommand(Excluir, CanExcluir);
+            PesquisarCommand = new DelegateCommand(Pesquisar, CanPesquisar);
+            this.strPalavraChave = string.Empty;
+            this.arrEstado = new List<Estado>();
+        }
+
+
+
+        #region Propriedades
+
+        private List<Estado> _arrEstado;
+        public List<Estado> arrEstado
+        {
+            get { return this._arrEstado; }
+            set
+            {
+                this._arrEstado = value;
+                RaisePropertyChanged("arrEstado");
+            }
+        }
+
+        private Cidade _objCidade;
+        public Cidade objCidade
+        {
+            get { return this._objCidade; }
+            set
+            {
+                this._objCidade = value;
+                RaisePropertyChanged("objCidade");
+            }
+        }
+
+        private PagedCollectionView _arrCidadePesquisa;
+        public PagedCollectionView arrCidadePesquisa 
+        {
+            get { return this._arrCidadePesquisa; }
+            set
+            {
+                this._arrCidadePesquisa = value;
+                RaisePropertyChanged("arrCidadePesquisa");
+            }
+        }
+
+        private string _strPalavraChave;
+        public string strPalavraChave
+        {
+            get { return this._strPalavraChave; }
+            set
+            {
+                this._strPalavraChave = value;
+                RaisePropertyChanged("strPalavraChave");
+            }
+        }
+
+        [Required(ErrorMessage = "Campo obrigatório")]
+        public string strNome
+        {
+            get { return this.objCidade.Nome; }
+            set
+            {
+                this.objCidade.Nome = value;
+                RaisePropertyChanged("strNome");
+            }
+        }
+
+        [Required(ErrorMessage = "Campo obrigatório")]
+        [Range(1, int.MaxValue, ErrorMessage = "Campo obrigatório")]
+        public int intCodigoEstado
+        {
+            get { return this.objCidade.CodigoEstado; }
+            set
+            {
+                this.objCidade.CodigoEstado = value;
+                RaisePropertyChanged("intCodigoEstado");
+            }
+        }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+        private bool CanNovo(object objParam)
+        {
+            return this.blnPermiteInclusaoRegistro;
+        }
+        private void Novo(object objParam)
+        {
+            this.blnConsulta = false;
+            var factory = new ChannelFactory<IPessoasAsync>(App.objHttpBinding, Util.RetornaEndpointAddress(enSvc.svcPessoas));
+            IPessoasAsync service = factory.CreateChannel();
+            service.BeginNovaCidade((sen) =>
+            {
+                Deployment.Current.Dispatcher.BeginInvoke((Action)(() =>
+                {
+                    Retorno objRetorno = service.EndNovaCidade(sen);
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        List<object> arrRetorno = (List<object>)objRetorno.objRetorno;
+                        this.arrEstado = (List<Estado>)arrRetorno[0];
+                        this.objCidade = (Cidade)arrRetorno[1];
+                        CidadeForm objCidadeForm = new CidadeForm();
+                        objCidadeForm.Loaded += (sen1, eve1) =>
+                        {
+                            this.blnConsulta = true;
+                            objCidadeForm.DataContext = this;
+                            RaiseAllPropertyChanged<CidadeViewModel>();
+                        };
+                        objCidadeForm.Closed += (sen2, eve2) =>
+                        {
+                            if (objCidadeForm.DialogResult == true)
+                                this.Pesquisar(null);
+                        };
+                        objCidadeForm.Show();                           
+                    }
+                    else
+                    {
+                        MensagemViewModel.Show(objRetorno.strMsgErro, "Atenção", MensagemViewModel.enMsgBotao.Ok, objRetorno.intCodigoErro, (result) =>
+                        {
+                            this.blnConsulta = true;
+                            (objParam as CidadePesquisa).Focus();
+                        });
+                    }
+                }));
+            }, null);
+        }
+
+        private bool CanEditar(object objParam)
+        {
+            return this.blnPermiteAlteracaoRegistro;
+        }
+        private void Editar(object objParam)
+        {
+            this.blnConsulta = false;
+            var factory = new ChannelFactory<IPessoasAsync>(App.objHttpBinding, Util.RetornaEndpointAddress(enSvc.svcPessoas));
+            IPessoasAsync service = factory.CreateChannel();
+            service.BeginEditarCidade(Convert.ToInt32(objParam), (sen) =>
+            {
+                Deployment.Current.Dispatcher.BeginInvoke((Action)(() =>
+                {
+                    Retorno objRetorno = service.EndEditarCidade(sen);
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        List<object> arrRetorno = (List<object>)objRetorno.objRetorno;
+                        this.arrEstado = (List<Estado>)arrRetorno[0];
+                        this.objCidade = (Cidade)arrRetorno[1];                        
+
+                        CidadeForm objCidadeForm = new CidadeForm();
+                        objCidadeForm.Loaded += (sen1, eve1) =>
+                        {
+                            this.blnConsulta = true;
+                            objCidadeForm.DataContext = this;
+                            RaiseAllPropertyChanged<CidadeViewModel>();
+                        };
+                        objCidadeForm.Closed += (sen2, eve2) =>
+                        {
+                            if (objCidadeForm.DialogResult == true)
+                                this.Pesquisar(null);
+                        };
+                        objCidadeForm.Show();
+                    }
+                    else
+                    {
+                        MensagemViewModel.Show(objRetorno.strMsgErro, "Atenção", MensagemViewModel.enMsgBotao.Ok, objRetorno.intCodigoErro, (result) =>
+                        {
+                            this.blnConsulta = true;
+                            (objParam as CidadePesquisa).Focus();
+                        });
+                    }
+                }));
+            }, null);
+        }
+
+        private bool CanSalvar(object objParam)
+        {
+            return !base.HasErrors;
+        }
+        private void Salvar(object objParam)
+        {
+            this.blnConsulta = false;
+            var factory = new ChannelFactory<IPessoasAsync>(App.objHttpBinding, Util.RetornaEndpointAddress(enSvc.svcPessoas));
+            IPessoasAsync service = factory.CreateChannel();
+            service.BeginSalvarCidade(this.objCidade, (sen) =>
+            {
+                Deployment.Current.Dispatcher.BeginInvoke((Action)(() =>
+                {
+                    Retorno objRetorno = service.EndSalvarCidade(sen);
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.blnConsulta = true;
+                        (objParam as CidadeForm).DialogResult = true;
+                    }
+                    else
+                    {
+                        MensagemViewModel.Show(objRetorno.strMsgErro, "Atenção", MensagemViewModel.enMsgBotao.Ok, objRetorno.intCodigoErro, (result) =>
+                        {
+                            this.blnConsulta = true;
+                        });
+                    }
+                }));
+            }, null);            
+        }
+
+        private bool CanExcluir(object objParam)
+        {
+            return this.blnPermiteExclusaoRegistro;
+        }
+        private void Excluir(object objParam)
+        {
+            MensagemViewModel.Show("Tem Certeza que deseja excluir o registro selecionado?", "Atenção", MensagemViewModel.enMsgBotao.SimOuNao, MensagemViewModel.enMsgIcone.Question, (result) =>
+            {
+                if (result == MensagemViewModel.enMsgResult.Sim)
+                {
+                    this.blnConsulta = false;
+                    var factory = new ChannelFactory<IPessoasAsync>(App.objHttpBinding, Util.RetornaEndpointAddress(enSvc.svcPessoas));
+                    IPessoasAsync service = factory.CreateChannel();
+                    service.BeginExcluirCidade(Convert.ToInt32(objParam), (sen) =>
+                    {
+                        Deployment.Current.Dispatcher.BeginInvoke((Action)(() =>
+                        {
+                            Retorno objRetorno = service.EndExcluirCidade(sen);
+                            if (objRetorno.intCodigoErro == 0)
+                            {
+                                this.blnConsulta = true;
+                                this.Pesquisar(null);
+                            }
+                            else
+                            {
+                                MensagemViewModel.Show(objRetorno.strMsgErro, "Atenção", MensagemViewModel.enMsgBotao.Ok, objRetorno.intCodigoErro, (resultErr) =>
+                                {
+                                    this.blnConsulta = true;
+                                });
+                            }
+                        }));
+                    }, null);
+                }
+            });
+        }
+
+        private bool CanPesquisar(object objParam)
+        {
+            return true;
+        }
+        private void Pesquisar(object objParam)
+        {
+            this.blnConsulta = false;
+            var factory = new ChannelFactory<IPessoasAsync>(App.objHttpBinding, Util.RetornaEndpointAddress(enSvc.svcPessoas));
+            IPessoasAsync service = factory.CreateChannel();
+            service.BeginRetornaListaCidade(this.strPalavraChave, (sen) =>
+            {
+                Deployment.Current.Dispatcher.BeginInvoke((Action)(() =>
+                {
+                    Retorno objRetorno = service.EndRetornaListaCidade(sen);
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.blnConsulta = true;
+                        this.arrCidadePesquisa = new PagedCollectionView((List<Cidade>)objRetorno.objRetorno);
+                        this.blnFocus = true;
+                    }
+                    else
+                    {
+                        MensagemViewModel.Show(objRetorno.strMsgErro, "Atenção", MensagemViewModel.enMsgBotao.Ok, objRetorno.intCodigoErro, (result) =>
+                        {
+                            this.blnConsulta = true;
+                            (objParam as CidadePesquisa).Focus();
+                        });
+                    }
+                }));
+            }, null);
+        }
+
+        #endregion Comandos
+
+
+
+        #region Eventos
+
+        void CidadeViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            base.ViewModelBase_PropertyChanged<CidadeViewModel>(sender, e);
+            NovoCommand.CanExecute(sender);
+            EditarCommand.CanExecute(sender);
+            SalvarCommand.CanExecute(sender);
+            ExcluirCommand.CanExecute(sender);
+        }
+
+        #endregion Eventos
+
+
+
+        #region Métodos
+
+        
+
+        #endregion Métodos
+    }
+}

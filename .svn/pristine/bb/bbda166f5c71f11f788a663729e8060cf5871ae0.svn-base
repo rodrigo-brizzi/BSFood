@@ -1,0 +1,419 @@
+﻿using BSFood.DataAccess;
+using BSFood.DataTransfer;
+using BSFood.Apoio;
+using BSFood.BusinessLogic.Interfaces;
+using BSFood.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Data.Entity;
+using System.ServiceModel;
+using System.Collections.ObjectModel;
+
+
+namespace BSFood.BusinessLogic
+{
+    public class Produtos : IProdutos, IDisposable
+    {
+        private bool blnFecharCon;
+        private EFContexto objCtx;
+        private GerenciaTransacao objTransacao;
+
+
+        public Produtos()
+            : base()
+        {
+            this.objCtx = new EFContexto();
+            this.objTransacao = new GerenciaTransacao(ref this.objCtx);
+            blnFecharCon = true;
+        }
+
+        public Produtos(ref EFContexto _objCtx, ref GerenciaTransacao _objTransacao)
+            : base()
+        {
+            this.objCtx = _objCtx;
+            this.objTransacao = _objTransacao;
+            blnFecharCon = false;
+        }
+
+
+
+        #region Produtos
+
+        public Retorno RetornaProduto(int intCodigo, enNavegacao? enDirecao)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                tbProduto objProduto = null;
+                if (enDirecao == null)
+                    objProduto = this.objCtx.tbProduto.AsNoTracking()
+                                                .Where(pro => pro.pro_codigo == intCodigo)
+                                                .FirstOrDefault();
+                if (enDirecao == enNavegacao.Proximo)
+                    objProduto = this.objCtx.tbProduto.AsNoTracking()
+                                                .Where(pro => pro.pro_codigo > intCodigo)
+                                                .OrderBy(pro => pro.pro_codigo).FirstOrDefault();
+                if (enDirecao == enNavegacao.Anterior)
+                    objProduto = this.objCtx.tbProduto.AsNoTracking()
+                                                .Where(pro => pro.pro_codigo < intCodigo)
+                                                .OrderByDescending(pro => pro.pro_codigo).FirstOrDefault();
+                if (objProduto != null)
+                {
+                    objRetorno.intCodigoErro = 0;
+                    objRetorno.objRetorno = objProduto;
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = "Registro não encontrado";
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno RetornaListaProduto(string strParametro)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                List<tbProduto> arrProduto = this.objCtx.tbProduto.AsNoTracking()
+                                                      .Where(pro => (pro.pro_codigo.ToString().Contains(strParametro) || pro.pro_nome.Contains(strParametro)))
+                                                      .OrderBy(pro => pro.pro_nome)
+                                                      .ToList();
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = arrProduto;
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno SalvarProduto(tbProduto objProduto)
+        {
+            Retorno objRetorno = new Retorno();
+            string strValidacao = this.ValidaProduto(objProduto);
+            try
+            {
+                enOperacao enTipoOperacao;
+                if (strValidacao == string.Empty)
+                {
+                    if (objProduto.pro_codigo == 0)
+                    {
+                        enTipoOperacao = enOperacao.Inclusao;
+                        this.objCtx.tbProduto.Add(objProduto);
+                    }
+                    else
+                    {
+                        enTipoOperacao = enOperacao.Alteracao;
+                        tbProduto objProdutoContexto = this.objCtx.tbProduto.Where(pro => pro.pro_codigo == objProduto.pro_codigo).FirstOrDefault();
+                        this.objCtx.Entry(objProdutoContexto).CurrentValues.SetValues(objProduto);
+                    }
+                    this.objCtx.SaveChanges();
+                    using (Auditoria objBLL = new Auditoria(ref this.objCtx, ref this.objTransacao))
+                        objBLL.SalvarAuditoria(objProduto.pro_codigo, enTipoOperacao, objProduto);
+                    objRetorno = RetornaProduto(objProduto.pro_codigo, null);
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = strValidacao;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno ExcluirProduto(int intCodigo)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                //Cria um contexto isolado para a trasacao de exclusao
+                using (EFContexto objContexto = new EFContexto())
+                {
+                    //Inicia uma transacao no contexto isolado
+                    using (var transacao = objContexto.Database.BeginTransaction())
+                    {
+                        try
+                        {
+                            tbProduto objProduto = objContexto.tbProduto.Where(pro => pro.pro_codigo == intCodigo).FirstOrDefault();
+                            if (objProduto != null)
+                            {
+                                //Tenta excluir o perfil no contexto isolado
+                                objContexto.tbProduto.Remove(objProduto);
+                                objContexto.SaveChanges();
+                                transacao.Commit();
+
+                                objRetorno.intCodigoErro = 0;
+                                objRetorno.objRetorno = true;
+                            }
+                            else
+                            {
+                                objRetorno.intCodigoErro = 48;
+                                objRetorno.strMsgErro = "procionário não encontrado para exclusão";
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            //Se deu erro é porque o perfil tem  registros relacionado
+                            transacao.Rollback();
+                            objRetorno.intCodigoErro = 48;
+                            objRetorno.strMsgErro = "procionário não pode ser excluido pois há registros relacionados ao mesmo";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        private string ValidaProduto(tbProduto objProduto)
+        {
+            if (string.IsNullOrEmpty(objProduto.pro_nome) || string.IsNullOrWhiteSpace(objProduto.pro_nome))
+                return "O nome deve ser informado.";
+
+            if (this.objCtx.tbProduto.AsNoTracking()
+                                         .Where(pro => (pro.pro_nome.Equals(objProduto.pro_nome)) && pro.pro_codigo != objProduto.pro_codigo)
+                                         .Count() > 0)
+                return "Já existe produto com esse nome.";
+
+            return string.Empty;
+        }
+
+        #endregion Produtos
+
+
+
+        #region Produto Grupo
+
+        public Retorno RetornaProdutoGrupo(int intCodigo, enNavegacao? enDirecao)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                tbProdutoGrupo objProdutoGrupo = null;
+                if (enDirecao == null)
+                    objProdutoGrupo = this.objCtx.tbProdutoGrupo.Include(psgr => psgr.tbProdutoSubGrupo).AsNoTracking()
+                                                      .Where(pgr => pgr.pgr_codigo == intCodigo)
+                                                      .FirstOrDefault();
+                if (enDirecao == enNavegacao.Proximo)
+                    objProdutoGrupo = this.objCtx.tbProdutoGrupo.Include(psgr => psgr.tbProdutoSubGrupo).AsNoTracking()
+                                                                          .Where(pgr => pgr.pgr_codigo > intCodigo)
+                                                                          .OrderBy(pgr => pgr.pgr_codigo).FirstOrDefault();
+                if (enDirecao == enNavegacao.Anterior)
+                    objProdutoGrupo = this.objCtx.tbProdutoGrupo.Include(psgr => psgr.tbProdutoSubGrupo).AsNoTracking()
+                                                                          .Where(pgr => pgr.pgr_codigo < intCodigo)
+                                                                          .OrderByDescending(pgr => pgr.pgr_codigo).FirstOrDefault();
+                if (objProdutoGrupo != null)
+                {
+                    objRetorno.intCodigoErro = 0;
+                    objRetorno.objRetorno = objProdutoGrupo;                    
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = "Registro não encontrado";
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno RetornaListaProdutoGrupo(string strParametro)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                List<tbProdutoGrupo> arrProdutoGrupo = this.objCtx.tbProdutoGrupo.Include(psgr => psgr.tbProdutoSubGrupo).AsNoTracking()
+                                                      .Where(pgr => (pgr.pgr_codigo.ToString().Contains(strParametro) || pgr.pgr_nome.Contains(strParametro)))
+                                                      .OrderBy(pgr => pgr.pgr_nome)
+                                                      .ToList();
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = arrProdutoGrupo;
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno SalvarProdutoGrupo(tbProdutoGrupo objProdutoGrupo)
+        {
+            Retorno objRetorno = new Retorno();
+            string strValidacao = this.ValidaProdutoGrupo(objProdutoGrupo);
+            try
+            {
+                enOperacao enTipoOperacao;
+                if (strValidacao == string.Empty)
+                {
+                    foreach (tbProdutoSubGrupo objProdutoSubGrupo in objProdutoGrupo.tbProdutoSubGrupo)
+                    {
+                        objProdutoSubGrupo.tbProduto = null;
+                        objProdutoSubGrupo.tbProdutoGrupo = null;
+                    }
+                    if (objProdutoGrupo.pgr_codigo == 0)
+                    {
+                        enTipoOperacao = enOperacao.Inclusao;
+                        this.objCtx.tbProdutoGrupo.Add(objProdutoGrupo);
+                    }
+                    else
+                    {
+                        enTipoOperacao = enOperacao.Alteracao;
+                        tbProdutoGrupo objProdutoGrupoContexto = this.objCtx.tbProdutoGrupo.Include(psgr => psgr.tbProdutoSubGrupo)
+                                                               .Where(pgr => pgr.pgr_codigo == objProdutoGrupo.pgr_codigo).FirstOrDefault();
+                        //Remover subgrupos que não vieram na coleçao
+                        int[] arrPsgrCodigo = objProdutoGrupo.tbProdutoSubGrupo.Select(psgr => psgr.psgr_codigo).ToArray();
+                        this.objCtx.tbProdutoSubGrupo.RemoveRange(objProdutoGrupoContexto.tbProdutoSubGrupo.Where(psgr => !arrPsgrCodigo.Contains(psgr.psgr_codigo)));
+
+                        //Alterar os subgrupos que vieram na coleção
+                        foreach (tbProdutoSubGrupo objProdutoSubGrupoContexto in objProdutoGrupoContexto.tbProdutoSubGrupo.Where(psgr => arrPsgrCodigo.Contains(psgr.psgr_codigo)))
+                            this.objCtx.Entry(objProdutoSubGrupoContexto).CurrentValues.SetValues(objProdutoGrupo.tbProdutoSubGrupo.Where(psgr => psgr.psgr_codigo == objProdutoSubGrupoContexto.psgr_codigo).FirstOrDefault());
+
+                        //Inclui os subgrupos que vieram na coleção sem codigo
+                        foreach (tbProdutoSubGrupo objItem in objProdutoGrupo.tbProdutoSubGrupo.Where(psgr => psgr.psgr_codigo == 0))
+                        {
+                            objItem.pgr_codigo = objProdutoGrupo.pgr_codigo;
+                            this.objCtx.tbProdutoSubGrupo.Add(objItem);
+                        }
+
+                        //Atualiza o grupo de produtos
+                        this.objCtx.Entry(objProdutoGrupoContexto).CurrentValues.SetValues(objProdutoGrupo);
+                    }
+                    this.objCtx.SaveChanges();
+                    using (Auditoria objBLL = new Auditoria(ref this.objCtx, ref this.objTransacao))
+                        objBLL.SalvarAuditoria(objProdutoGrupo.pgr_codigo, enTipoOperacao, objProdutoGrupo);
+                    objRetorno = RetornaProdutoGrupo(objProdutoGrupo.pgr_codigo, null);
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = strValidacao;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno ExcluirProdutoGrupo(int intCodigo)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                //Cria um contexto isolado para a trasacao de exclusao
+                using (EFContexto objContexto = new EFContexto())
+                {
+                    //Inicia uma transacao no contexto isolado
+                    using (var transacao = objContexto.Database.BeginTransaction())
+                    {
+                        try
+                        {
+                            tbProdutoGrupo objProdutoGrupo = objContexto.tbProdutoGrupo.Include(psgr => psgr.tbProdutoSubGrupo).Where(pgr => pgr.pgr_codigo == intCodigo).FirstOrDefault();
+                            if (objProdutoGrupo != null)
+                            {
+                                //Tenta excluir o perfil no contexto isolado
+                                objContexto.tbProdutoSubGrupo.RemoveRange(objProdutoGrupo.tbProdutoSubGrupo);
+                                objContexto.tbProdutoGrupo.Remove(objProdutoGrupo);
+                                objContexto.SaveChanges();
+                                transacao.Commit();
+
+                                objRetorno.intCodigoErro = 0;
+                                objRetorno.objRetorno = true;
+                            }
+                            else
+                            {
+                                objRetorno.intCodigoErro = 48;
+                                objRetorno.strMsgErro = "Produto Grupo não encontrado para exclusão";
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            //Se deu erro é porque o perfil tem  registros relacionado
+                            transacao.Rollback();
+                            objRetorno.intCodigoErro = 48;
+                            objRetorno.strMsgErro = "Produto Grupo não pode ser excluido pois há registros relacionados ao mesmo";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        private string ValidaProdutoGrupo(tbProdutoGrupo objProdutoGrupo)
+        {
+            if (string.IsNullOrEmpty(objProdutoGrupo.pgr_nome) || string.IsNullOrWhiteSpace(objProdutoGrupo.pgr_nome))
+                return "O nome deve ser informado.";
+
+            if (this.objCtx.tbProdutoGrupo.AsNoTracking()
+                                         .Where(pgr => (pgr.pgr_nome.Equals(objProdutoGrupo.pgr_nome)) && pgr.pgr_codigo != objProdutoGrupo.pgr_codigo)
+                                         .Count() > 0)
+                return "Já existe produto grupo com esse nome.";
+
+            if (objProdutoGrupo.tbProdutoSubGrupo.Count == 0)
+                return "Não foram informados nenhum sub grupo.";
+
+            return string.Empty;
+        }
+
+        #endregion Produto Grupo
+
+
+        public void Dispose()
+        {
+            if (this.blnFecharCon)
+            {
+                this.objCtx.Dispose();
+                this.objCtx = null;
+            }
+        }
+    }
+}

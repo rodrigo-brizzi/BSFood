@@ -1,0 +1,23 @@
+﻿using BSFoodServer.Models;
+using System;
+using System.Collections.Generic;
+using System.Data.Entity.ModelConfiguration;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.DAL.Config
+{
+    public class EstadoConfig : EntityTypeConfiguration<Estado>
+    {
+        public EstadoConfig()
+        {
+            this.ToTable("tbEstado");
+            this.HasKey(e => e.Codigo);
+            
+            this.Property(e => e.Codigo).HasColumnName("est_codigo");
+            this.Property(e => e.Sigla).HasColumnName("est_sigla").HasMaxLength(2);
+            this.Property(e => e.Nome).HasColumnName("est_nome").HasMaxLength(20);
+        }
+    }
+}

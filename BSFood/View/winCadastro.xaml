@@ -1,0 +1,64 @@
+﻿<Window x:Class="BSFood.View.winCadastro"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:BSFood.ViewModel"
+        xmlns:vw="clr-namespace:BSFood.View"
+        Height="300" 
+        Width="300"
+        SizeToContent="WidthAndHeight"
+        Icon="/BSFood;component/Imagens/novo16.png" 
+        ResizeMode="NoResize" 
+        WindowStartupLocation="CenterScreen" 
+        ShowInTaskbar="False">
+    <Grid>
+        <ContentControl Content="{Binding}">
+            <ContentControl.Resources>
+                <DataTemplate DataType="{x:Type vm:PerfilAcessoViewModel}">
+                    <vw:ucPerfilAcesso />
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vm:CidadeViewModel}">
+                    <vw:ucCidade />
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vm:BairroViewModel}">
+                    <vw:ucBairro />
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vm:FuncionarioViewModel}">
+                    <vw:ucFuncionario />
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vm:ClienteGrupoViewModel}">
+                    <vw:ucClienteGrupo />
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vm:ClienteViewModel}">
+                    <vw:ucCliente />
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vm:FornecedorViewModel}">
+                    <vw:ucFornecedor />
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vm:ProdutoGrupoViewModel}">
+                    <vw:ucProdutoGrupo />
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vm:ProdutoViewModel}">
+                    <vw:ucProduto />
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vm:FormaPagamentoViewModel}">
+                    <vw:ucFormaPagamento />
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vm:EntregaPedidoViewModel}">
+                    <vw:ucEntregaPedido />
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vm:ConfiguracaoViewModel}">
+                    <vw:ucConfiguracao />
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vm:EmpresaViewModel}">
+                    <vw:ucEmpresa />
+                </DataTemplate>
+                <!--<DataTemplate DataType="{x:Type vm:CaixaFechamentoViewModel}">
+                    <vw:ucCaixaFechamento />
+                </DataTemplate>-->
+                <DataTemplate DataType="{x:Type vm:MesaViewModel}">
+                    <vw:ucMesa />
+                </DataTemplate>
+            </ContentControl.Resources>
+        </ContentControl>
+    </Grid>
+</Window>

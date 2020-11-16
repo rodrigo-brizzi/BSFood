@@ -1,0 +1,48 @@
+﻿using BSFoodServer.DAL.Config;
+using BSFoodServer.Models;
+using System;
+using System.Collections.Generic;
+using System.Data.Entity;
+using System.Data.Entity.ModelConfiguration.Conventions;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.DAL
+{
+    public class EFContexto : DbContext
+    {
+        public EFContexto()
+        {
+            this.Configuration.ProxyCreationEnabled = false;
+            this.Configuration.LazyLoadingEnabled = false;
+            Database.SetInitializer(new EFContextoInitializer());
+            //Database.SetInitializer<EFContexto>(new EFContextoInitializer());
+            //Database.SetInitializer(new MigrateDatabaseToLatestVersion<EFContexto, BSFoodServer.Migrations.Configuration>("BSFoodServer.DAL.EFContexto"));
+        }
+
+        public DbSet<Estado> Estados { get; set; }
+        public DbSet<Cidade> Cidades { get; set; }
+        public DbSet<Configuracao> Configuracoes { get; set; }
+
+        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        {
+            //remover algumas convenções do entity framework
+            modelBuilder.Conventions.Remove<PluralizingTableNameConvention>();
+            modelBuilder.Conventions.Remove<OneToManyCascadeDeleteConvention>();
+            modelBuilder.Conventions.Remove<ManyToManyCascadeDeleteConvention>();
+
+            //configurar as propriedades strings para terem o tipo nvarchar no banco de dados
+            modelBuilder.Properties<string>().Configure(p => p.HasColumnType("nvarchar"));
+
+            //configurar o tamanho das strings para tamanho 100 quando não informado na configuração da entidade
+            modelBuilder.Properties<string>().Configure(p => p.HasMaxLength(100));
+
+            //adicionar a configuração para cada entidade
+            modelBuilder.Configurations.Add(new EstadoConfig());
+            modelBuilder.Configurations.Add(new CidadeConfig());
+            modelBuilder.Configurations.Add(new ConfiguracaoConfig());
+
+        }
+    }
+}

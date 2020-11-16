@@ -1,0 +1,74 @@
+﻿<UserControl
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:Apoio="clr-namespace:BSFood.Apoio;assembly=BSFood"
+    xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk" x:Class="BSFood.View.ucPrincipal"
+    mc:Ignorable="d"
+    d:DesignHeight="300" d:DesignWidth="400" Loaded="UserControl_Loaded">
+    <Grid x:Name="LayoutRoot">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Offset="0.0" Color="#FF000000"/>
+                <GradientStop Offset="1.0" Color="#FF4080FF"/>
+            </LinearGradientBrush>
+        </Grid.Background>
+        <Grid.Resources>
+            <Style TargetType='sdk:TabItem'>
+                <Setter Property='HeaderTemplate'>
+                    <Setter.Value>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding RelativeSource={RelativeSource AncestorType=sdk:TabItem }, Path=Header}" />
+                                <Button Width="16" Height="16" Margin="5,0,0,0" Padding="0" BorderThickness="0" Cursor="Hand"
+                                Command="{Binding DataContext.FechaTelaCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=sdk:TabItem }, Path=Name}">
+                                    <Image Width="16" Height="16" Source="../Imagens/fechar16.png" />
+                                </Button>
+                            </StackPanel>
+                        </DataTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </Grid.Resources>
+        <Apoio:Menu Grid.Row="0" Grid.Column="0" VerticalAlignment="Top"
+            ImagesPath="{Binding strCaminhoImagens}" 
+            MenuItem="{Binding arrMenuItem}" 
+            Command="{Binding Path=AbreTelaCommand}" />
+        <ItemsControl Grid.Row="0" Grid.Column="0" VerticalAlignment="Top" Margin="0,22,0,0" ItemsSource="{Binding arrToolBar}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Button Margin="5" Cursor="Hand"
+                            Command="{Binding DataContext.AbreTelaCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding Ordem}">
+                        <StackPanel>
+                            <Image Source="{Binding Ordem, Converter={StaticResource StringToImageConverter}}" Width="64" />
+                            <TextBlock Text="{Binding Cabecalho}" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <sdk:TabControl Grid.Row="0" Grid.Column="0" Margin="5,115,5,20" 
+                        ItemsSource="{Binding arrTelas}" 
+                        SelectedItem="{Binding objTelaPrincipal, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        Visibility="{Binding blnEscondeTela, Converter={StaticResource BooleanToVisibilityConverter}}" >
+        </sdk:TabControl>
+        <StackPanel Orientation="Horizontal" Background="#FF606062" VerticalAlignment="Bottom" Height="18">
+            <TextBlock >
+                <Run Text=" Funcionário: " Foreground="Yellow"/>
+                <Run Text="{Binding strFuncionario}" Foreground="White"/>
+            </TextBlock>
+        </StackPanel>
+    </Grid>
+</UserControl>

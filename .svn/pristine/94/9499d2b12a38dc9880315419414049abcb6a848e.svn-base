@@ -1,0 +1,24 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFood.Models
+{
+    public class tbCliente
+    {
+        public int cli_codigo { get; set; }
+        public string cli_nome { get; set; }
+        public string cli_nomeFantasia { get; set; }
+        public string cli_tipo { get; set; }
+        public string cli_cpfCnpj { get; set; }
+        public string cli_rgIe { get; set; }
+        public string cli_sexo { get; set; }
+        public string cli_email { get; set; }
+        public string cli_observacao { get; set; }
+
+        public List<tbClienteEndereco> tbClienteEndereco { get; set; }
+        public List<tbClienteTelefone> tbClienteTelefone { get; set; }
+    }
+}

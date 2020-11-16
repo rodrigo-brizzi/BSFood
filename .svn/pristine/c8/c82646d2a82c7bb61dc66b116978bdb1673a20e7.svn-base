@@ -1,0 +1,783 @@
+﻿using BSFood.View;
+using BSFood.Apoio;
+using BSFood.Models;
+using BSFood.BusinessLogic;
+using BSFood.DataTransfer;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
+using System.Windows.Threading;
+
+namespace BSFood.ViewModel
+{
+    public class MesaViewModel : TelaViewModel
+    {
+        public ICommand FecharMesaCommand { get; set; }
+        public ICommand ExcluirCommand { get; set; }
+        public ICommand LogCommand { get; set; }
+        public ICommand FormaPagamentoCommand { get; set; }
+        public ICommand AdicionaProdutoCommand { get; set; }        
+        public ICommand BuscarCommand { get; set; }
+        public ICommand ImprimirCupomCommand { get; set; }
+
+        private DispatcherTimer timerAtualizaMesa;
+
+        public MesaViewModel()
+        {
+            FecharMesaCommand = new DelegateCommand(FecharMesa, CanFecharMesa);
+            ExcluirCommand = new DelegateCommand(Excluir, CanExcluir);
+            LogCommand = new DelegateCommand(Log, CanLog);
+            FormaPagamentoCommand = new DelegateCommand(FormaPagamento, CanFormaPagamento);
+            AdicionaProdutoCommand = new DelegateCommand(AdicionaProduto, CanAdicionaProduto);            
+            BuscarCommand = new DelegateCommand(Buscar, CanBuscar);
+            ImprimirCupomCommand = new DelegateCommand(ImprimirCupom, CanImprimirCupom);
+            this.blnLivre = true;
+            this.blnOcupado = true;
+
+            this.timerAtualizaMesa = new DispatcherTimer();
+            this.timerAtualizaMesa.Interval = new TimeSpan(0, 1, 0); // 1 minuto
+            this.timerAtualizaMesa.Tick += timerAtualizaMesa_Tick;
+            this.timerAtualizaMesa.Start();
+        }
+
+
+
+        #region Propriedades
+
+        public int? mes_codigo
+        {
+            get
+            {
+                if (this.objMesa == null)
+                    return null;
+                else
+                    return this.objMesa.mes_codigo;
+            }
+            set
+            {
+                if (this.objMesa == null || this.objMesa.mes_codigo != value)
+                {
+                    Retorno objRetorno;
+                    using (var objBLL = new Mesa())
+                    {
+                        objRetorno = objBLL.RetornaMesa(value == null ? 0 : (int)value);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objMesa = (tbMesa)objRetorno.objRetorno;
+                    }
+                    else
+                    {
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                        RaisePropertyChanged();
+                    }
+                }
+            }
+        }
+
+        private tbMesa _objMesa;
+        public tbMesa objMesa 
+        {
+            get { return this._objMesa; }
+            set
+            {
+                this._objMesa = value;
+                this.objPedido = this._objMesa.tbPedido;
+            }
+        }
+
+        private bool _blnLivre;
+        public bool blnLivre
+        {
+            get { return this._blnLivre; }
+            set
+            {
+                if (this._blnLivre != value)
+                {
+                    this._blnLivre = value;
+                    RaisePropertyChanged();
+                    this.AtualizaMesa();
+                }
+            }
+        }
+
+        private bool _blnOcupado;
+        public bool blnOcupado
+        {
+            get { return this._blnOcupado; }
+            set
+            {
+                if (this._blnOcupado != value)
+                {
+                    this._blnOcupado = value;
+                    RaisePropertyChanged();
+                    this.AtualizaMesa();
+                }
+            }
+        }
+
+        private tbPedido _objPedido;
+        public tbPedido objPedido
+        {
+            get { return this._objPedido; }
+            set
+            {
+                this._objPedido = value;
+                if (this._objPedido != null)
+                {
+                    ObservableCollection<MesaProdutoViewModel> arrMesaProdutoViewModelAux = new ObservableCollection<MesaProdutoViewModel>();
+                    if (this._objPedido.tbPedidoProduto != null)
+                    {
+                        foreach (tbPedidoProduto objPedidoProduto in this._objPedido.tbPedidoProduto)
+                        {
+                            MesaProdutoViewModel objMesaProdutoViewModel = new MesaProdutoViewModel(objPedidoProduto);
+                            objMesaProdutoViewModel.OnDispose += objMesaProdutoViewModel_OnDispose;
+                            objMesaProdutoViewModel.PropertyChanged += objMesaProdutoViewModel_PropertyChanged;
+                            arrMesaProdutoViewModelAux.Add(objMesaProdutoViewModel);
+                        }
+                    }
+                    this._arrMesaProdutoViewModel = arrMesaProdutoViewModelAux;                    
+                }
+                else
+                {
+                    this._arrMesaProdutoViewModel = null;
+                }
+
+                //Prepara propriedades da viewmodel
+                RaisePropertyChanged(null);
+            }
+        }
+
+        private ObservableCollection<MesaProdutoViewModel> _arrMesaProdutoViewModel;
+        public ObservableCollection<MesaProdutoViewModel> arrMesaProdutoViewModel
+        {
+            get { return this._arrMesaProdutoViewModel; }
+            set
+            {
+                this._arrMesaProdutoViewModel = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private ObservableCollection<tbMesa> _arrMesa;
+        public ObservableCollection<tbMesa> arrMesa
+        {
+            get { return this._arrMesa; }
+            set
+            {
+                this._arrMesa = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public int? fpg_codigo
+        {
+            get
+            {
+                if (this.objPedido == null || this.objPedido.fpg_codigo == 0)
+                    return null;
+                else
+                    return this.objPedido.fpg_codigo;
+            }
+            set
+            {
+                if (this.objPedido == null || this.objPedido.fpg_codigo != value)
+                {
+                    Retorno objRetorno;
+                    using (var objBLL = new FormaPagamento())
+                    {
+                        objRetorno = objBLL.RetornaFormaPagamento(value == null ? 0 : (int)value, null);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objPedido.fpg_codigo = ((tbFormaPagamento)objRetorno.objRetorno).fpg_codigo;
+                        //this.objPedido.tbFormaPagamento.fpg_descricao = ((tbFormaPagamento)objRetorno.objRetorno).fpg_descricao;
+                    }
+                    else
+                    {
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                        this.objPedido.fpg_codigo = null;
+                        //this.objPedido.tbFormaPagamento.fpg_descricao = string.Empty;
+                    }
+                    //RaisePropertyChanged("fpg_codigo");
+                    //RaisePropertyChanged("fpg_descricao");
+                    SalvarMesa();
+                }
+            }
+        }
+        public string fpg_descricao
+        {
+            get 
+            {
+                //return this.objPedido == null ? string.Empty : this.objPedido.tbFormaPagamento.fpg_descricao;
+                if (this.objPedido == null)
+                {
+                    return string.Empty;
+                }
+                else
+                {
+                    if (this.objPedido.tbFormaPagamento == null)
+                    {
+                        return string.Empty;
+                    }
+                    else
+                    {
+                        return this.objPedido.tbFormaPagamento.fpg_descricao;
+                    }
+                }
+            }
+            set
+            {
+                if (this.objPedido.tbFormaPagamento.fpg_descricao != value)
+                {
+                    this.objPedido.tbFormaPagamento.fpg_descricao = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        public decimal ped_valorSubTotal
+        {
+            get { return this.objPedido == null ? 0 : this.objPedido.ped_valorSubTotal; }
+            set
+            {
+                if (this.objPedido.ped_valorSubTotal != value)
+                {
+                    this.objPedido.ped_valorSubTotal = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        public decimal ped_valorTaxaEntrega
+        {
+            get { return this.objPedido == null ? 0 : this.objPedido.ped_valorTaxaEntrega; }
+            set
+            {
+                if (this.objPedido.ped_valorTaxaEntrega != value)
+                {
+                    this.objPedido.ped_valorTaxaEntrega = value;
+                    CalculaValores();
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        public decimal ped_valorDespesa
+        {
+            get { return this.objPedido == null ? 0 : this.objPedido.ped_valorDespesa; }
+            set
+            {
+                if (this.objPedido.ped_valorDespesa != value)
+                {
+                    this.objPedido.ped_valorDespesa = value;
+                    CalculaValores();
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        public decimal ped_valorDesconto
+        {
+            get { return this.objPedido == null ? 0 : this.objPedido.ped_valorDesconto; }
+            set
+            {
+                if (this.objPedido.ped_valorDesconto != value)
+                {
+                    this.objPedido.ped_valorDesconto = value;
+                    CalculaValores();
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        public decimal ped_valorRecebido
+        {
+            get { return this.objPedido == null ? 0 : this.objPedido.ped_valorRecebido; }
+            set
+            {
+                if (this.objPedido.ped_valorRecebido != value)
+                {
+                    this.objPedido.ped_valorRecebido = value;
+                    CalculaValores();
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        public decimal ped_valorTroco
+        {
+            get { return this.objPedido == null ? 0 : this.objPedido.ped_valorTroco; }
+            set
+            {
+                if (this.objPedido.ped_valorTroco != value)
+                {
+                    this.objPedido.ped_valorTroco = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        public decimal ped_valorTotal
+        {
+            get { return this.objPedido == null ? 0 : this.objPedido.ped_valorTotal; }
+            set
+            {
+                if (this.objPedido.ped_valorTotal != value)
+                {
+                    this.objPedido.ped_valorTotal = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [StringLength(250, ErrorMessage = "É permitido apenas 250 caracteres")]
+        public string ped_observacao
+        {
+            get { return this.objPedido == null ? string.Empty : this.objPedido.ped_observacao; }
+            set
+            {
+                if (this.objPedido.ped_observacao != value)
+                {
+                    this.objPedido.ped_observacao = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [StringLength(250, ErrorMessage = "É permitido apenas 250 caracteres")]
+        public string ped_motivoCancelamento
+        {
+            get { return this.objPedido == null ? string.Empty : this.objPedido.ped_motivoCancelamento; }
+            set
+            {
+                if (this.objPedido.ped_motivoCancelamento != value)
+                {
+                    this.objPedido.ped_motivoCancelamento = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        public List<tbAuditoria> arrAuditoria { get; set; }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+        private bool CanFecharMesa(object objParam)
+        {
+            return this.objPedido != null && this.objPedido.ped_codigo > 0;
+        }
+        private void FecharMesa(object objParam)
+        {
+            var focusedElement = Keyboard.FocusedElement as FrameworkElement;
+            if (focusedElement is TextBox)
+            {
+                var expression = focusedElement.GetBindingExpression(TextBox.TextProperty);
+                if (expression != null && expression.ParentBinding.UpdateSourceTrigger == System.Windows.Data.UpdateSourceTrigger.LostFocus)
+                    expression.UpdateSource();
+            }
+
+            bool blnAchouErro = false;
+            foreach (MesaProdutoViewModel objMesaProdutoViewModel in this.arrMesaProdutoViewModel)
+            {
+                objMesaProdutoViewModel.Validate();
+                blnAchouErro = objMesaProdutoViewModel.HasErrors;
+                if (blnAchouErro)
+                    break;
+            }
+
+            this.Validate();
+            if (!this.HasErrors && !blnAchouErro)
+            {
+                this.objPedido.tbPedidoProduto.Clear();
+                foreach (MesaProdutoViewModel objMesaProdutoViewModel in this.arrMesaProdutoViewModel)
+                    this.objPedido.tbPedidoProduto.Add(objMesaProdutoViewModel.objPedidoProduto);
+
+                //if (this.objPedido.fpg_codigo == 0)
+                //    this.objPedido.fpg_codigo = null;
+                this.objMesa.tbPedido = this.objPedido;
+
+                Retorno objRetorno;
+                using (var objBLL = new Mesa())
+                {
+                    objRetorno = objBLL.FecharMesa(this.objMesa, Util.objConfigStorage.objFuncionario.fun_codigo);
+                }
+                if (objRetorno.intCodigoErro == 0)
+                {
+                    this.ImprimirCupom(null);
+                    this.objMesa = (tbMesa)objRetorno.objRetorno;
+                }
+                else
+                    MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+            }            
+        }
+
+        private bool CanExcluir(object objParam)
+        {
+            return this.objPedido != null && this.objPedido.ped_codigo > 0;
+        }
+        private void Excluir(object objParam)
+        {
+            if (objParam == null)
+            {
+                winMotivoExclusaoPedido objTelaMotivoExclusaoPedido = new winMotivoExclusaoPedido();
+                objTelaMotivoExclusaoPedido.DataContext = this;
+                objTelaMotivoExclusaoPedido.Owner = (Window)Application.Current.MainWindow;
+                objTelaMotivoExclusaoPedido.Closed += (sen, eve) => { objTelaMotivoExclusaoPedido = null; };
+                objTelaMotivoExclusaoPedido.ShowDialog();
+            }
+            else
+            {
+                if (this.objPedido != null && this.objPedido.ped_codigo > 0)
+                {
+                    if (!string.IsNullOrWhiteSpace(this.ped_motivoCancelamento))
+                    {
+                        if (MessageBox.Show("Tem Certeza que deseja excluir o registro selecionado?", "Atenção", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                        {
+                            this.objMesa.tbPedido = this.objPedido;
+
+                            Retorno objRetorno;
+                            using (var objBLL = new Mesa())
+                            {
+                                objRetorno = objBLL.ExcluirMesa(this.objMesa, Util.objConfigStorage.objFuncionario.fun_codigo);
+                            }
+                            if (objRetorno.intCodigoErro == 0)
+                                this.objMesa = (tbMesa)objRetorno.objRetorno;
+                            else
+                                MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                        }
+                        else
+                            this.ped_motivoCancelamento = string.Empty;
+                        ((Window)objParam).Close();
+                    }
+                    else
+                        MessageBox.Show("Informe o motivo da exclusão!", "Atenção", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+                else
+                    ((Window)objParam).Close();
+            }
+        }
+
+        private bool CanLog(object objParam)
+        {
+            return this.objPedido != null && this.objPedido.ped_codigo > 0;
+        }
+        private void Log(object objParam)
+        {
+            if (objParam != null)
+            {
+                if (objParam.ToString() == "AbrirTela")
+                {
+                    Retorno objRetorno;
+                    using (Auditoria objBLL = new Auditoria())
+                    {
+                        objRetorno = objBLL.RetornaListaAuditoria(this.objPedido.ped_codigo, this.objPedido);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        arrAuditoria = (List<tbAuditoria>)objRetorno.objRetorno;
+                        winAuditoria objTelaAuditoria = new winAuditoria();
+                        objTelaAuditoria.Title = "Auditoria - " + base.strNomeTela;
+                        objTelaAuditoria.DataContext = this;
+                        objTelaAuditoria.Owner = (Window)Application.Current.MainWindow;
+                        objTelaAuditoria.Closed += (sen, eve) =>
+                        {
+                            arrAuditoria = null;
+                            objTelaAuditoria = null;
+                        };
+                        objTelaAuditoria.ShowDialog();
+                    }
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                }
+                else if (objParam.GetType() == typeof(winAuditoria))
+                {
+                    ((Window)objParam).Close();
+                }
+            }
+        }
+
+        private bool CanFormaPagamento(object objParam)
+        {
+            return true;
+        }
+        private void FormaPagamento(object objParam)
+        {
+            //if (objParam != null)
+            //{
+            //    if (objParam.ToString() == "Novo")
+            //    {
+            //        winCadastro objTelaCadastro = new winCadastro();
+            //        FormaPagamentoViewModel objFormaPagamentoViewModel = new FormaPagamentoViewModel();
+            //        if (this.objPedido.fpg_codigo > 0)
+            //            objFormaPagamentoViewModel.fpg_codigo = this.objPedido.fpg_codigo;
+            //        objFormaPagamentoViewModel.OnDispose += (sen1, eve1) => { objTelaCadastro.Close(); };
+            //        objTelaCadastro.Title = "Cadastro - " + objFormaPagamentoViewModel.strNomeTela;
+            //        objTelaCadastro.DataContext = objFormaPagamentoViewModel;
+            //        objTelaCadastro.Owner = (Window)Application.Current.MainWindow;
+            //        objTelaCadastro.Closed += (sen, eve) =>
+            //        {
+            //            if (objFormaPagamentoViewModel.fpg_codigo != null)
+            //            {
+            //                this.objPedido.fpg_codigo = (int)objFormaPagamentoViewModel.fpg_codigo;
+            //                //RaisePropertyChanged("fpg_codigo");
+            //                //this.objPedido.tbFormaPagamento.fpg_descricao = objFormaPagamentoViewModel.fpg_descricao;
+            //                //RaisePropertyChanged("fpg_descricao");
+            //                SalvarMesa();
+            //            }
+            //            objFormaPagamentoViewModel = null;
+            //            objTelaCadastro = null;
+            //        };
+            //        objTelaCadastro.ShowDialog();
+            //    }
+            //    else if (objParam.ToString() == "Pesquisar")
+            //    {
+            //        FormaPagamentoViewModel objFormaPagamentoViewModel = new FormaPagamentoViewModel();
+            //        objFormaPagamentoViewModel.OnPesquisa += (sen, eve) =>
+            //        {
+            //            if (objFormaPagamentoViewModel.fpg_codigo != null)
+            //            {
+            //                this.objPedido.fpg_codigo = (int)objFormaPagamentoViewModel.fpg_codigo;
+            //                //RaisePropertyChanged("fpg_codigo");
+            //                //this.objPedido.tbFormaPagamento.fpg_descricao = objFormaPagamentoViewModel.fpg_descricao;
+            //                //RaisePropertyChanged("fpg_descricao");
+            //                SalvarMesa();
+            //            }
+            //            objFormaPagamentoViewModel.Dispose();
+            //        };
+            //        objFormaPagamentoViewModel.Pesquisar("AbrirTela");
+            //    }
+            //    else
+            //    {
+            //        int intCodigo;
+            //        if (int.TryParse(objParam.ToString(), out intCodigo))
+            //            this.fpg_codigo = intCodigo;
+            //        else
+            //            FormaPagamento("Pesquisar");
+            //    }
+            //}
+        }
+
+        private bool CanAdicionaProduto(object objParam)
+        {
+            return true;
+        }
+        private void AdicionaProduto(object objParam)
+        {
+            tbPedidoProduto objPedidoProduto = new tbPedidoProduto();
+            objPedidoProduto.tbProduto = new tbProduto();
+            MesaProdutoViewModel objMesaProdutoViewModel = new MesaProdutoViewModel(objPedidoProduto);
+            objMesaProdutoViewModel.OnDispose += objMesaProdutoViewModel_OnDispose;
+            objMesaProdutoViewModel.PropertyChanged += objMesaProdutoViewModel_PropertyChanged;
+            this.arrMesaProdutoViewModel.Add(objMesaProdutoViewModel);
+        }
+
+        private bool CanBuscar(object objParam)
+        {
+            return true;
+        }
+        private void Buscar(object objParam)
+        {
+            if (objParam != null)
+            {
+                int intCodigo;
+                if (int.TryParse(objParam.ToString(), out intCodigo))
+                    this.mes_codigo = intCodigo;
+            }
+        }
+
+        private bool CanImprimirCupom(object objParam)
+        {
+            return this.objPedido != null && this.objPedido.ped_codigo > 0;
+        }
+        private void ImprimirCupom(object objParam)
+        {
+            if (this.objPedido != null && this.objPedido.ped_codigo > 0)
+            {
+                Retorno objRetorno;
+                using (Relatorios objBLL = new Relatorios())
+                {
+                    objRetorno = objBLL.RetornaTicketConferencia(this.objPedido);
+                }
+                if (objRetorno.intCodigoErro == 0)
+                {
+                    string strConteudo = (string)objRetorno.objRetorno;
+                    string[] arrLinhas = strConteudo.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+                    Util.objGerenciaCupom.AbreRelatorio();
+                    for (int i = 0; i < arrLinhas.Length; i++)
+                    {
+                        Util.objGerenciaCupom.LinhaRelatorio(arrLinhas[i]);
+                    }
+                    if (string.IsNullOrWhiteSpace(Util.objConfigStorage.objConfiguracao.cfg_impressoraBalcao))
+                        MessageBox.Show("Impressora não configurada!", "Atenção", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    else
+                        Util.objGerenciaCupom.FechaRelatorio(Util.objConfigStorage.objConfiguracao.cfg_impressoraBalcao);
+                }
+                else
+                    MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+            }            
+            
+            //if (this.objPedido != null && this.objPedido.ped_codigo > 0)
+            //{
+            //    Util.objGerenciaCupom.AbreRelatorio();
+            //    Util.objGerenciaCupom.LinhaRelatorio("         TICKET DE CONFERENCIA         ");
+            //    Util.objGerenciaCupom.LinhaRelatorio("");
+            //    Util.objGerenciaCupom.LinhaRelatorio("QTD PRODUTO               VALOR   TOTAL");
+            //    Util.objGerenciaCupom.LinhaRelatorio("---------------------------------------");
+            //    foreach (tbPedidoProduto objPedidoProduto in this.objPedido.tbPedidoProduto)
+            //    {
+            //        string strQuantidade;
+            //        if (objPedidoProduto.ppr_quantidade < 1)
+            //            strQuantidade = objPedidoProduto.ppr_quantidade.ToString("0.0");
+            //        else
+            //            strQuantidade = objPedidoProduto.ppr_quantidade.ToString("000");
+            //        Util.objGerenciaCupom.LinhaRelatorio(strQuantidade + " " +
+            //            objPedidoProduto.ppr_descricao.PadRight(19, ' ').Substring(0, 19) + " " +
+            //            objPedidoProduto.ppr_valorUnitario.ToString("#,##0.00").PadLeft(7) + " " +
+            //            objPedidoProduto.ppr_valorTotal.ToString("#,##0.00").PadLeft(7));
+            //    }
+            //    Util.objGerenciaCupom.LinhaRelatorio("                    SUBTOTAL -> " + this.objPedido.ped_valorSubTotal.ToString("#,##0.00").PadLeft(7));
+            //    Util.objGerenciaCupom.LinhaRelatorio("                                -------");
+            //    if (this.objPedido.ped_valorTaxaEntrega > 0 || this.objPedido.ped_valorDespesa > 0 || this.objPedido.ped_valorDesconto > 0)
+            //    {
+            //        if (this.objPedido.ped_valorTaxaEntrega > 0)
+            //            Util.objGerenciaCupom.LinhaRelatorio("                 TX. ENTREGA -> " + this.objPedido.ped_valorTaxaEntrega.ToString("#,##0.00").PadLeft(7));
+            //        if (this.objPedido.ped_valorDespesa > 0)
+            //            Util.objGerenciaCupom.LinhaRelatorio("                    DESPESAS -> " + this.objPedido.ped_valorDespesa.ToString("#,##0.00").PadLeft(7));
+            //        if (this.objPedido.ped_valorDesconto > 0)
+            //            Util.objGerenciaCupom.LinhaRelatorio("                    DESCONTO -> " + this.objPedido.ped_valorDesconto.ToString("#,##0.00").PadLeft(7));
+            //        Util.objGerenciaCupom.LinhaRelatorio("                       TOTAL -> " + this.objPedido.ped_valorTotal.ToString("#,##0.00").PadLeft(7));
+            //    }
+            //    Util.objGerenciaCupom.LinhaRelatorio("                    RECEBIDO -> " + this.objPedido.ped_valorRecebido.ToString("#,##0.00").PadLeft(7));
+            //    Util.objGerenciaCupom.LinhaRelatorio("                       TROCO -> " + this.objPedido.ped_valorTroco.ToString("#,##0.00").PadLeft(7));
+            //    Util.objGerenciaCupom.LinhaRelatorio("OBSERVACOES: " + this.objPedido.ped_observacao);
+            //    if (string.IsNullOrWhiteSpace(Util.objConfigStorage.objConfiguracao.cfg_impressoraBalcao))
+            //        MessageBox.Show("Impressora não configurada!", "Atenção", MessageBoxButton.OK, MessageBoxImage.Warning);
+            //    else
+            //        Util.objGerenciaCupom.FechaRelatorio(Util.objConfigStorage.objConfiguracao.cfg_impressoraEntrega);
+            //}
+        }
+
+        #endregion Comandos
+
+
+
+        #region Eventos
+
+        void timerAtualizaMesa_Tick(object sender, EventArgs e)
+        {
+            this.AtualizaMesa();
+        }
+
+        void objMesaProdutoViewModel_OnDispose(object sender, EventArgs e)
+        {
+            this.arrMesaProdutoViewModel.Remove((MesaProdutoViewModel)sender);
+            CalculaValores();
+        }
+
+        void objMesaProdutoViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "ppr_quantidade")
+                CalculaValores();
+        }
+
+        #endregion Eventos
+
+
+
+        #region Métodos
+
+        private void AtualizaMesa()
+        {
+            Retorno objRetorno;
+            using (var objBLL = new Mesa())
+            {
+                objRetorno = objBLL.RetornaListaMesa(string.Empty, this.blnLivre, this.blnOcupado);
+            }
+            if (objRetorno.intCodigoErro == 0)
+            {
+                ObservableCollection<tbMesa> arrMesaAux = new ObservableCollection<tbMesa>();
+                foreach (tbMesa objMesa in (List<tbMesa>)objRetorno.objRetorno)
+                {
+                    arrMesaAux.Add(objMesa);
+                }
+                this.arrMesa = arrMesaAux;
+            }
+        }
+
+        private void CalculaValores()
+        {
+            this.ped_valorSubTotal = arrMesaProdutoViewModel.Sum(ppr => ppr.ppr_valorTotal);
+            this.ped_valorTotal = (this.ped_valorSubTotal + this.ped_valorTaxaEntrega + this.ped_valorDespesa) - this.ped_valorDesconto;
+            if ((this.ped_valorRecebido - this.ped_valorTotal) > 0)
+                this.ped_valorTroco = this.ped_valorRecebido - this.ped_valorTotal;
+            else
+                this.ped_valorTroco = 0;
+            SalvarMesa();
+        }
+
+        private void SalvarMesa()
+        {
+            if (Util.objConfigStorage.intCaiCodigo > 0)
+            {
+                var focusedElement = Keyboard.FocusedElement as FrameworkElement;
+                if (focusedElement is TextBox)
+                {
+                    var expression = focusedElement.GetBindingExpression(TextBox.TextProperty);
+                    if (expression != null && expression.ParentBinding.UpdateSourceTrigger == System.Windows.Data.UpdateSourceTrigger.LostFocus)
+                        expression.UpdateSource();
+                }
+
+                bool blnAchouErro = false;
+                foreach (MesaProdutoViewModel objMesaProdutoViewModel in this.arrMesaProdutoViewModel)
+                {
+                    objMesaProdutoViewModel.Validate();
+                    blnAchouErro = objMesaProdutoViewModel.HasErrors;
+                    if (blnAchouErro)
+                        break;
+                }
+
+                this.Validate();
+                if (!this.HasErrors && !blnAchouErro)
+                {
+                    this.objPedido.tbPedidoProduto.Clear();
+                    foreach (MesaProdutoViewModel objMesaProdutoViewModel in this.arrMesaProdutoViewModel)
+                        this.objPedido.tbPedidoProduto.Add(objMesaProdutoViewModel.objPedidoProduto);
+
+                    //if (this.objPedido.fpg_codigo == 0)
+                    //    this.objPedido.fpg_codigo = null;
+                    this.objMesa.tbPedido = this.objPedido;
+
+                    Retorno objRetorno;
+                    using (var objBLL = new Mesa())
+                    {
+                        objRetorno = objBLL.SalvarMesa(this.objMesa, Util.objConfigStorage.objFuncionario.fun_codigo);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                        this.objMesa = (tbMesa)objRetorno.objRetorno;
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                }
+            }
+            else
+                MessageBox.Show("Não existe caixa aberto!", "Anteção", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+
+        #endregion Métodos
+    }
+}

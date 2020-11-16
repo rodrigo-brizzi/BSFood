@@ -1,0 +1,37 @@
+(View)
+-Substituir todo o documento pelo conteudo do ucBairro.xaml
+-Substituir ocorrencias de propriedades utilizando De=>Para
+-Substituir ocorrencias de objetos utilizando De=>Para
+-Substituir aba "Cadastros" pelos campos da tela de destino referente ao Canvas interno
+-Atualizar novo formato dos campos de chave estrangeira (remover o botão novo, adequar layout)
+USABILIDADE
+-Tirar o foco do campo codigo e passar para o nome no filtro de pesquisa
+-Decorar o canvas do formulario de cadastro com:  KeyboardNavigation.TabNavigation="Cycle"
+-As telas que possuem scrollviewer ou grid, colocar o botão de inclusão depois das mesmas devido ao foco do teclado
+-Decorar a scrollviewer e qualquer container abaixo dela como  Focusable="False"
+-Decorar os botões de pesquisa como Focusable="False"
+-Decorar os botões de ação dentro da scrollviewer editavel como Focusable="False"
+-Decorar os campos de pesquisa com o Tag="NoTab" para que ao pressionar o enter ele realize a pesquisa e nao mude de foco
+-Sempre que tem um campo de pesquisa com o Tag="NoTab" o foco no proximo campo é preparado para receber o foco programaticamente
+ com uma variavel que recebe true, o campo fica: bh:FocusExtension.IsFocused="{Binding blnEmailFocus, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+
+(ViewModel)
+-Substituir  todo o documento pelo conteudo do BairroViewModel.cs
+-Substituir nome de classe e construtor
+-Adequar nomes de propriedades de pesquisa
+-Substituir as propriedades pelas propriedades da viewmodel de destino
+-Verificar coerencia das propriedades
+-Adequar comandos
+-Remover o prefixo "this"
+
+
+(BusinessLogic)
+-Substituir todo o metodo RetornaLista pelo metodo RetornaLista da classe Bairros
+-Adequar Interface
+-Alterar metodo salvar para não retornar o objeto salvo
+
+Obs:
+-É necessário adicionar o estilo que muda as mensagens de validação para janelas em vermelho de aviso
+-É necessário adicionar o label com o * em vermelho em frente aos campos que são obrigatório o preenchimento
+-É necessário adicionar o summary validator em telas com abas que tenham campos obrigatórios dentro das abas, para que o usuário possa visualizar os campos que precisa ser preenchidos sem ter que ir aba por aba.
+

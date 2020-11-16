@@ -1,0 +1,1028 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+      <Schema Namespace="BSFOODModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <EntityType Name="tbBairro">
+          <Key>
+            <PropertyRef Name="bai_codigo" />
+          </Key>
+          <Property Name="bai_codigo" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="bai_nome" Type="varchar" MaxLength="100" />
+        </EntityType>
+        <EntityType Name="tbCidade">
+          <Key>
+            <PropertyRef Name="cid_codigo" />
+          </Key>
+          <Property Name="cid_codigo" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="cid_ibge" Type="varchar" MaxLength="7" />
+          <Property Name="cid_nome" Type="varchar" MaxLength="60" />
+          <Property Name="est_codigo" Type="int" />
+        </EntityType>
+        <EntityType Name="tbCliente">
+          <Key>
+            <PropertyRef Name="cli_codigo" />
+          </Key>
+          <Property Name="cli_codigo" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="cli_nome" Type="varchar" MaxLength="100" />
+          <Property Name="cli_nomeFantasia" Type="varchar" MaxLength="100" />
+          <Property Name="cli_tipo" Type="char" MaxLength="1" />
+          <Property Name="cli_cpfCnpj" Type="varchar" MaxLength="20" />
+          <Property Name="cli_rgIe" Type="varchar" MaxLength="20" />
+          <Property Name="cli_observacao" Type="varchar" MaxLength="250" />
+          <Property Name="cli_sexo" Type="char" MaxLength="1" />
+          <Property Name="cli_email" Type="varchar" MaxLength="100" />
+        </EntityType>
+        <EntityType Name="tbClienteEndereco">
+          <Key>
+            <PropertyRef Name="cen_codigo" />
+          </Key>
+          <Property Name="cen_codigo" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="cen_logradouro" Type="varchar" MaxLength="200" />
+          <Property Name="cen_numero" Type="varchar" MaxLength="10" />
+          <Property Name="bai_codigo" Type="int" />
+          <Property Name="cen_cep" Type="varchar" MaxLength="9" />
+          <Property Name="cid_codigo" Type="int" />
+          <Property Name="est_codigo" Type="int" />
+          <Property Name="cli_codigo" Type="int" />
+          <Property Name="cen_complemento" Type="varchar" MaxLength="150" />
+        </EntityType>
+        <EntityType Name="tbClienteTelefone">
+          <Key>
+            <PropertyRef Name="ctl_codigo" />
+          </Key>
+          <Property Name="ctl_codigo" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="ctl_numero" Type="varchar" MaxLength="20" />
+          <Property Name="cli_codigo" Type="int" />
+        </EntityType>
+        <EntityType Name="tbConfiguracao">
+          <Key>
+            <PropertyRef Name="cfg_codigo" />
+          </Key>
+          <Property Name="cfg_codigo" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="cfg_versaoBanco" Type="int" />
+          <Property Name="cfg_servidorUsuarioWindows" Type="varchar" MaxLength="256" />
+          <Property Name="cfg_servidorSenhaWindows" Type="varchar" MaxLength="256" />
+          <Property Name="cfg_servidorAtualizacao" Type="varchar" MaxLength="256" />
+          <Property Name="cfg_ultimoLogin" Type="datetime" />
+          <Property Name="cfg_cnpjSoftwareHouse" Type="varchar" MaxLength="20" />
+        </EntityType>
+        <EntityType Name="tbEmpresa">
+          <Key>
+            <PropertyRef Name="emp_codigo" />
+          </Key>
+          <Property Name="emp_codigo" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="emp_nome" Type="varchar" MaxLength="100" />
+          <Property Name="emp_nomeFantasia" Type="varchar" MaxLength="100" />
+          <Property Name="est_codigo" Type="int" />
+          <Property Name="cid_codigo" Type="int" />
+          <Property Name="est_estadoPadrao" Type="int" />
+          <Property Name="cid_cidadePadrao" Type="int" />
+        </EntityType>
+        <EntityType Name="tbEstado">
+          <Key>
+            <PropertyRef Name="est_codigo" />
+          </Key>
+          <Property Name="est_codigo" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="est_sigla" Type="char" MaxLength="2" />
+          <Property Name="est_nome" Type="varchar" MaxLength="20" />
+        </EntityType>
+        <EntityType Name="tbFuncionario">
+          <Key>
+            <PropertyRef Name="fun_codigo" />
+          </Key>
+          <Property Name="fun_codigo" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="fun_nome" Type="varchar" MaxLength="100" />
+          <Property Name="fun_login" Type="varchar" MaxLength="20" />
+          <Property Name="fun_senha" Type="varchar" MaxLength="20" />
+          <Property Name="pac_codigo" Type="int" />
+          <Property Name="cid_codigo" Type="int" />
+          <Property Name="est_codigo" Type="int" />
+        </EntityType>
+        <EntityType Name="tbMenu">
+          <Key>
+            <PropertyRef Name="men_codigo" />
+          </Key>
+          <Property Name="men_codigo" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="men_codigoPai" Type="int" />
+          <Property Name="men_nivel" Type="int" />
+          <Property Name="men_nomeControle" Type="varchar" MaxLength="100" />
+          <Property Name="men_cabecalho" Type="varchar" MaxLength="35" />
+          <Property Name="men_ordem" Type="varchar" MaxLength="50" />
+          <Property Name="men_imagem" Type="varchar" MaxLength="50" />
+          <Property Name="men_status" Type="bit" />
+        </EntityType>
+        <EntityType Name="tbPerfilAcesso">
+          <Key>
+            <PropertyRef Name="pac_codigo" />
+          </Key>
+          <Property Name="pac_codigo" Type="int" Nullable="false" />
+          <Property Name="pac_descricao" Type="varchar" MaxLength="30" />
+          <Property Name="pac_permiteDesconto" Type="bit" />
+          <Property Name="pac_permiteCancelaItem" Type="bit" />
+          <Property Name="pac_permiteCancelaCupom" Type="bit" />
+          <Property Name="pac_permiteVendaClienteBloqueado" Type="bit" />
+          <Property Name="pac_permiteVendaClienteNegativo" Type="bit" />
+        </EntityType>
+        <EntityType Name="tbPerfilAcessoMenu">
+          <Key>
+            <PropertyRef Name="pac_codigo" />
+            <PropertyRef Name="men_codigo" />
+          </Key>
+          <Property Name="pac_codigo" Type="int" Nullable="false" />
+          <Property Name="men_codigo" Type="int" Nullable="false" />
+          <Property Name="pam_inclusao" Type="bit" />
+          <Property Name="pam_alteracao" Type="bit" />
+          <Property Name="pam_exclusao" Type="bit" />
+          <Property Name="pam_visualizacao" Type="bit" />
+        </EntityType>
+        <Association Name="FK_tbCidade_tbEstado">
+          <End Role="tbEstado" Type="Self.tbEstado" Multiplicity="0..1" />
+          <End Role="tbCidade" Type="Self.tbCidade" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbEstado">
+              <PropertyRef Name="est_codigo" />
+            </Principal>
+            <Dependent Role="tbCidade">
+              <PropertyRef Name="est_codigo" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbClienteEndereco_tbBairro">
+          <End Role="tbBairro" Type="Self.tbBairro" Multiplicity="0..1" />
+          <End Role="tbClienteEndereco" Type="Self.tbClienteEndereco" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbBairro">
+              <PropertyRef Name="bai_codigo" />
+            </Principal>
+            <Dependent Role="tbClienteEndereco">
+              <PropertyRef Name="bai_codigo" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbClienteEndereco_tbCidade">
+          <End Role="tbCidade" Type="Self.tbCidade" Multiplicity="0..1" />
+          <End Role="tbClienteEndereco" Type="Self.tbClienteEndereco" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbCidade">
+              <PropertyRef Name="cid_codigo" />
+            </Principal>
+            <Dependent Role="tbClienteEndereco">
+              <PropertyRef Name="cid_codigo" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbClienteEndereco_tbCliente">
+          <End Role="tbCliente" Type="Self.tbCliente" Multiplicity="0..1" />
+          <End Role="tbClienteEndereco" Type="Self.tbClienteEndereco" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbCliente">
+              <PropertyRef Name="cli_codigo" />
+            </Principal>
+            <Dependent Role="tbClienteEndereco">
+              <PropertyRef Name="cli_codigo" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbClienteEndereco_tbEstado">
+          <End Role="tbEstado" Type="Self.tbEstado" Multiplicity="0..1" />
+          <End Role="tbClienteEndereco" Type="Self.tbClienteEndereco" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbEstado">
+              <PropertyRef Name="est_codigo" />
+            </Principal>
+            <Dependent Role="tbClienteEndereco">
+              <PropertyRef Name="est_codigo" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbClienteTelefone_tbCliente">
+          <End Role="tbCliente" Type="Self.tbCliente" Multiplicity="0..1" />
+          <End Role="tbClienteTelefone" Type="Self.tbClienteTelefone" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbCliente">
+              <PropertyRef Name="cli_codigo" />
+            </Principal>
+            <Dependent Role="tbClienteTelefone">
+              <PropertyRef Name="cli_codigo" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbEmpresa_tbCidade">
+          <End Role="tbCidade" Type="Self.tbCidade" Multiplicity="0..1" />
+          <End Role="tbEmpresa" Type="Self.tbEmpresa" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbCidade">
+              <PropertyRef Name="cid_codigo" />
+            </Principal>
+            <Dependent Role="tbEmpresa">
+              <PropertyRef Name="cid_codigo" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbEmpresa_tbCidade__Padrao">
+          <End Role="tbCidade" Type="Self.tbCidade" Multiplicity="0..1" />
+          <End Role="tbEmpresa" Type="Self.tbEmpresa" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbCidade">
+              <PropertyRef Name="cid_codigo" />
+            </Principal>
+            <Dependent Role="tbEmpresa">
+              <PropertyRef Name="cid_cidadePadrao" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbEmpresa_tbEstado">
+          <End Role="tbEstado" Type="Self.tbEstado" Multiplicity="0..1" />
+          <End Role="tbEmpresa" Type="Self.tbEmpresa" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbEstado">
+              <PropertyRef Name="est_codigo" />
+            </Principal>
+            <Dependent Role="tbEmpresa">
+              <PropertyRef Name="est_codigo" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbEmpresa_tbEstado__Padrao">
+          <End Role="tbEstado" Type="Self.tbEstado" Multiplicity="0..1" />
+          <End Role="tbEmpresa" Type="Self.tbEmpresa" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbEstado">
+              <PropertyRef Name="est_codigo" />
+            </Principal>
+            <Dependent Role="tbEmpresa">
+              <PropertyRef Name="est_estadoPadrao" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbFuncionario_tbCidade">
+          <End Role="tbCidade" Type="Self.tbCidade" Multiplicity="0..1" />
+          <End Role="tbFuncionario" Type="Self.tbFuncionario" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbCidade">
+              <PropertyRef Name="cid_codigo" />
+            </Principal>
+            <Dependent Role="tbFuncionario">
+              <PropertyRef Name="cid_codigo" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbFuncionario_tbEstado">
+          <End Role="tbEstado" Type="Self.tbEstado" Multiplicity="0..1" />
+          <End Role="tbFuncionario" Type="Self.tbFuncionario" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbEstado">
+              <PropertyRef Name="est_codigo" />
+            </Principal>
+            <Dependent Role="tbFuncionario">
+              <PropertyRef Name="est_codigo" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbFuncionario_tbPerfilAcesso">
+          <End Role="tbPerfilAcesso" Type="Self.tbPerfilAcesso" Multiplicity="0..1" />
+          <End Role="tbFuncionario" Type="Self.tbFuncionario" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbPerfilAcesso">
+              <PropertyRef Name="pac_codigo" />
+            </Principal>
+            <Dependent Role="tbFuncionario">
+              <PropertyRef Name="pac_codigo" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbMenu_tbMenu__MenuPai">
+          <End Role="tbMenu" Type="Self.tbMenu" Multiplicity="0..1" />
+          <End Role="tbMenu1" Type="Self.tbMenu" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbMenu">
+              <PropertyRef Name="men_codigo" />
+            </Principal>
+            <Dependent Role="tbMenu1">
+              <PropertyRef Name="men_codigoPai" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbPerfilAcessoMenu_tbMenu">
+          <End Role="tbMenu" Type="Self.tbMenu" Multiplicity="1" />
+          <End Role="tbPerfilAcessoMenu" Type="Self.tbPerfilAcessoMenu" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbMenu">
+              <PropertyRef Name="men_codigo" />
+            </Principal>
+            <Dependent Role="tbPerfilAcessoMenu">
+              <PropertyRef Name="men_codigo" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbPerfilAcessoMenu_tbPerfilAcesso">
+          <End Role="tbPerfilAcesso" Type="Self.tbPerfilAcesso" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="tbPerfilAcessoMenu" Type="Self.tbPerfilAcessoMenu" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbPerfilAcesso">
+              <PropertyRef Name="pac_codigo" />
+            </Principal>
+            <Dependent Role="tbPerfilAcessoMenu">
+              <PropertyRef Name="pac_codigo" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityContainer Name="BSFOODModelStoreContainer">
+          <EntitySet Name="tbBairro" EntityType="Self.tbBairro" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbCidade" EntityType="Self.tbCidade" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbCliente" EntityType="Self.tbCliente" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbClienteEndereco" EntityType="Self.tbClienteEndereco" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbClienteTelefone" EntityType="Self.tbClienteTelefone" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbConfiguracao" EntityType="Self.tbConfiguracao" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbEmpresa" EntityType="Self.tbEmpresa" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbEstado" EntityType="Self.tbEstado" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbFuncionario" EntityType="Self.tbFuncionario" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbMenu" EntityType="Self.tbMenu" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbPerfilAcesso" EntityType="Self.tbPerfilAcesso" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tbPerfilAcessoMenu" EntityType="Self.tbPerfilAcessoMenu" Schema="dbo" store:Type="Tables" />
+          <AssociationSet Name="FK_tbCidade_tbEstado" Association="Self.FK_tbCidade_tbEstado">
+            <End Role="tbEstado" EntitySet="tbEstado" />
+            <End Role="tbCidade" EntitySet="tbCidade" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbClienteEndereco_tbBairro" Association="Self.FK_tbClienteEndereco_tbBairro">
+            <End Role="tbBairro" EntitySet="tbBairro" />
+            <End Role="tbClienteEndereco" EntitySet="tbClienteEndereco" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbClienteEndereco_tbCidade" Association="Self.FK_tbClienteEndereco_tbCidade">
+            <End Role="tbCidade" EntitySet="tbCidade" />
+            <End Role="tbClienteEndereco" EntitySet="tbClienteEndereco" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbClienteEndereco_tbCliente" Association="Self.FK_tbClienteEndereco_tbCliente">
+            <End Role="tbCliente" EntitySet="tbCliente" />
+            <End Role="tbClienteEndereco" EntitySet="tbClienteEndereco" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbClienteEndereco_tbEstado" Association="Self.FK_tbClienteEndereco_tbEstado">
+            <End Role="tbEstado" EntitySet="tbEstado" />
+            <End Role="tbClienteEndereco" EntitySet="tbClienteEndereco" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbClienteTelefone_tbCliente" Association="Self.FK_tbClienteTelefone_tbCliente">
+            <End Role="tbCliente" EntitySet="tbCliente" />
+            <End Role="tbClienteTelefone" EntitySet="tbClienteTelefone" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbEmpresa_tbCidade" Association="Self.FK_tbEmpresa_tbCidade">
+            <End Role="tbCidade" EntitySet="tbCidade" />
+            <End Role="tbEmpresa" EntitySet="tbEmpresa" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbEmpresa_tbCidade__Padrao" Association="Self.FK_tbEmpresa_tbCidade__Padrao">
+            <End Role="tbCidade" EntitySet="tbCidade" />
+            <End Role="tbEmpresa" EntitySet="tbEmpresa" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbEmpresa_tbEstado" Association="Self.FK_tbEmpresa_tbEstado">
+            <End Role="tbEstado" EntitySet="tbEstado" />
+            <End Role="tbEmpresa" EntitySet="tbEmpresa" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbEmpresa_tbEstado__Padrao" Association="Self.FK_tbEmpresa_tbEstado__Padrao">
+            <End Role="tbEstado" EntitySet="tbEstado" />
+            <End Role="tbEmpresa" EntitySet="tbEmpresa" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbFuncionario_tbCidade" Association="Self.FK_tbFuncionario_tbCidade">
+            <End Role="tbCidade" EntitySet="tbCidade" />
+            <End Role="tbFuncionario" EntitySet="tbFuncionario" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbFuncionario_tbEstado" Association="Self.FK_tbFuncionario_tbEstado">
+            <End Role="tbEstado" EntitySet="tbEstado" />
+            <End Role="tbFuncionario" EntitySet="tbFuncionario" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbFuncionario_tbPerfilAcesso" Association="Self.FK_tbFuncionario_tbPerfilAcesso">
+            <End Role="tbPerfilAcesso" EntitySet="tbPerfilAcesso" />
+            <End Role="tbFuncionario" EntitySet="tbFuncionario" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbMenu_tbMenu__MenuPai" Association="Self.FK_tbMenu_tbMenu__MenuPai">
+            <End Role="tbMenu" EntitySet="tbMenu" />
+            <End Role="tbMenu1" EntitySet="tbMenu" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbPerfilAcessoMenu_tbMenu" Association="Self.FK_tbPerfilAcessoMenu_tbMenu">
+            <End Role="tbMenu" EntitySet="tbMenu" />
+            <End Role="tbPerfilAcessoMenu" EntitySet="tbPerfilAcessoMenu" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbPerfilAcessoMenu_tbPerfilAcesso" Association="Self.FK_tbPerfilAcessoMenu_tbPerfilAcesso">
+            <End Role="tbPerfilAcesso" EntitySet="tbPerfilAcesso" />
+            <End Role="tbPerfilAcessoMenu" EntitySet="tbPerfilAcessoMenu" />
+          </AssociationSet>
+        </EntityContainer>
+      </Schema>
+    </edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="BSFoodDAL" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityType Name="tbBairro">
+          <Key>
+            <PropertyRef Name="bai_codigo" />
+          </Key>
+          <Property Name="bai_codigo" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="bai_nome" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="tbClienteEndereco" Relationship="Self.FK_tbClienteEndereco_tbBairro" FromRole="tbBairro" ToRole="tbClienteEndereco" />
+        </EntityType>
+        <EntityType Name="tbCidade">
+          <Key>
+            <PropertyRef Name="cid_codigo" />
+          </Key>
+          <Property Name="cid_codigo" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="cid_ibge" Type="String" MaxLength="7" FixedLength="false" Unicode="false" />
+          <Property Name="cid_nome" Type="String" MaxLength="60" FixedLength="false" Unicode="false" />
+          <Property Name="est_codigo" Type="Int32" />
+          <NavigationProperty Name="tbEstado" Relationship="Self.FK_tbCidade_tbEstado" FromRole="tbCidade" ToRole="tbEstado" />
+          <NavigationProperty Name="tbClienteEndereco" Relationship="Self.FK_tbClienteEndereco_tbCidade" FromRole="tbCidade" ToRole="tbClienteEndereco" />
+          <NavigationProperty Name="tbEmpresa" Relationship="Self.FK_tbEmpresa_tbCidade" FromRole="tbCidade" ToRole="tbEmpresa" />
+          <NavigationProperty Name="tbEmpresa1" Relationship="Self.FK_tbEmpresa_tbCidade__Padrao" FromRole="tbCidade" ToRole="tbEmpresa" />
+          <NavigationProperty Name="tbFuncionario" Relationship="Self.FK_tbFuncionario_tbCidade" FromRole="tbCidade" ToRole="tbFuncionario" />
+        </EntityType>
+        <EntityType Name="tbCliente">
+          <Key>
+            <PropertyRef Name="cli_codigo" />
+          </Key>
+          <Property Name="cli_codigo" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="cli_nome" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="cli_nomeFantasia" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="cli_tipo" Type="String" MaxLength="1" FixedLength="true" Unicode="false" />
+          <Property Name="cli_cpfCnpj" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
+          <Property Name="cli_rgIe" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
+          <Property Name="cli_observacao" Type="String" MaxLength="250" FixedLength="false" Unicode="false" />
+          <Property Name="cli_sexo" Type="String" MaxLength="1" FixedLength="true" Unicode="false" />
+          <Property Name="cli_email" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="tbClienteEndereco" Relationship="Self.FK_tbClienteEndereco_tbCliente" FromRole="tbCliente" ToRole="tbClienteEndereco" />
+          <NavigationProperty Name="tbClienteTelefone" Relationship="Self.FK_tbClienteTelefone_tbCliente" FromRole="tbCliente" ToRole="tbClienteTelefone" />
+        </EntityType>
+        <EntityType Name="tbClienteEndereco">
+          <Key>
+            <PropertyRef Name="cen_codigo" />
+          </Key>
+          <Property Name="cen_codigo" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="cen_logradouro" Type="String" MaxLength="200" FixedLength="false" Unicode="false" />
+          <Property Name="cen_numero" Type="String" MaxLength="10" FixedLength="false" Unicode="false" />
+          <Property Name="bai_codigo" Type="Int32" />
+          <Property Name="cen_cep" Type="String" MaxLength="9" FixedLength="false" Unicode="false" />
+          <Property Name="cid_codigo" Type="Int32" />
+          <Property Name="est_codigo" Type="Int32" />
+          <Property Name="cli_codigo" Type="Int32" />
+          <Property Name="cen_complemento" Type="String" MaxLength="150" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="tbBairro" Relationship="Self.FK_tbClienteEndereco_tbBairro" FromRole="tbClienteEndereco" ToRole="tbBairro" />
+          <NavigationProperty Name="tbCidade" Relationship="Self.FK_tbClienteEndereco_tbCidade" FromRole="tbClienteEndereco" ToRole="tbCidade" />
+          <NavigationProperty Name="tbCliente" Relationship="Self.FK_tbClienteEndereco_tbCliente" FromRole="tbClienteEndereco" ToRole="tbCliente" />
+          <NavigationProperty Name="tbEstado" Relationship="Self.FK_tbClienteEndereco_tbEstado" FromRole="tbClienteEndereco" ToRole="tbEstado" />
+        </EntityType>
+        <EntityType Name="tbClienteTelefone">
+          <Key>
+            <PropertyRef Name="ctl_codigo" />
+          </Key>
+          <Property Name="ctl_codigo" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="ctl_numero" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
+          <Property Name="cli_codigo" Type="Int32" />
+          <NavigationProperty Name="tbCliente" Relationship="Self.FK_tbClienteTelefone_tbCliente" FromRole="tbClienteTelefone" ToRole="tbCliente" />
+        </EntityType>
+        <EntityType Name="tbConfiguracao">
+          <Key>
+            <PropertyRef Name="cfg_codigo" />
+          </Key>
+          <Property Name="cfg_codigo" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="cfg_versaoBanco" Type="Int32" />
+          <Property Name="cfg_servidorUsuarioWindows" Type="String" MaxLength="256" FixedLength="false" Unicode="false" />
+          <Property Name="cfg_servidorSenhaWindows" Type="String" MaxLength="256" FixedLength="false" Unicode="false" />
+          <Property Name="cfg_servidorAtualizacao" Type="String" MaxLength="256" FixedLength="false" Unicode="false" />
+          <Property Name="cfg_ultimoLogin" Type="DateTime" Precision="3" />
+          <Property Name="cfg_cnpjSoftwareHouse" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <EntityType Name="tbEmpresa">
+          <Key>
+            <PropertyRef Name="emp_codigo" />
+          </Key>
+          <Property Name="emp_codigo" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="emp_nome" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="emp_nomeFantasia" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="est_codigo" Type="Int32" />
+          <Property Name="cid_codigo" Type="Int32" />
+          <Property Name="est_estadoPadrao" Type="Int32" />
+          <Property Name="cid_cidadePadrao" Type="Int32" />
+          <NavigationProperty Name="tbCidade" Relationship="Self.FK_tbEmpresa_tbCidade" FromRole="tbEmpresa" ToRole="tbCidade" />
+          <NavigationProperty Name="tbCidade1" Relationship="Self.FK_tbEmpresa_tbCidade__Padrao" FromRole="tbEmpresa" ToRole="tbCidade" />
+          <NavigationProperty Name="tbEstado" Relationship="Self.FK_tbEmpresa_tbEstado" FromRole="tbEmpresa" ToRole="tbEstado" />
+          <NavigationProperty Name="tbEstado1" Relationship="Self.FK_tbEmpresa_tbEstado__Padrao" FromRole="tbEmpresa" ToRole="tbEstado" />
+        </EntityType>
+        <EntityType Name="tbEstado">
+          <Key>
+            <PropertyRef Name="est_codigo" />
+          </Key>
+          <Property Name="est_codigo" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="est_sigla" Type="String" MaxLength="2" FixedLength="true" Unicode="false" />
+          <Property Name="est_nome" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="tbCidade" Relationship="Self.FK_tbCidade_tbEstado" FromRole="tbEstado" ToRole="tbCidade" />
+          <NavigationProperty Name="tbClienteEndereco" Relationship="Self.FK_tbClienteEndereco_tbEstado" FromRole="tbEstado" ToRole="tbClienteEndereco" />
+          <NavigationProperty Name="tbEmpresa" Relationship="Self.FK_tbEmpresa_tbEstado" FromRole="tbEstado" ToRole="tbEmpresa" />
+          <NavigationProperty Name="tbEmpresa1" Relationship="Self.FK_tbEmpresa_tbEstado__Padrao" FromRole="tbEstado" ToRole="tbEmpresa" />
+          <NavigationProperty Name="tbFuncionario" Relationship="Self.FK_tbFuncionario_tbEstado" FromRole="tbEstado" ToRole="tbFuncionario" />
+        </EntityType>
+        <EntityType Name="tbFuncionario">
+          <Key>
+            <PropertyRef Name="fun_codigo" />
+          </Key>
+          <Property Name="fun_codigo" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="fun_nome" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="fun_login" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
+          <Property Name="fun_senha" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
+          <Property Name="pac_codigo" Type="Int32" />
+          <Property Name="cid_codigo" Type="Int32" />
+          <Property Name="est_codigo" Type="Int32" />
+          <NavigationProperty Name="tbCidade" Relationship="Self.FK_tbFuncionario_tbCidade" FromRole="tbFuncionario" ToRole="tbCidade" />
+          <NavigationProperty Name="tbEstado" Relationship="Self.FK_tbFuncionario_tbEstado" FromRole="tbFuncionario" ToRole="tbEstado" />
+          <NavigationProperty Name="tbPerfilAcesso" Relationship="Self.FK_tbFuncionario_tbPerfilAcesso" FromRole="tbFuncionario" ToRole="tbPerfilAcesso" />
+        </EntityType>
+        <EntityType Name="tbMenu">
+          <Key>
+            <PropertyRef Name="men_codigo" />
+          </Key>
+          <Property Name="men_codigo" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="men_codigoPai" Type="Int32" />
+          <Property Name="men_nivel" Type="Int32" />
+          <Property Name="men_nomeControle" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="men_cabecalho" Type="String" MaxLength="35" FixedLength="false" Unicode="false" />
+          <Property Name="men_ordem" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="men_imagem" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="men_status" Type="Boolean" />
+          <NavigationProperty Name="tbMenu1" Relationship="Self.FK_tbMenu_tbMenu__MenuPai" FromRole="tbMenu" ToRole="tbMenu1" />
+          <NavigationProperty Name="tbMenu2" Relationship="Self.FK_tbMenu_tbMenu__MenuPai" FromRole="tbMenu1" ToRole="tbMenu" />
+          <NavigationProperty Name="tbPerfilAcessoMenu" Relationship="Self.FK_tbPerfilAcessoMenu_tbMenu" FromRole="tbMenu" ToRole="tbPerfilAcessoMenu" />
+        </EntityType>
+        <EntityType Name="tbPerfilAcesso">
+          <Key>
+            <PropertyRef Name="pac_codigo" />
+          </Key>
+          <Property Name="pac_codigo" Type="Int32" Nullable="false" />
+          <Property Name="pac_descricao" Type="String" MaxLength="30" FixedLength="false" Unicode="false" />
+          <Property Name="pac_permiteDesconto" Type="Boolean" />
+          <Property Name="pac_permiteCancelaItem" Type="Boolean" />
+          <Property Name="pac_permiteCancelaCupom" Type="Boolean" />
+          <Property Name="pac_permiteVendaClienteBloqueado" Type="Boolean" />
+          <Property Name="pac_permiteVendaClienteNegativo" Type="Boolean" />
+          <NavigationProperty Name="tbFuncionario" Relationship="Self.FK_tbFuncionario_tbPerfilAcesso" FromRole="tbPerfilAcesso" ToRole="tbFuncionario" />
+          <NavigationProperty Name="tbPerfilAcessoMenu" Relationship="Self.FK_tbPerfilAcessoMenu_tbPerfilAcesso" FromRole="tbPerfilAcesso" ToRole="tbPerfilAcessoMenu" />
+        </EntityType>
+        <EntityType Name="tbPerfilAcessoMenu">
+          <Key>
+            <PropertyRef Name="pac_codigo" />
+            <PropertyRef Name="men_codigo" />
+          </Key>
+          <Property Name="pac_codigo" Type="Int32" Nullable="false" />
+          <Property Name="men_codigo" Type="Int32" Nullable="false" />
+          <Property Name="pam_inclusao" Type="Boolean" />
+          <Property Name="pam_alteracao" Type="Boolean" />
+          <Property Name="pam_exclusao" Type="Boolean" />
+          <Property Name="pam_visualizacao" Type="Boolean" />
+          <NavigationProperty Name="tbMenu" Relationship="Self.FK_tbPerfilAcessoMenu_tbMenu" FromRole="tbPerfilAcessoMenu" ToRole="tbMenu" />
+          <NavigationProperty Name="tbPerfilAcesso" Relationship="Self.FK_tbPerfilAcessoMenu_tbPerfilAcesso" FromRole="tbPerfilAcessoMenu" ToRole="tbPerfilAcesso" />
+        </EntityType>
+        <Association Name="FK_tbClienteEndereco_tbBairro">
+          <End Role="tbBairro" Type="Self.tbBairro" Multiplicity="0..1" />
+          <End Role="tbClienteEndereco" Type="Self.tbClienteEndereco" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbBairro">
+              <PropertyRef Name="bai_codigo" />
+            </Principal>
+            <Dependent Role="tbClienteEndereco">
+              <PropertyRef Name="bai_codigo" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbCidade_tbEstado">
+          <End Role="tbEstado" Type="Self.tbEstado" Multiplicity="0..1" />
+          <End Role="tbCidade" Type="Self.tbCidade" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbEstado">
+              <PropertyRef Name="est_codigo" />
+            </Principal>
+            <Dependent Role="tbCidade">
+              <PropertyRef Name="est_codigo" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbClienteEndereco_tbCidade">
+          <End Role="tbCidade" Type="Self.tbCidade" Multiplicity="0..1" />
+          <End Role="tbClienteEndereco" Type="Self.tbClienteEndereco" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbCidade">
+              <PropertyRef Name="cid_codigo" />
+            </Principal>
+            <Dependent Role="tbClienteEndereco">
+              <PropertyRef Name="cid_codigo" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbEmpresa_tbCidade">
+          <End Role="tbCidade" Type="Self.tbCidade" Multiplicity="0..1" />
+          <End Role="tbEmpresa" Type="Self.tbEmpresa" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbCidade">
+              <PropertyRef Name="cid_codigo" />
+            </Principal>
+            <Dependent Role="tbEmpresa">
+              <PropertyRef Name="cid_codigo" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbEmpresa_tbCidade__Padrao">
+          <End Role="tbCidade" Type="Self.tbCidade" Multiplicity="0..1" />
+          <End Role="tbEmpresa" Type="Self.tbEmpresa" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbCidade">
+              <PropertyRef Name="cid_codigo" />
+            </Principal>
+            <Dependent Role="tbEmpresa">
+              <PropertyRef Name="cid_cidadePadrao" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbFuncionario_tbCidade">
+          <End Role="tbCidade" Type="Self.tbCidade" Multiplicity="0..1" />
+          <End Role="tbFuncionario" Type="Self.tbFuncionario" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbCidade">
+              <PropertyRef Name="cid_codigo" />
+            </Principal>
+            <Dependent Role="tbFuncionario">
+              <PropertyRef Name="cid_codigo" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbClienteEndereco_tbCliente">
+          <End Role="tbCliente" Type="Self.tbCliente" Multiplicity="0..1" />
+          <End Role="tbClienteEndereco" Type="Self.tbClienteEndereco" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbCliente">
+              <PropertyRef Name="cli_codigo" />
+            </Principal>
+            <Dependent Role="tbClienteEndereco">
+              <PropertyRef Name="cli_codigo" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbClienteTelefone_tbCliente">
+          <End Role="tbCliente" Type="Self.tbCliente" Multiplicity="0..1" />
+          <End Role="tbClienteTelefone" Type="Self.tbClienteTelefone" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbCliente">
+              <PropertyRef Name="cli_codigo" />
+            </Principal>
+            <Dependent Role="tbClienteTelefone">
+              <PropertyRef Name="cli_codigo" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbClienteEndereco_tbEstado">
+          <End Role="tbEstado" Type="Self.tbEstado" Multiplicity="0..1" />
+          <End Role="tbClienteEndereco" Type="Self.tbClienteEndereco" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbEstado">
+              <PropertyRef Name="est_codigo" />
+            </Principal>
+            <Dependent Role="tbClienteEndereco">
+              <PropertyRef Name="est_codigo" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbEmpresa_tbEstado">
+          <End Role="tbEstado" Type="Self.tbEstado" Multiplicity="0..1" />
+          <End Role="tbEmpresa" Type="Self.tbEmpresa" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbEstado">
+              <PropertyRef Name="est_codigo" />
+            </Principal>
+            <Dependent Role="tbEmpresa">
+              <PropertyRef Name="est_codigo" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbEmpresa_tbEstado__Padrao">
+          <End Role="tbEstado" Type="Self.tbEstado" Multiplicity="0..1" />
+          <End Role="tbEmpresa" Type="Self.tbEmpresa" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbEstado">
+              <PropertyRef Name="est_codigo" />
+            </Principal>
+            <Dependent Role="tbEmpresa">
+              <PropertyRef Name="est_estadoPadrao" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbFuncionario_tbEstado">
+          <End Role="tbEstado" Type="Self.tbEstado" Multiplicity="0..1" />
+          <End Role="tbFuncionario" Type="Self.tbFuncionario" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbEstado">
+              <PropertyRef Name="est_codigo" />
+            </Principal>
+            <Dependent Role="tbFuncionario">
+              <PropertyRef Name="est_codigo" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbFuncionario_tbPerfilAcesso">
+          <End Role="tbPerfilAcesso" Type="Self.tbPerfilAcesso" Multiplicity="0..1" />
+          <End Role="tbFuncionario" Type="Self.tbFuncionario" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbPerfilAcesso">
+              <PropertyRef Name="pac_codigo" />
+            </Principal>
+            <Dependent Role="tbFuncionario">
+              <PropertyRef Name="pac_codigo" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbMenu_tbMenu__MenuPai">
+          <End Role="tbMenu" Type="Self.tbMenu" Multiplicity="0..1" />
+          <End Role="tbMenu1" Type="Self.tbMenu" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbMenu">
+              <PropertyRef Name="men_codigo" />
+            </Principal>
+            <Dependent Role="tbMenu1">
+              <PropertyRef Name="men_codigoPai" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbPerfilAcessoMenu_tbMenu">
+          <End Role="tbMenu" Type="Self.tbMenu" Multiplicity="1" />
+          <End Role="tbPerfilAcessoMenu" Type="Self.tbPerfilAcessoMenu" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbMenu">
+              <PropertyRef Name="men_codigo" />
+            </Principal>
+            <Dependent Role="tbPerfilAcessoMenu">
+              <PropertyRef Name="men_codigo" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tbPerfilAcessoMenu_tbPerfilAcesso">
+          <End Role="tbPerfilAcesso" Type="Self.tbPerfilAcesso" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="tbPerfilAcessoMenu" Type="Self.tbPerfilAcessoMenu" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tbPerfilAcesso">
+              <PropertyRef Name="pac_codigo" />
+            </Principal>
+            <Dependent Role="tbPerfilAcessoMenu">
+              <PropertyRef Name="pac_codigo" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityContainer Name="EFContexto" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="tbBairro" EntityType="Self.tbBairro" />
+          <EntitySet Name="tbCidade" EntityType="Self.tbCidade" />
+          <EntitySet Name="tbCliente" EntityType="Self.tbCliente" />
+          <EntitySet Name="tbClienteEndereco" EntityType="Self.tbClienteEndereco" />
+          <EntitySet Name="tbClienteTelefone" EntityType="Self.tbClienteTelefone" />
+          <EntitySet Name="tbConfiguracao" EntityType="Self.tbConfiguracao" />
+          <EntitySet Name="tbEmpresa" EntityType="Self.tbEmpresa" />
+          <EntitySet Name="tbEstado" EntityType="Self.tbEstado" />
+          <EntitySet Name="tbFuncionario" EntityType="Self.tbFuncionario" />
+          <EntitySet Name="tbMenu" EntityType="Self.tbMenu" />
+          <EntitySet Name="tbPerfilAcesso" EntityType="Self.tbPerfilAcesso" />
+          <EntitySet Name="tbPerfilAcessoMenu" EntityType="Self.tbPerfilAcessoMenu" />
+          <AssociationSet Name="FK_tbClienteEndereco_tbBairro" Association="Self.FK_tbClienteEndereco_tbBairro">
+            <End Role="tbBairro" EntitySet="tbBairro" />
+            <End Role="tbClienteEndereco" EntitySet="tbClienteEndereco" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbCidade_tbEstado" Association="Self.FK_tbCidade_tbEstado">
+            <End Role="tbEstado" EntitySet="tbEstado" />
+            <End Role="tbCidade" EntitySet="tbCidade" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbClienteEndereco_tbCidade" Association="Self.FK_tbClienteEndereco_tbCidade">
+            <End Role="tbCidade" EntitySet="tbCidade" />
+            <End Role="tbClienteEndereco" EntitySet="tbClienteEndereco" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbEmpresa_tbCidade" Association="Self.FK_tbEmpresa_tbCidade">
+            <End Role="tbCidade" EntitySet="tbCidade" />
+            <End Role="tbEmpresa" EntitySet="tbEmpresa" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbEmpresa_tbCidade__Padrao" Association="Self.FK_tbEmpresa_tbCidade__Padrao">
+            <End Role="tbCidade" EntitySet="tbCidade" />
+            <End Role="tbEmpresa" EntitySet="tbEmpresa" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbFuncionario_tbCidade" Association="Self.FK_tbFuncionario_tbCidade">
+            <End Role="tbCidade" EntitySet="tbCidade" />
+            <End Role="tbFuncionario" EntitySet="tbFuncionario" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbClienteEndereco_tbCliente" Association="Self.FK_tbClienteEndereco_tbCliente">
+            <End Role="tbCliente" EntitySet="tbCliente" />
+            <End Role="tbClienteEndereco" EntitySet="tbClienteEndereco" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbClienteTelefone_tbCliente" Association="Self.FK_tbClienteTelefone_tbCliente">
+            <End Role="tbCliente" EntitySet="tbCliente" />
+            <End Role="tbClienteTelefone" EntitySet="tbClienteTelefone" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbClienteEndereco_tbEstado" Association="Self.FK_tbClienteEndereco_tbEstado">
+            <End Role="tbEstado" EntitySet="tbEstado" />
+            <End Role="tbClienteEndereco" EntitySet="tbClienteEndereco" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbEmpresa_tbEstado" Association="Self.FK_tbEmpresa_tbEstado">
+            <End Role="tbEstado" EntitySet="tbEstado" />
+            <End Role="tbEmpresa" EntitySet="tbEmpresa" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbEmpresa_tbEstado__Padrao" Association="Self.FK_tbEmpresa_tbEstado__Padrao">
+            <End Role="tbEstado" EntitySet="tbEstado" />
+            <End Role="tbEmpresa" EntitySet="tbEmpresa" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbFuncionario_tbEstado" Association="Self.FK_tbFuncionario_tbEstado">
+            <End Role="tbEstado" EntitySet="tbEstado" />
+            <End Role="tbFuncionario" EntitySet="tbFuncionario" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbFuncionario_tbPerfilAcesso" Association="Self.FK_tbFuncionario_tbPerfilAcesso">
+            <End Role="tbPerfilAcesso" EntitySet="tbPerfilAcesso" />
+            <End Role="tbFuncionario" EntitySet="tbFuncionario" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbMenu_tbMenu__MenuPai" Association="Self.FK_tbMenu_tbMenu__MenuPai">
+            <End Role="tbMenu" EntitySet="tbMenu" />
+            <End Role="tbMenu1" EntitySet="tbMenu" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbPerfilAcessoMenu_tbMenu" Association="Self.FK_tbPerfilAcessoMenu_tbMenu">
+            <End Role="tbMenu" EntitySet="tbMenu" />
+            <End Role="tbPerfilAcessoMenu" EntitySet="tbPerfilAcessoMenu" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tbPerfilAcessoMenu_tbPerfilAcesso" Association="Self.FK_tbPerfilAcessoMenu_tbPerfilAcesso">
+            <End Role="tbPerfilAcesso" EntitySet="tbPerfilAcesso" />
+            <End Role="tbPerfilAcessoMenu" EntitySet="tbPerfilAcessoMenu" />
+          </AssociationSet>
+        </EntityContainer>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="BSFOODModelStoreContainer" CdmEntityContainer="EFContexto">
+          <EntitySetMapping Name="tbBairro">
+            <EntityTypeMapping TypeName="BSFoodDAL.tbBairro">
+              <MappingFragment StoreEntitySet="tbBairro">
+                <ScalarProperty Name="bai_codigo" ColumnName="bai_codigo" />
+                <ScalarProperty Name="bai_nome" ColumnName="bai_nome" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbCidade">
+            <EntityTypeMapping TypeName="BSFoodDAL.tbCidade">
+              <MappingFragment StoreEntitySet="tbCidade">
+                <ScalarProperty Name="cid_codigo" ColumnName="cid_codigo" />
+                <ScalarProperty Name="cid_ibge" ColumnName="cid_ibge" />
+                <ScalarProperty Name="cid_nome" ColumnName="cid_nome" />
+                <ScalarProperty Name="est_codigo" ColumnName="est_codigo" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbCliente">
+            <EntityTypeMapping TypeName="BSFoodDAL.tbCliente">
+              <MappingFragment StoreEntitySet="tbCliente">
+                <ScalarProperty Name="cli_codigo" ColumnName="cli_codigo" />
+                <ScalarProperty Name="cli_nome" ColumnName="cli_nome" />
+                <ScalarProperty Name="cli_nomeFantasia" ColumnName="cli_nomeFantasia" />
+                <ScalarProperty Name="cli_tipo" ColumnName="cli_tipo" />
+                <ScalarProperty Name="cli_cpfCnpj" ColumnName="cli_cpfCnpj" />
+                <ScalarProperty Name="cli_rgIe" ColumnName="cli_rgIe" />
+                <ScalarProperty Name="cli_observacao" ColumnName="cli_observacao" />
+                <ScalarProperty Name="cli_sexo" ColumnName="cli_sexo" />
+                <ScalarProperty Name="cli_email" ColumnName="cli_email" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbClienteEndereco">
+            <EntityTypeMapping TypeName="BSFoodDAL.tbClienteEndereco">
+              <MappingFragment StoreEntitySet="tbClienteEndereco">
+                <ScalarProperty Name="cen_codigo" ColumnName="cen_codigo" />
+                <ScalarProperty Name="cen_logradouro" ColumnName="cen_logradouro" />
+                <ScalarProperty Name="cen_numero" ColumnName="cen_numero" />
+                <ScalarProperty Name="bai_codigo" ColumnName="bai_codigo" />
+                <ScalarProperty Name="cen_cep" ColumnName="cen_cep" />
+                <ScalarProperty Name="cid_codigo" ColumnName="cid_codigo" />
+                <ScalarProperty Name="est_codigo" ColumnName="est_codigo" />
+                <ScalarProperty Name="cli_codigo" ColumnName="cli_codigo" />
+                <ScalarProperty Name="cen_complemento" ColumnName="cen_complemento" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbClienteTelefone">
+            <EntityTypeMapping TypeName="BSFoodDAL.tbClienteTelefone">
+              <MappingFragment StoreEntitySet="tbClienteTelefone">
+                <ScalarProperty Name="ctl_codigo" ColumnName="ctl_codigo" />
+                <ScalarProperty Name="ctl_numero" ColumnName="ctl_numero" />
+                <ScalarProperty Name="cli_codigo" ColumnName="cli_codigo" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbConfiguracao">
+            <EntityTypeMapping TypeName="BSFoodDAL.tbConfiguracao">
+              <MappingFragment StoreEntitySet="tbConfiguracao">
+                <ScalarProperty Name="cfg_codigo" ColumnName="cfg_codigo" />
+                <ScalarProperty Name="cfg_versaoBanco" ColumnName="cfg_versaoBanco" />
+                <ScalarProperty Name="cfg_servidorUsuarioWindows" ColumnName="cfg_servidorUsuarioWindows" />
+                <ScalarProperty Name="cfg_servidorSenhaWindows" ColumnName="cfg_servidorSenhaWindows" />
+                <ScalarProperty Name="cfg_servidorAtualizacao" ColumnName="cfg_servidorAtualizacao" />
+                <ScalarProperty Name="cfg_ultimoLogin" ColumnName="cfg_ultimoLogin" />
+                <ScalarProperty Name="cfg_cnpjSoftwareHouse" ColumnName="cfg_cnpjSoftwareHouse" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbEmpresa">
+            <EntityTypeMapping TypeName="BSFoodDAL.tbEmpresa">
+              <MappingFragment StoreEntitySet="tbEmpresa">
+                <ScalarProperty Name="emp_codigo" ColumnName="emp_codigo" />
+                <ScalarProperty Name="emp_nome" ColumnName="emp_nome" />
+                <ScalarProperty Name="emp_nomeFantasia" ColumnName="emp_nomeFantasia" />
+                <ScalarProperty Name="est_codigo" ColumnName="est_codigo" />
+                <ScalarProperty Name="cid_codigo" ColumnName="cid_codigo" />
+                <ScalarProperty Name="est_estadoPadrao" ColumnName="est_estadoPadrao" />
+                <ScalarProperty Name="cid_cidadePadrao" ColumnName="cid_cidadePadrao" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbEstado">
+            <EntityTypeMapping TypeName="BSFoodDAL.tbEstado">
+              <MappingFragment StoreEntitySet="tbEstado">
+                <ScalarProperty Name="est_codigo" ColumnName="est_codigo" />
+                <ScalarProperty Name="est_sigla" ColumnName="est_sigla" />
+                <ScalarProperty Name="est_nome" ColumnName="est_nome" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbFuncionario">
+            <EntityTypeMapping TypeName="BSFoodDAL.tbFuncionario">
+              <MappingFragment StoreEntitySet="tbFuncionario">
+                <ScalarProperty Name="fun_codigo" ColumnName="fun_codigo" />
+                <ScalarProperty Name="fun_nome" ColumnName="fun_nome" />
+                <ScalarProperty Name="fun_login" ColumnName="fun_login" />
+                <ScalarProperty Name="fun_senha" ColumnName="fun_senha" />
+                <ScalarProperty Name="pac_codigo" ColumnName="pac_codigo" />
+                <ScalarProperty Name="cid_codigo" ColumnName="cid_codigo" />
+                <ScalarProperty Name="est_codigo" ColumnName="est_codigo" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbMenu">
+            <EntityTypeMapping TypeName="BSFoodDAL.tbMenu">
+              <MappingFragment StoreEntitySet="tbMenu">
+                <ScalarProperty Name="men_codigo" ColumnName="men_codigo" />
+                <ScalarProperty Name="men_codigoPai" ColumnName="men_codigoPai" />
+                <ScalarProperty Name="men_nivel" ColumnName="men_nivel" />
+                <ScalarProperty Name="men_nomeControle" ColumnName="men_nomeControle" />
+                <ScalarProperty Name="men_cabecalho" ColumnName="men_cabecalho" />
+                <ScalarProperty Name="men_ordem" ColumnName="men_ordem" />
+                <ScalarProperty Name="men_imagem" ColumnName="men_imagem" />
+                <ScalarProperty Name="men_status" ColumnName="men_status" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbPerfilAcesso">
+            <EntityTypeMapping TypeName="BSFoodDAL.tbPerfilAcesso">
+              <MappingFragment StoreEntitySet="tbPerfilAcesso">
+                <ScalarProperty Name="pac_codigo" ColumnName="pac_codigo" />
+                <ScalarProperty Name="pac_descricao" ColumnName="pac_descricao" />
+                <ScalarProperty Name="pac_permiteDesconto" ColumnName="pac_permiteDesconto" />
+                <ScalarProperty Name="pac_permiteCancelaItem" ColumnName="pac_permiteCancelaItem" />
+                <ScalarProperty Name="pac_permiteCancelaCupom" ColumnName="pac_permiteCancelaCupom" />
+                <ScalarProperty Name="pac_permiteVendaClienteBloqueado" ColumnName="pac_permiteVendaClienteBloqueado" />
+                <ScalarProperty Name="pac_permiteVendaClienteNegativo" ColumnName="pac_permiteVendaClienteNegativo" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tbPerfilAcessoMenu">
+            <EntityTypeMapping TypeName="BSFoodDAL.tbPerfilAcessoMenu">
+              <MappingFragment StoreEntitySet="tbPerfilAcessoMenu">
+                <ScalarProperty Name="pac_codigo" ColumnName="pac_codigo" />
+                <ScalarProperty Name="men_codigo" ColumnName="men_codigo" />
+                <ScalarProperty Name="pam_inclusao" ColumnName="pam_inclusao" />
+                <ScalarProperty Name="pam_alteracao" ColumnName="pam_alteracao" />
+                <ScalarProperty Name="pam_exclusao" ColumnName="pam_exclusao" />
+                <ScalarProperty Name="pam_visualizacao" ColumnName="pam_visualizacao" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="false" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="true" />
+        <DesignerProperty Name="UseLegacyProvider" Value="false" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams></Diagrams>
+  </Designer>
+</edmx:Edmx>

@@ -1,0 +1,17 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.Models
+{
+    public class Configuracao : EntityBase
+    {
+        public int Codigo { get; set; }
+        public DateTime? UltimoLogin { get; set; }
+        public string SenhaMaster { get; set; }
+        public string CnpjSoftwareHouse { get; set; }
+    }
+}

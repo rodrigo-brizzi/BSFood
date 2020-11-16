@@ -1,0 +1,33 @@
+﻿using BSFoodServer.DTO;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.ServiceModel;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.BLL.Interfaces
+{
+    [ServiceContract]
+    public interface IConfiguracao
+    {
+        #region Atualização
+
+        [OperationContract]
+        Retorno RetornaVersaoServer();
+
+        #endregion Atualização
+    }
+
+    [ServiceContract(Name = "IConfiguracao")]
+    public interface IConfiguracaoAsync
+    {
+        #region Atualização
+
+        [OperationContract(AsyncPattern = true)]
+        IAsyncResult BeginRetornaVersaoServer(AsyncCallback callback, object state);
+        Retorno EndRetornaVersaoServer(IAsyncResult result);
+
+        #endregion Atualização
+    }
+}

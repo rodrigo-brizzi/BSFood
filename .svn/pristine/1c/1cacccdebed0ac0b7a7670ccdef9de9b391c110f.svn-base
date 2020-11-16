@@ -1,0 +1,23 @@
+﻿using BSFoodServer.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.DTO
+{
+    [DataContract]
+    public class ConfigStorage
+    {
+        [DataMember]
+        public Funcionario objFuncionario { get; set; }
+
+        [DataMember]
+        public List<PerfilAcessoMenu> arrPerfilAcessoMenu { get; set; }
+
+        [DataMember]
+        public List<Menu> arrMenu { get; set; }
+    }
+}

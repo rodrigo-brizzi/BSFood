@@ -1,0 +1,166 @@
+﻿using BSFood.Apoio;
+using BSFood.BusinessLogic;
+using BSFood.DataTransfer;
+using BSFood.Models;
+using BSFood.View;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Input;
+
+namespace BSFood.ViewModel
+{
+    public class CaixaMovimentoViewModel : ViewModelBase
+    {
+        public ICommand FormaPagamentoCommand { get; set; }
+        public ICommand RemoveCaixaMovimentoCommand { get; set; }
+        public CaixaMovimentoViewModel(tbCaixaMovimento _objCaixaMovimento)
+        {
+            FormaPagamentoCommand = new DelegateCommand(FormaPagamento, CanFormaPagamento);
+            RemoveCaixaMovimentoCommand = new DelegateCommand(RemoveCaixaMovimento, CanRemoveCaixaMovimento);
+            this.objCaixaMovimento = _objCaixaMovimento;
+        }
+
+        #region Propriedades
+
+        public tbCaixaMovimento objCaixaMovimento { get; set; }
+
+        [Required(ErrorMessage = "Forma de pagamento obrigatória")]
+        [Range(1, int.MaxValue, ErrorMessage = "Forma de pagamento obrigatória")]
+        public int? fpg_codigo
+        {
+            get
+            {
+                if (this.objCaixaMovimento == null || this.objCaixaMovimento.fpg_codigo == 0)
+                    return null;
+                else
+                    return this.objCaixaMovimento.fpg_codigo;
+            }
+            set
+            {
+                if (this.objCaixaMovimento == null || this.objCaixaMovimento.fpg_codigo != value)
+                {
+                    Retorno objRetorno;
+                    using (var objBLL = new FormaPagamento())
+                    {
+                        objRetorno = objBLL.RetornaFormaPagamento(value == null ? 0 : (int)value, null);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objCaixaMovimento.fpg_codigo = ((tbFormaPagamento)objRetorno.objRetorno).fpg_codigo;
+                        this.objCaixaMovimento.tbFormaPagamento.fpg_descricao = ((tbFormaPagamento)objRetorno.objRetorno).fpg_descricao;
+                    }
+                    else
+                    {
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                        this.objCaixaMovimento.fpg_codigo = 0;
+                        this.objCaixaMovimento.tbFormaPagamento.fpg_descricao = string.Empty;
+                    }
+                    RaisePropertyChanged("fpg_codigo");
+                    RaisePropertyChanged("fpg_descricao");
+                }
+            }
+        }
+
+        public string fpg_descricao
+        {
+            get { return this.objCaixaMovimento == null ? string.Empty : this.objCaixaMovimento.tbFormaPagamento.fpg_descricao; }
+            set
+            {
+                if (this.objCaixaMovimento.tbFormaPagamento.fpg_descricao != value)
+                {
+                    this.objCaixaMovimento.tbFormaPagamento.fpg_descricao = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+        private bool CanFormaPagamento(object objParam)
+        {
+            return true;
+        }
+        private void FormaPagamento(object objParam)
+        {
+            //if (objParam != null)
+            //{
+            //    if (objParam.ToString() == "Novo")
+            //    {
+            //        winCadastro objTelaCadastro = new winCadastro();
+            //        FormaPagamentoViewModel objFormaPagamentoViewModel = new FormaPagamentoViewModel();
+            //        if (this.objCaixaMovimento.fpg_codigo > 0)
+            //            objFormaPagamentoViewModel.fpg_codigo = this.objCaixaMovimento.fpg_codigo;
+            //        objFormaPagamentoViewModel.OnDispose += (sen1, eve1) => { objTelaCadastro.Close(); };
+            //        objTelaCadastro.Title = "Cadastro - " + objFormaPagamentoViewModel.strNomeTela;
+            //        objTelaCadastro.DataContext = objFormaPagamentoViewModel;
+            //        objTelaCadastro.Owner = (Window)Application.Current.MainWindow;
+            //        objTelaCadastro.Closed += (sen, eve) =>
+            //        {
+            //            if (objFormaPagamentoViewModel.fpg_codigo != null)
+            //            {
+            //                this.objCaixaMovimento.fpg_codigo = (int)objFormaPagamentoViewModel.fpg_codigo;
+            //                RaisePropertyChanged("fpg_codigo");
+            //                this.objCaixaMovimento.tbFormaPagamento.fpg_descricao = objFormaPagamentoViewModel.fpg_descricao;
+            //                RaisePropertyChanged("fpg_descricao");
+            //            }
+            //            objFormaPagamentoViewModel = null;
+            //            objTelaCadastro = null;
+            //        };
+            //        objTelaCadastro.ShowDialog();
+            //    }
+            //    else if (objParam.ToString() == "Pesquisar")
+            //    {
+            //        FormaPagamentoViewModel objFormaPagamentoViewModel = new FormaPagamentoViewModel();
+            //        objFormaPagamentoViewModel.OnPesquisa += (sen, eve) =>
+            //        {
+            //            if (objFormaPagamentoViewModel.fpg_codigo != null)
+            //            {
+            //                this.objCaixaMovimento.fpg_codigo = (int)objFormaPagamentoViewModel.fpg_codigo;
+            //                RaisePropertyChanged("fpg_codigo");
+            //                this.objCaixaMovimento.tbFormaPagamento.fpg_descricao = objFormaPagamentoViewModel.fpg_descricao;
+            //                RaisePropertyChanged("fpg_descricao");
+            //            }
+            //            objFormaPagamentoViewModel.Dispose();
+            //        };
+            //        objFormaPagamentoViewModel.Pesquisar("AbrirTela");
+            //    }
+            //    else
+            //    {
+            //        int intCodigo;
+            //        if (int.TryParse(objParam.ToString(), out intCodigo))
+            //            this.fpg_codigo = intCodigo;
+            //        else
+            //            FormaPagamento("Pesquisar");
+            //    }
+            //}
+        }
+
+        private bool CanRemoveCaixaMovimento(object objParam)
+        {
+            return true;
+        }
+        private void RemoveCaixaMovimento(object objParam)
+        {
+            this.Dispose();
+        }
+
+        #endregion Comandos
+
+
+
+        #region Métodos
+
+
+
+        #endregion Métodos
+    }
+}

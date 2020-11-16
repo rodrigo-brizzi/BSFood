@@ -1,0 +1,72 @@
+﻿using BSFoodServer.Apoio;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Configuration;
+using System.Data;
+using System.Diagnostics;
+using System.Linq;
+using System.Reflection;
+using System.Security.Principal;
+using System.Threading.Tasks;
+using System.Windows;
+
+namespace BSFoodServer
+{
+    /// <summary>
+    /// Interaction logic for App.xaml
+    /// </summary>
+    public partial class App : Application
+    {
+        public static ObservableCollection<LogServices> arrLog { get; set; }
+        
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            if (!IsRunAsAdministrator())
+            {
+                var processInfo = new ProcessStartInfo(Assembly.GetExecutingAssembly().CodeBase);
+
+                // The following properties run the new process as administrator
+                processInfo.UseShellExecute = true;
+                processInfo.Verb = "runas";
+
+                // Start the new process
+                try
+                {
+                    Process.Start(processInfo);
+                }
+                catch (Exception)
+                {
+                    // The user did not allow the application to run as administrator
+                    MessageBox.Show("Desculpe, este aplicativo não pode ser executado como administrador.", "Atenção",MessageBoxButton.OK,MessageBoxImage.Warning);
+                }
+
+                // Shut down the current process
+                Application.Current.Shutdown();
+            }
+            else
+            {
+                string procName = Process.GetCurrentProcess().ProcessName;
+                Process[] processes = Process.GetProcessesByName(procName);
+                if (processes.Length > 1)
+                {
+                    MessageBox.Show(procName + " já está em execução!", "Aviso", MessageBoxButton.OK, MessageBoxImage.Information);
+                    Util.FecharSistema();
+                }
+                else
+                {
+                    App.arrLog = new ObservableCollection<LogServices>();
+                    this.StartupUri = new System.Uri("View/winPrincipal.xaml", System.UriKind.Relative);
+                } 
+            }
+        }
+
+        private bool IsRunAsAdministrator()
+        {
+            var wi = WindowsIdentity.GetCurrent();
+            var wp = new WindowsPrincipal(wi);
+
+            return wp.IsInRole(WindowsBuiltInRole.Administrator);
+        }
+    }
+}

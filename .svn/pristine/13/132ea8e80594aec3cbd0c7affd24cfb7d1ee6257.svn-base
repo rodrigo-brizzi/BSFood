@@ -1,0 +1,24 @@
+﻿using BSFood.Apoio;
+using BSFood.DataTransfer;
+using BSFood.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFood.BusinessLogic.Interfaces
+{
+    public interface IAuditoria
+    {
+
+        #region Auditoria
+
+        Retorno RetornaListaAuditoria(int intCodRegistro, object objTabela);
+
+        void SalvarAuditoria(int intCodRegistro, enOperacao enAcao, object objTabela);
+
+        #endregion Auditoria
+
+    }
+}

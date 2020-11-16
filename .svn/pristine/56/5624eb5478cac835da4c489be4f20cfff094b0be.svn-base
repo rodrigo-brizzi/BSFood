@@ -1,0 +1,61 @@
+﻿using BSFood.Apoio;
+using BSFood.DataTransfer;
+using BSFood.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFood.BusinessLogic.Interfaces
+{
+    public interface IPessoas
+    {
+
+        #region Cidades
+
+        Retorno RetornaCidade(int intCodigo, enNavegacao? enDirecao);
+
+        Retorno RetornaListaCidade(string strParametro);
+
+        Retorno RetornaListaEstado();
+
+        Retorno SalvarCidade(tbCidade objCidade);
+
+        Retorno ExcluirCidade(int intCodigo);
+
+        #endregion Cidades
+
+
+
+        #region Funcionarios
+
+        Retorno RetornaFuncionario(int intCodigo, enNavegacao? enDirecao);
+
+        Retorno RetornaListaFuncionario(string strParametro);
+
+        Retorno SalvarFuncionario(tbFuncionario objFuncionario);
+
+        Retorno ExcluirFuncionario(int intCodigo);
+
+        Retorno AutenticaFuncionario(string strLogin, string strSenha);
+
+        #endregion Funcionarios
+
+
+
+        #region Perfil Acesso
+
+        Retorno RetornaPerfilAcesso(int intCodigo, enNavegacao? enDirecao);
+
+        Retorno RetornaListaPerfilAcesso(string strParametro);
+
+        Retorno RetornaListaMenu();
+
+        Retorno SalvarPerfilAcesso(tbPerfilAcesso objPerfilAcesso);
+
+        Retorno ExcluirPerfilAcesso(int intCodigo);
+
+        #endregion Perfil Acesso
+    }
+}

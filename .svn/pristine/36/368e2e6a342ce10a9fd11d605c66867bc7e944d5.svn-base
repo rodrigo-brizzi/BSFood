@@ -1,0 +1,268 @@
+﻿using BSFoodServer.BLL.Interfaces;
+using BSFoodServer.Models;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Reflection;
+using System.Runtime.InteropServices.Automation;
+using System.ServiceModel;
+using System.Threading;
+using System.Windows;
+using System.Windows.Browser;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+using System.Windows.Threading;
+
+namespace BSFood
+{
+    public partial class MainPage : UserControl
+    {
+        
+        
+        IPessoasAsync service;
+        
+        public MainPage()
+        {
+            InitializeComponent();
+        }
+
+        private void UserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            var factory = new ChannelFactory<IPessoasAsync>(App.objHttpBinding, new EndpointAddress("http://localhost:9090/svcPessoas.svc"));
+            service = factory.CreateChannel();
+            service.BeginRetornaListaEstado((sen) =>
+            {                
+                Retorno objRetorno = service.EndRetornaListaEstado(sen);
+                Dispatcher.BeginInvoke(delegate
+                {
+                    cboEstado.ItemsSource = (List<Estado>)objRetorno.objRetorno;
+                });
+            }, null);
+
+            
+            
+            //string curDir = Directory.GetCurrentDirectory();
+            //try
+            //{
+            //    string[] strNomeArquivo = new string[2];
+            //    strNomeArquivo[0] = "AutomacaoUI.exe";
+            //    strNomeArquivo[1] = "PostoBLL.dll";
+
+            //    for (int i = 0; i < 2; i++)
+            //    {
+            //        var strCaminhoDestino = System.IO.Path.Combine(@"c:\temp", strNomeArquivo[i]);
+            //        Uri strCaminhoLocal = new Uri("SVC/" + strNomeArquivo[i], UriKind.Relative);
+            //        var rs = Application.GetResourceStream(strCaminhoLocal);
+            //        byte[] bytes = new byte[(int)rs.Stream.Length];
+            //        rs.Stream.Read(bytes, 0, bytes.Length);
+
+            //        File.WriteAllBytes(strCaminhoDestino, bytes);
+
+                    //using (StreamReader sr = new StreamReader(rs.Stream))
+                    //{
+                    //    var tempDirectory = @"c:\Windows";
+                    //    var fullPath = System.IO.Path.Combine(tempDirectory, strNomeArquivo[i]);
+                    //    using (FileStream fs = File.Create(fullPath))
+                    //    using (StreamWriter swr = new StreamWriter(fs))
+                    //    {
+                    //        swr.WriteLine(sr.ReadToEnd());
+                    //    }
+                    //}
+                //}
+
+                //if (AutomationFactory.IsAvailable)
+                //{
+                //    var cmd = AutomationFactory.CreateObject("WScript.Shell");
+                //    cmd.Run("AutomacaoUI.exe", 1, true);
+                //}
+                
+                //Uri path = new Uri("SVC/AutomacaoUI.exe", UriKind.Relative);
+                //var rs = Application.GetResourceStream(path);
+                //using (StreamReader sr = new StreamReader(rs.Stream))
+                //{
+                //    var filename = "AutomacaoUI.exe";
+                //    var tempDirectory = @"c:\Windows";
+                //    var fullPath = System.IO.Path.Combine(tempDirectory, filename);                    
+                //    using (FileStream fs = File.Create(fullPath))
+                //    using (StreamWriter swr = new StreamWriter(fs))
+                //    {
+                //        swr.WriteLine(sr.ReadToEnd());
+                //    }
+                //}
+            //}
+            //catch(Exception ex)
+            //{
+            //    MessageBox.Show(ex.ToString());
+            //}            
+            
+            //App.objSvcPessoa.RetornaListaMenuCompleted += (sen, eve) =>
+            //{
+            //    if (!eve.Result.blnTemErro)
+            //    {
+            //        lbMenu.ItemsSource = (List<tbMenu>)eve.Result.objRetorno;
+            //        resetEvent.Set();
+            //    }
+            //};
+            //App.objSvcPessoa.RetornaListaMenuAsync();
+            //resetEvent.WaitOne();
+            //List<tbMenu> arrRetorno = new List<tbMenu>();
+            //ThreadPool.QueueUserWorkItem(delegate
+            //{
+               
+            //});
+            //resetEvent.WaitOne();
+            //BasicHttpBinding objHttpBinding;
+            //objHttpBinding = new BasicHttpBinding(BasicHttpSecurityMode.None);
+            //objHttpBinding.MaxBufferSize = 2147483647;
+            //objHttpBinding.MaxReceivedMessageSize = 2147483647;
+            //objHttpBinding.CloseTimeout = new TimeSpan(0, 10, 0);
+            //objHttpBinding.OpenTimeout = new TimeSpan(0, 10, 0);
+            //objHttpBinding.ReceiveTimeout = new TimeSpan(0, 10, 0);
+            //objHttpBinding.SendTimeout = new TimeSpan(0, 10, 0);
+
+            //EndpointAddress objEndereco = new EndpointAddress("http://localhost/BSFoodWEB/svc/svcPessoas.svc");
+
+            ////var factory = new ChannelFactory<IPessoas>(objHttpBinding, objEndereco);
+            //var factory = new ChannelFactory<IPessoas>("*");
+            //IPessoas service = factory.CreateChannel();
+            //var result = service.BeginRetornaListaMenu(null, null);
+
+            //try
+            //{
+            //    var retorno = service.EndRetornaListaMenu(result);
+                
+            //    //arrRetorno = (List<tbMenu>)service.EndRetornaListaMenu(result).objRetorno;
+            //    //resetEvent.Set();
+            //}
+            //catch (Exception ex)
+            //{
+            //    //MessageBox.Show(string.Format("Unable to communicate with server. {0} {1}", ex.Message, ex.StackTrace));
+            //}
+            ////resetEvent.WaitOne();
+            //if (Dispatcher.CheckAccess())
+            //{
+            //    lbMenu.ItemsSource = arrRetorno;
+            //}
+            //else
+            //{
+            //    Dispatcher.BeginInvoke(delegate
+            //    {
+            //        lbMenu.ItemsSource = arrRetorno;
+            //    });
+            //}        
+
+            //ThreadPool.QueueUserWorkItem(delegate
+            //{
+            //    var factory = new ChannelFactory<IPessoasAsync>(new BasicHttpBinding(), new EndpointAddress("http://localhost/BSFoodWEB/svc/svcPessoas.svc"));
+            //    service = factory.CreateChannel();
+            //    service.BeginRetornaListaMenu((sen) =>
+            //    {
+            //        BSRetorno objRetorno = service.EndRetornaListaMenu(sen);
+            //        resetEvent.Set();
+            //        Dispatcher.BeginInvoke(delegate
+            //        {
+            //            lbMenu.ItemsSource = (List<tbMenu>)objRetorno.objRetorno;
+            //        });
+            //    }, null);
+            //    resetEvent.WaitOne();
+            //});
+
+            //resetEvent.WaitOne();
+
+        }
+
+        //void OnRetornaListaMenuCompleted(IAsyncResult ar)
+        //{
+        //    BSRetorno objRetorno = service.EndRetornaListaMenu(ar);
+        //    resetEvent.Set();
+        //    Dispatcher.BeginInvoke(delegate
+        //    {
+        //        lbMenu.ItemsSource = (List<tbMenu>)objRetorno.objRetorno;
+        //    });
+        //}
+
+        //private void Button_Click(object sender, RoutedEventArgs e)
+        //{
+        //    txtHoraFim.Text = "Button_Click=" + DateTime.Now.Millisecond;
+            //var factory = new ChannelFactory<IPessoasAsync>(new BasicHttpBinding(), new EndpointAddress("http://localhost/BSFoodWEB/svc/svcPessoas.svc"));
+            //service = factory.CreateChannel();
+            //service.BeginRetornaListaMenu((sen) =>
+            //{
+            //    BSRetorno objRetorno = service.EndRetornaListaMenu(sen);
+            //    Dispatcher.BeginInvoke(delegate
+            //    {
+            //        List<tbMenu> arrRetorno = (List<tbMenu>)objRetorno.objRetorno;
+            //        arrRetorno.First().men_nomeControle = "2-" + DateTime.Now.Second + ":" + DateTime.Now.Millisecond;
+            //        lbMenu.ItemsSource = arrRetorno;
+            //    });
+            //}, null);
+
+            
+            
+
+            //List<tbMenu> arrRetorno = new List<tbMenu>();
+            ////var factory = new ChannelFactory<IPessoas>(objHttpBinding, objEndereco);
+            //var factory = new ChannelFactory<IPessoas>("*");
+            //IPessoas service = factory.CreateChannel();
+            //var result = service.BeginRetornaListaMenu(null, null);
+
+            //try
+            //{
+            //    var retorno = service.EndRetornaListaMenu(result);
+
+            //    arrRetorno = (List<tbMenu>)retorno.objRetorno;
+            //    //resetEvent.Set();
+            //}
+            //catch (Exception ex)
+            //{
+            //    //MessageBox.Show(string.Format("Unable to communicate with server. {0} {1}", ex.Message, ex.StackTrace));
+            //}
+            ////resetEvent.WaitOne();
+            //if (Dispatcher.CheckAccess())
+            //{
+            //    lbMenu.ItemsSource = arrRetorno;
+            //}
+            //else
+            //{
+            //    Dispatcher.BeginInvoke(delegate
+            //    {
+            //        lbMenu.ItemsSource = arrRetorno;
+            //    });
+            //}        
+        //}
+
+        //private void TextBox_LostFocus(object sender, RoutedEventArgs e)
+        //{
+        //    txtHoraInicio.Text = "LostFocus=" + DateTime.Now.Millisecond;
+
+        //    if (Application.Current.IsRunningOutOfBrowser)
+        //    {
+        //        var factory = new ChannelFactory<IPessoasAsync>(new BasicHttpBinding(), new EndpointAddress("http://localhost/BSFoodWEB/svc/svcPessoas.svc"));
+        //        service = factory.CreateChannel();
+        //        service.BeginRetornaListaMenu((sen) =>
+        //        {
+        //            BSRetorno objRetorno = service.EndRetornaListaMenu(sen);
+        //            resetEvent.Set();
+        //            Dispatcher.BeginInvoke(delegate
+        //            {
+        //                txtHoraMeio.Text = DateTime.Now.Millisecond.ToString();
+        //                lbMenu.ItemsSource = (List<tbMenu>)objRetorno.objRetorno;
+        //            });
+        //        }, null);
+        //        resetEvent.WaitOne();
+        //    }
+        //    else
+        //    {
+        //        txtHoraMeio.Text = DateTime.Now.Millisecond + "=" + (string)System.Windows.Browser.HtmlPage.Window.Invoke("getRemote", null);
+        //    }
+            
+
+        //}
+    }
+}

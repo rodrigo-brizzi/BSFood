@@ -1,0 +1,15 @@
+<OutOfBrowserSettings ShortName="BSFood" EnableGPUAcceleration="True" ShowInstallMenuItem="True">
+  <OutOfBrowserSettings.Blurb>BSFood - Brizzi Soft</OutOfBrowserSettings.Blurb>
+  <OutOfBrowserSettings.WindowSettings>
+    <WindowSettings Title="BSFood" />
+  </OutOfBrowserSettings.WindowSettings>
+  <OutOfBrowserSettings.SecuritySettings>
+    <SecuritySettings ElevatedPermissions="Required" />
+  </OutOfBrowserSettings.SecuritySettings>
+  <OutOfBrowserSettings.Icons>
+    <Icon Size="16,16">Imagens/icone_oob16.png</Icon>
+    <Icon Size="32,32">Imagens/icone_oob32.png</Icon>
+    <Icon Size="48,48">Imagens/icone_oob48.png</Icon>
+    <Icon Size="128,128">Imagens/icone_oob128.png</Icon>
+  </OutOfBrowserSettings.Icons>
+</OutOfBrowserSettings>

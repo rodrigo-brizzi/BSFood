@@ -1,0 +1,306 @@
+﻿using BSFood.DataAccess;
+using BSFood.DataTransfer;
+using BSFood.Apoio;
+using BSFood.BusinessLogic.Interfaces;
+using BSFood.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Data.Entity;
+using System.ServiceModel;
+using System.Collections.ObjectModel;
+
+
+namespace BSFood.BusinessLogic
+{
+    public class Vendas : IVendas, IDisposable
+    {
+        private bool blnFecharCon;
+        private EFContexto objCtx;
+        private GerenciaTransacao objTransacao;
+
+
+        public Vendas()
+            : base()
+        {
+            this.objCtx = new EFContexto();
+            this.objTransacao = new GerenciaTransacao(ref this.objCtx);
+            blnFecharCon = true;
+        }
+
+        public Vendas(ref EFContexto _objCtx, ref GerenciaTransacao _objTransacao)
+            : base()
+        {
+            this.objCtx = _objCtx;
+            this.objTransacao = _objTransacao;
+            blnFecharCon = false;
+        }
+
+
+
+        #region Entrega Pedido
+
+        public Retorno RetornaEntregaPedido(int intCodigo, enNavegacao? enDirecao)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                tbPedido objPedido = null;
+                if (enDirecao == null)
+                    objPedido = this.objCtx.tbPedido.Include(ppr => ppr.tbPedidoProduto.Select(pro => pro.tbProduto))
+                                                      .Include(cli => cli.tbCliente)
+                                                      .Include(cen => cen.tbCliente.tbClienteEndereco.Select(bai => bai.tbBairro))
+                                                      .Include(fun => fun.tbFuncionarioEntregador)
+                                                      .Include(fpg => fpg.tbFormaPagamento).AsNoTracking()
+                                                      .Where(ped => ped.ped_codigo == intCodigo && ped.ped_origem == "E")
+                                                      .FirstOrDefault();
+                if (enDirecao == enNavegacao.Proximo)
+                    objPedido = this.objCtx.tbPedido.Include(ppr => ppr.tbPedidoProduto.Select(pro => pro.tbProduto))
+                                                      .Include(cli => cli.tbCliente)
+                                                      .Include(cen => cen.tbCliente.tbClienteEndereco.Select(bai => bai.tbBairro))
+                                                      .Include(fun => fun.tbFuncionarioEntregador)
+                                                      .Include(fpg => fpg.tbFormaPagamento).AsNoTracking()
+                                                      .Where(ped => ped.ped_codigo > intCodigo && ped.ped_origem == "E")
+                                                      .OrderBy(ped => ped.ped_codigo).FirstOrDefault();
+                if (enDirecao == enNavegacao.Anterior)
+                    objPedido = this.objCtx.tbPedido.Include(ppr => ppr.tbPedidoProduto.Select(pro => pro.tbProduto))
+                                                      .Include(cli => cli.tbCliente)
+                                                      .Include(cen => cen.tbCliente.tbClienteEndereco.Select(bai => bai.tbBairro))
+                                                      .Include(fun => fun.tbFuncionarioEntregador)
+                                                      .Include(fpg => fpg.tbFormaPagamento).AsNoTracking()
+                                                      .Where(ped => ped.ped_codigo < intCodigo && ped.ped_origem == "E")
+                                                      .OrderByDescending(ped => ped.ped_codigo).FirstOrDefault();
+                if (objPedido != null)
+                {
+                    objRetorno.intCodigoErro = 0;
+                    objRetorno.objRetorno = objPedido;
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = "Registro não encontrado";
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno RetornaListaEntregaPedido(string strParametro, bool blnProducao = true, bool blnEntrega = true, bool blnFinalizado = true, bool blnExcluido = true, int? intFunCodigo = null, int? intCaiCodigo = null)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                List<tbPedido> arrPedido;
+                if (intCaiCodigo != null)
+                {
+                    var Query = this.objCtx.tbPedido.Include(fun => fun.tbFuncionarioEntregador)
+                                                    .Include(ppr => ppr.tbPedidoProduto).AsNoTracking()
+                                                    .Where(ped => ped.ped_origem == "E" && ped.cai_codigo == intCaiCodigo &&
+                                                    (ped.ped_codigo.ToString().Contains(strParametro) || ped.ped_nomeCliente.Contains(strParametro)))
+                                                    .AsQueryable();
+                    if (!blnProducao)
+                        Query = Query.Where(ped => ped.ped_status != "P").AsQueryable();
+                    if (!blnEntrega)
+                        Query = Query.Where(ped => ped.ped_status != "E").AsQueryable();
+                    if (!blnFinalizado)
+                        Query = Query.Where(ped => ped.ped_status != "F").AsQueryable();
+                    if (!blnExcluido)
+                        Query = Query.Where(ped => ped.ped_status != "X").AsQueryable();
+                    if (intFunCodigo != null)
+                        Query = Query.Where(ped => ped.fun_funcionarioEntregador == intFunCodigo).AsQueryable();
+
+                    arrPedido = Query.OrderBy(ped => ped.ped_codigo).ToList();
+                }
+                else
+                {
+                    arrPedido = this.objCtx.tbPedido.AsNoTracking()
+                                                    .Where(ped => ped.ped_origem == "E" &&
+                                                    (ped.ped_codigo.ToString().Contains(strParametro) || ped.ped_nomeCliente.Contains(strParametro)))
+                                                    .OrderBy(ped => ped.ped_nomeCliente)
+                                                    .ToList();
+                }
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = arrPedido;
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno SalvarEntregaPedido(tbPedido objPedido)
+        {
+            Retorno objRetorno = new Retorno();
+            string strValidacao = this.ValidaEntregaPedido(objPedido);
+            try
+            {
+                enOperacao enTipoOperacao;
+                if (strValidacao == string.Empty)
+                {
+                    objPedido.tbFuncionarioEntregador = null;
+                    objPedido.tbCliente = null;
+                    objPedido.tbFormaPagamento = null;
+                    foreach (tbPedidoProduto objPedidoProduto in objPedido.tbPedidoProduto)
+                    {
+                        objPedidoProduto.tbProduto = null;
+                        objPedidoProduto.tbPedido = null;
+                    }
+                    if (objPedido.ped_codigo == 0)
+                    {
+                        objPedido.ped_data = DateTime.Now;
+                        objPedido.ped_origem = "E"; //"E" = Entrega, "C" = Comanda
+
+                        if (objPedido.fun_funcionarioEntregador == null)
+                            objPedido.ped_status = "P"; //"P" = Produção, "E" = Entrega, "F" = Finalizado, "X" = Excluido
+                        else
+                        {
+                            objPedido.ped_status = "E";
+                            objPedido.ped_dataEntrega = DateTime.Now;
+                        }
+                        objPedido.fun_codigo = Util.objConfigStorage.objFuncionario.fun_codigo;
+                        objPedido.cai_codigo = Util.objConfigStorage.intCaiCodigo;
+                        enTipoOperacao = enOperacao.Inclusao;
+                        this.objCtx.tbPedido.Add(objPedido);
+                    }
+                    else
+                    {
+                        enTipoOperacao = enOperacao.Alteracao;
+                        tbPedido objPedidoContexto = this.objCtx.tbPedido.Include(ppr => ppr.tbPedidoProduto)
+                                                                            .Where(ped => ped.ped_codigo == objPedido.ped_codigo).FirstOrDefault();
+                        
+                        if(objPedidoContexto.fun_funcionarioEntregador == null && objPedido.fun_funcionarioEntregador != null)
+                        {
+                            objPedido.ped_status = "E";
+                            objPedido.ped_dataEntrega = DateTime.Now;
+                        }
+                        
+                        this.objCtx.tbPedidoProduto.RemoveRange(objPedidoContexto.tbPedidoProduto);
+                        this.objCtx.Entry(objPedidoContexto).CurrentValues.SetValues(objPedido);
+
+                        foreach (tbPedidoProduto objItemProduto in objPedido.tbPedidoProduto)
+                        {
+                            objItemProduto.ped_codigo = objPedido.ped_codigo;
+                            this.objCtx.tbPedidoProduto.Add(objItemProduto);
+                        }
+                    }
+                    this.objCtx.SaveChanges();
+                    using (Auditoria objBLL = new Auditoria(ref this.objCtx, ref this.objTransacao))
+                        objBLL.SalvarAuditoria(objPedido.ped_codigo, enTipoOperacao, objPedido);
+                    objRetorno = RetornaEntregaPedido(objPedido.ped_codigo, null);
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = strValidacao;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno ExcluirEntregaPedido(int intCodigo, string strMotivoCancelamento)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                tbPedido objPedido = this.objCtx.tbPedido.Where(ped => ped.ped_codigo == intCodigo && ped.ped_origem == "E").FirstOrDefault();
+                if (objPedido != null)
+                {
+                    objPedido.ped_status = "X";
+                    objPedido.ped_motivoCancelamento = strMotivoCancelamento;
+                    this.objCtx.Entry(objPedido).State = EntityState.Modified;
+                    this.objCtx.SaveChanges();
+                    using (Auditoria objBLL = new Auditoria(ref this.objCtx, ref this.objTransacao))
+                        objBLL.SalvarAuditoria(objPedido.ped_codigo, enOperacao.Exclusao, objPedido);
+
+                    objRetorno.intCodigoErro = 0;
+                    objRetorno.objRetorno = true;
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = "Pedido não encontrado para exclusão";
+                }                
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno SalvarEntregador(tbPedido objPedido)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                objPedido.tbFuncionarioEntregador = null;
+                objPedido.tbPedidoProduto = null;
+                objPedido.ped_status = "E";
+                objPedido.ped_dataEntrega = DateTime.Now;
+                tbPedido objPedidoContexto = this.objCtx.tbPedido.Where(ped => ped.ped_codigo == objPedido.ped_codigo).FirstOrDefault();
+                this.objCtx.Entry(objPedidoContexto).CurrentValues.SetValues(objPedido);
+                this.objCtx.SaveChanges();
+                using (Auditoria objBLL = new Auditoria(ref this.objCtx, ref this.objTransacao))
+                    objBLL.SalvarAuditoria(objPedido.ped_codigo, enOperacao.Outro, objPedido);
+                objRetorno = RetornaEntregaPedido(objPedido.ped_codigo, null);
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        private string ValidaEntregaPedido(tbPedido objPedido)
+        {
+            if (objPedido.cli_codigo == 0)
+                return "O cliente do Pedido deve ser informado.";
+
+            if (objPedido.tbPedidoProduto.Count == 0)
+                return "Não foram informados nenhum produto.";
+
+            if (objPedido.fpg_codigo == 0)
+                return "A forma de pagamento deve ser informada.";
+
+            return string.Empty;
+        }
+
+        #endregion Entrega Pedido
+
+
+
+        public void Dispose()
+        {
+            if (this.blnFecharCon)
+            {
+                this.objCtx.Dispose();
+                this.objCtx = null;
+            }
+        }
+    }
+}

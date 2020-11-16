@@ -1,0 +1,29 @@
+﻿using BSFood.Models;
+using System;
+using System.Collections.Generic;
+using System.Data.Entity.ModelConfiguration;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFood.DataAccess.Config
+{
+    public class tbCaixaMovimentoConfig : EntityTypeConfiguration<tbCaixaMovimento>
+    {
+        public tbCaixaMovimentoConfig()
+        {
+            this.ToTable("tbCaixaMovimento");
+            this.HasKey(e => e.caim_codigo);
+
+            this.Property(e => e.caim_codigo).HasColumnName("caim_codigo");
+            this.Property(e => e.caim_data).HasColumnName("caim_data");
+            this.Property(e => e.caim_valor).HasColumnName("caim_valor");
+            this.HasRequired(e => e.tbFormaPagamento).WithMany(e => e.tbCaixaMovimento).HasForeignKey(e => e.fpg_codigo);
+            this.Property(e => e.fpg_codigo).HasColumnName("fpg_codigo");
+            this.HasRequired(e => e.tbCaixaOperacao).WithMany(e => e.tbCaixaMovimento).HasForeignKey(e => e.caio_codigo);
+            this.Property(e => e.caio_codigo).HasColumnName("caio_codigo");
+            this.HasRequired(e => e.tbCaixa).WithMany(e => e.tbCaixaMovimento).HasForeignKey(e => e.cai_codigo);
+            this.Property(e => e.cai_codigo).HasColumnName("cai_codigo");
+        }
+    }
+}

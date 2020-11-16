@@ -1,0 +1,72 @@
+﻿using BSFoodWEB.Apoio;
+using BSFoodWEB.DAL;
+using BSFoodWEB.DTO;
+using System;
+using System.Collections.Generic;
+using System.Data.Entity;
+using System.Linq;
+using System.Web;
+
+namespace BSFoodWEB.BLL
+{
+    public class Pessoas : ClasseBase, IPessoas, IDisposable
+    {
+        private bool blnFecharCon;
+        private Conexao objCtx;
+        private GerenciaTransacao objTransacao;
+
+
+        public Pessoas()
+            : base()
+        {
+            this.objCtx = new Conexao();
+            this.objCtx.Configuration.ProxyCreationEnabled = false;
+            this.objTransacao = new GerenciaTransacao(ref this.objCtx);
+            blnFecharCon = true;
+        }
+
+        public Pessoas(ref Conexao _objCtx, ref GerenciaTransacao _objTransacao)
+            : base()
+        {
+            this.objCtx = _objCtx;
+            this.objTransacao = _objTransacao;
+            blnFecharCon = false;
+        }
+
+        #region Cadastro de Perfil de Acesso
+
+        public BSRetorno RetornaListaMenu()
+        {
+            BSRetorno objRetorno = new BSRetorno();
+            try
+            {
+                List<tbMenu> arrMenu = null;
+                arrMenu = this.objCtx.tbMenu.Include(men => men.tbPerfilAcessoMenu).AsNoTracking()
+                                                                                   .Where(men => men.men_status == true)
+                                                                                   .OrderBy(men => men.men_ordem)
+                                                                                   .ToList();
+                objRetorno.blnTemErro = false;
+                objRetorno.objRetorno = arrMenu;
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.blnTemErro = true;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        #endregion
+
+        public void Dispose()
+        {
+            if (this.blnFecharCon)
+            {
+                this.objCtx.Dispose();
+                this.objCtx = null;
+            }
+        }
+    }
+}

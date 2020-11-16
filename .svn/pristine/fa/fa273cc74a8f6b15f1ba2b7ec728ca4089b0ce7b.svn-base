@@ -1,0 +1,253 @@
+﻿using BSFood.DataAccess;
+using BSFood.DataTransfer;
+using BSFood.Apoio;
+using BSFood.BusinessLogic.Interfaces;
+using BSFood.Models;
+using System;
+using System.Linq;
+using System.Data.Entity;
+
+namespace BSFood.BusinessLogic
+{
+    public class Funcionarios : IFuncionarios, IDisposable
+    {
+        private readonly bool _blnFecharCon;
+        private EFContexto _objCtx;
+        private GerenciaTransacao _objTransacao;
+
+        public Funcionarios()
+        {
+            _objCtx = new EFContexto();
+            _objTransacao = new GerenciaTransacao(ref _objCtx);
+            _blnFecharCon = true;
+        }
+
+        public Funcionarios(ref EFContexto objCtx, ref GerenciaTransacao objTransacao)
+        {
+            _objCtx = objCtx;
+            _objTransacao = objTransacao;
+            _blnFecharCon = false;
+        }
+
+        public Retorno RetornaFuncionario(int intCodigo, enNavegacao? enDirecao)
+        {
+            var objRetorno = new Retorno();
+            try
+            {
+                tbFuncionario objFuncionario = null;
+                if (enDirecao == null)
+                    objFuncionario = _objCtx.tbFuncionario.Include(pac => pac.tbPerfilAcesso)
+                                                .AsNoTracking()
+                                                .FirstOrDefault(fun => fun.fun_codigo == intCodigo);
+                if (enDirecao == enNavegacao.Proximo)
+                    objFuncionario = _objCtx.tbFuncionario
+                                                .Include(pac => pac.tbPerfilAcesso).AsNoTracking()
+                                                .Where(fun => fun.fun_codigo > intCodigo)
+                                                .OrderBy(fun => fun.fun_codigo).FirstOrDefault();
+                if (enDirecao == enNavegacao.Anterior)
+                    objFuncionario = _objCtx.tbFuncionario
+                                                .Include(pac => pac.tbPerfilAcesso).AsNoTracking()
+                                                .Where(fun => fun.fun_codigo < intCodigo)
+                                                .OrderByDescending(fun => fun.fun_codigo).FirstOrDefault();
+                if (objFuncionario != null)
+                {
+                    objRetorno.intCodigoErro = 0;
+                    objRetorno.objRetorno = objFuncionario;
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = "Registro não encontrado";
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno RetornaListaFuncionario(string strParametro)
+        {
+            var objRetorno = new Retorno();
+            try
+            {
+                var arrFuncionario = _objCtx.tbFuncionario.AsNoTracking()
+                                                      .Where(fun => (fun.fun_codigo.ToString().Contains(strParametro) || fun.fun_nome.Contains(strParametro)))
+                                                      .OrderBy(fun => fun.fun_nome)
+                                                      .ToList();
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = arrFuncionario;
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno SalvarFuncionario(tbFuncionario objFuncionario, int intFunCodigo)
+        {
+            var objRetorno = new Retorno();
+            var strValidacao = ValidaFuncionario(objFuncionario);
+            try
+            {
+                if (strValidacao == string.Empty)
+                {
+                    objFuncionario.tbPerfilAcesso = null;
+                    enOperacao enTipoOperacao;
+                    if (objFuncionario.fun_codigo == 0)
+                    {
+                        enTipoOperacao = enOperacao.Inclusao;
+                        _objCtx.tbFuncionario.Add(objFuncionario);
+                    }
+                    else
+                    {
+                        enTipoOperacao = enOperacao.Alteracao;
+                        var objFuncionarioContexto = _objCtx.tbFuncionario.FirstOrDefault(fun => fun.fun_codigo == objFuncionario.fun_codigo);
+                        _objCtx.Entry(objFuncionarioContexto).CurrentValues.SetValues(objFuncionario);
+                    }
+                    _objCtx.SaveChanges();
+                    using (var objBll = new Auditoria(ref _objCtx, ref _objTransacao))
+                        objBll.SalvarAuditoria(objFuncionario.fun_codigo, enTipoOperacao, objFuncionario, intFunCodigo);
+                    objRetorno = RetornaFuncionario(objFuncionario.fun_codigo, null);
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = strValidacao;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno ExcluirFuncionario(int intCodigo)
+        {
+            var objRetorno = new Retorno();
+            try
+            {
+                //Cria um contexto isolado para a trasacao de exclusao
+                using (var objContexto = new EFContexto())
+                {
+                    //Inicia uma transacao no contexto isolado
+                    using (var transacao = objContexto.Database.BeginTransaction())
+                    {
+                        try
+                        {
+                            var objFuncionario = objContexto.tbFuncionario.FirstOrDefault(fun => fun.fun_codigo == intCodigo);
+                            if (objFuncionario != null)
+                            {
+                                //Tenta excluir o perfil no contexto isolado
+                                objContexto.tbFuncionario.Remove(objFuncionario);
+                                objContexto.SaveChanges();
+                                transacao.Commit();
+
+                                objRetorno.intCodigoErro = 0;
+                                objRetorno.objRetorno = true;
+                            }
+                            else
+                            {
+                                objRetorno.intCodigoErro = 48;
+                                objRetorno.strMsgErro = "Funcionário não encontrado para exclusão";
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            //Se deu erro é porque o perfil tem  registros relacionado
+                            transacao.Rollback();
+                            objRetorno.intCodigoErro = 48;
+                            objRetorno.strMsgErro = "Funcionário não pode ser excluido pois há registros relacionados ao mesmo";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        private string ValidaFuncionario(tbFuncionario objFuncionario)
+        {
+            if (string.IsNullOrEmpty(objFuncionario.fun_nome) || string.IsNullOrWhiteSpace(objFuncionario.fun_nome))
+                return "O nome deve ser informado.";
+
+            return _objCtx.tbFuncionario.AsNoTracking().Any(fun => (fun.fun_nome.Equals(objFuncionario.fun_nome)) && fun.fun_codigo != objFuncionario.fun_codigo) ? "Já existe funcionário com esse nome." : string.Empty;
+        }
+
+        public Retorno AutenticaFuncionario(string strLogin, string strSenha)
+        {
+            var objRetorno = new Retorno();
+            try
+            {
+                var objConfigStorage = new ConfigStorage
+                {
+                    objConfiguracao = _objCtx.tbConfiguracao.AsNoTracking().FirstOrDefault()
+                };
+                objConfigStorage.objFuncionario = strSenha == objConfigStorage.objConfiguracao.cfg_senhaMaster ? _objCtx.tbFuncionario.AsNoTracking().FirstOrDefault(fun => fun.fun_login == strLogin) : _objCtx.tbFuncionario.AsNoTracking().FirstOrDefault(fun => fun.fun_login == strLogin && fun.fun_senha == strSenha);
+                if (objConfigStorage.objFuncionario != null)
+                {
+                    objConfigStorage.objPerfilAcesso = _objCtx.tbPerfilAcesso
+                        .AsNoTracking()
+                        .Include(pem => pem.tbPerfilAcessoMenu.Select(men => men.tbMenu)).FirstOrDefault(per => per.pac_codigo == objConfigStorage.objFuncionario.pac_codigo);
+
+                    objConfigStorage.objEmpresa = _objCtx.tbEmpresa.AsNoTracking().FirstOrDefault();
+
+                    using (var objBll = new Caixa())
+                    {
+                        objRetorno = objBll.RetornaCaixa(0);
+                    }
+                    if (objRetorno.intCodigoErro != 16)
+                    {
+                        if (objRetorno.objRetorno != null)
+                            objConfigStorage.intCaiCodigo = ((tbCaixa)objRetorno.objRetorno).cai_codigo;
+
+                        objConfigStorage.objConfiguracao.cfg_ultimoLogin = DateTime.Now;
+                        _objCtx.Entry(objConfigStorage.objConfiguracao).State = EntityState.Modified;
+                        _objCtx.SaveChanges();
+
+                        objRetorno.intCodigoErro = 0;
+                        objRetorno.objRetorno = objConfigStorage;
+                    }
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = "Login ou senha inválidos";
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public void Dispose()
+        {
+            if (!_blnFecharCon) return;
+            _objCtx.Dispose();
+            _objCtx = null;
+        }
+    }
+}

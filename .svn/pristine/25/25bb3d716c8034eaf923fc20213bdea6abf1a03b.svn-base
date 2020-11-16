@@ -1,0 +1,1273 @@
+﻿using BSFood.View;
+using BSFood.Apoio;
+using BSFood.Models;
+using BSFood.BusinessLogic;
+using BSFood.DataTransfer;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
+using System.Threading.Tasks;
+
+namespace BSFood.ViewModel
+{
+    public class EntregaPedidoViewModel : ViewModelBase
+    {
+        public ICommand AnteriorCommand { get; set; }
+        public ICommand ProximoCommand { get; set; }
+        public ICommand NovoCommand { get; set; }
+        public ICommand EditarCommand { get; set; }
+        public ICommand SalvarCommand { get; set; }
+        public ICommand CancelarCommand { get; set; }
+        public ICommand ExcluirCommand { get; set; }
+        public ICommand PesquisarCommand { get; set; }
+        public ICommand LogCommand { get; set; }
+        public ICommand BuscarCommand { get; set; }
+        public ICommand ClienteCommand { get; set; }
+        public ICommand FuncionarioEntregadorCommand { get; set; }
+        public ICommand FormaPagamentoCommand { get; set; }
+        public ICommand AdicionaProdutoCommand { get; set; }
+        public ICommand SelecionaEnderecoCommand { get; set; }
+        public ICommand ImprimirCupomCommand { get; set; }
+
+        private winPesquisa objTelaPesquisa;
+
+        public EntregaPedidoViewModel()
+        {
+            AnteriorCommand = new DelegateCommand(Anterior, CanAnterior);
+            ProximoCommand = new DelegateCommand(Proximo, CanProximo);
+            NovoCommand = new DelegateCommand(Novo, CanNovo);
+            EditarCommand = new DelegateCommand(Editar, CanEditar);
+            SalvarCommand = new DelegateCommand(Salvar, CanSalvar);
+            CancelarCommand = new DelegateCommand(Cancelar, CanCancelar);
+            ExcluirCommand = new DelegateCommand(Excluir, CanExcluir);
+            PesquisarCommand = new DelegateCommand(Pesquisar, CanPesquisar);
+            LogCommand = new DelegateCommand(Log, CanLog);
+            BuscarCommand = new DelegateCommand(Buscar, CanBuscar);
+            ClienteCommand = new DelegateCommand(Cliente, CanCliente);
+            FuncionarioEntregadorCommand = new DelegateCommand(FuncionarioEntregador, CanFuncionarioEntregador);
+            FormaPagamentoCommand = new DelegateCommand(FormaPagamento, CanFormaPagamento);
+            AdicionaProdutoCommand = new DelegateCommand(AdicionaProduto, CanAdicionaProduto);
+            SelecionaEnderecoCommand = new DelegateCommand(SelecionaEndereco, CanSelecionaEndereco);
+            ImprimirCupomCommand = new DelegateCommand(ImprimirCupom, CanImprimirCupom);
+        }
+
+
+        #region Propriedades
+
+        public int? ped_codigo
+        {
+            get
+            {
+                if (this.objPedido == null)
+                    return null;
+                else
+                    return this.objPedido.ped_codigo;
+            }
+            set
+            {
+                if (this.objPedido == null || this.objPedido.ped_codigo != value)
+                {
+                    Retorno objRetorno;
+                    using (Vendas objBLL = new Vendas())
+                    {
+                        objRetorno = objBLL.RetornaPedido(value == null ? 0 : (int)value, null, enOrigemPedido.Entrega);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objPedido = (tbPedido)objRetorno.objRetorno;
+                        base.enStatusTelaAtual = enStatusTela.Navegacao;
+                    }
+                    else
+                    {
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                        RaisePropertyChanged();
+                    }
+                }
+            }
+        }
+
+        [Required(ErrorMessage = "Cliente obrigatório")]
+        [Range(1, int.MaxValue, ErrorMessage = "Cliente obrigatório")]
+        public int? cli_codigo
+        {
+            get
+            {
+                if (this.objPedido == null || this.objPedido.cli_codigo == 0)
+                    return null;
+                else
+                {
+                    if (string.IsNullOrWhiteSpace(this.objPedido.ped_telefone))
+                        return this.objPedido.cli_codigo;
+                    else
+                        return Convert.ToInt32(this.objPedido.ped_telefone);
+                }
+            }
+            set
+            {
+                if (this.objPedido == null || (this.objPedido.cli_codigo != value && this.objPedido.ped_telefone != value.ToString()))
+                {
+                    Retorno objRetorno;
+                    using (Pessoas objBLL = new Pessoas())
+                    {
+                        objRetorno = objBLL.RetornaCliente(value == null ? 0 : (int)value, null);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        ComplementaDadosCliente((tbCliente)objRetorno.objRetorno, value);
+                    }
+                    else
+                    {
+                        ComplementaDadosCliente(null, null);
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                        NovoCliente(value.ToString());
+                    }
+                }
+                else
+                {
+                    this.blnProdutoFoco = true;
+                    this.blnProdutoFoco = false;
+                }
+            }
+        }
+        public string cli_nome
+        {
+            get { return this.objPedido == null ? string.Empty : this.objPedido.tbCliente.cli_nome; }
+            set
+            {
+                if (this.objPedido.tbCliente.cli_nome != value)
+                {
+                    this.objPedido.tbCliente.cli_nome = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+        
+        private List<ClienteEnderecoViewModel> _arrClienteEndereco;
+        public List<ClienteEnderecoViewModel> arrClienteEndereco 
+        {
+            get { return this._arrClienteEndereco; }
+            set 
+            {
+                this._arrClienteEndereco = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public int? fun_funcionarioEntregador
+        {
+            get
+            {
+                if (this.objPedido == null || this.objPedido.fun_funcionarioEntregador == 0)
+                    return null;
+                else
+                    return this.objPedido.fun_funcionarioEntregador;
+            }
+            set
+            {
+                if (this.objPedido == null || this.objPedido.fun_funcionarioEntregador != value)
+                {
+                    Retorno objRetorno;
+                    using (Pessoas objBLL = new Pessoas())
+                    {
+                        objRetorno = objBLL.RetornaFuncionario(value == null ? 0 : (int)value, null);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objPedido.fun_funcionarioEntregador = ((tbFuncionario)objRetorno.objRetorno).fun_codigo;
+                        this.objPedido.tbFuncionarioEntregador.fun_nome = ((tbFuncionario)objRetorno.objRetorno).fun_nome;
+                    }
+                    else
+                    {
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                        this.objPedido.fun_funcionarioEntregador = 0;
+                        this.objPedido.tbFuncionarioEntregador.fun_nome = string.Empty;
+                    }
+                    RaisePropertyChanged("fun_funcionarioEntregador");
+                    RaisePropertyChanged("fun_nomeEntregador");
+                }
+            }
+        }
+        public string fun_nomeEntregador
+        {
+            get { return this.objPedido == null ? string.Empty : (this.objPedido.tbFuncionarioEntregador == null ? string.Empty : this.objPedido.tbFuncionarioEntregador.fun_nome); }
+            set
+            {
+                if (this.objPedido.tbFuncionarioEntregador.fun_nome != value)
+                {
+                    this.objPedido.tbFuncionarioEntregador.fun_nome = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [Required(ErrorMessage = "Forma de pagamento obrigatória")]
+        [Range(1, int.MaxValue, ErrorMessage = "Forma de pagamento obrigatória")]
+        public int? fpg_codigo
+        {
+            get
+            {
+                if (this.objPedido == null || this.objPedido.fpg_codigo == 0)
+                    return null;
+                else
+                    return this.objPedido.fpg_codigo;
+            }
+            set
+            {
+                if (this.objPedido == null || this.objPedido.fpg_codigo != value)
+                {
+                    Retorno objRetorno;
+                    using (Financeiro objBLL = new Financeiro())
+                    {
+                        objRetorno = objBLL.RetornaFormaPagamento(value == null ? 0 : (int)value, null);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objPedido.fpg_codigo = ((tbFormaPagamento)objRetorno.objRetorno).fpg_codigo;
+                        this.objPedido.tbFormaPagamento.fpg_descricao = ((tbFormaPagamento)objRetorno.objRetorno).fpg_descricao;
+                        this.objPedido.ped_cobranca = ((tbFormaPagamento)objRetorno.objRetorno).fpg_cobranca;
+                    }
+                    else
+                    {
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                        this.objPedido.fpg_codigo = 0;
+                        this.objPedido.tbFormaPagamento.fpg_descricao = string.Empty;
+                        this.objPedido.ped_cobranca = string.Empty;
+                    }
+                    RaisePropertyChanged("fpg_codigo");
+                    RaisePropertyChanged("fpg_descricao");
+                }
+                else
+                {
+                    this.blnValorRecebidoFoco = true;
+                    this.blnValorRecebidoFoco = false;
+                }
+                    
+            }
+        }
+        public string fpg_descricao
+        {
+            get { return this.objPedido == null ? string.Empty : this.objPedido.tbFormaPagamento.fpg_descricao; }
+            set
+            {
+                if (this.objPedido.tbFormaPagamento.fpg_descricao != value)
+                {
+                    this.objPedido.tbFormaPagamento.fpg_descricao = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+        
+        private tbPedido _objPedido;
+        public tbPedido objPedido
+        {
+            get { return this._objPedido; }
+            set
+            {
+                this._objPedido = value;
+                if (this._objPedido != null)
+                {
+                    ObservableCollection<EntregaPedidoProdutoViewModel> arrEntregaPedidoProdutoViewModelAux = new ObservableCollection<EntregaPedidoProdutoViewModel>();
+                    foreach (tbPedidoProduto objPedidoProduto in this._objPedido.tbPedidoProduto)
+                    {
+                        EntregaPedidoProdutoViewModel objEntregaPedidoProdutoViewModel = new EntregaPedidoProdutoViewModel(objPedidoProduto);
+                        objEntregaPedidoProdutoViewModel.OnDispose += objEntregaPedidoProdutoViewModel_OnDispose;
+                        objEntregaPedidoProdutoViewModel.PropertyChanged += objEntregaPedidoProdutoViewModel_PropertyChanged;
+                        arrEntregaPedidoProdutoViewModelAux.Add(objEntregaPedidoProdutoViewModel);
+                    }
+                    this._arrEntregaPedidoProdutoViewModel = arrEntregaPedidoProdutoViewModelAux;
+                    
+                    List<ClienteEnderecoViewModel> arrClienteEnderecoViewModelAux = new List<ClienteEnderecoViewModel>();
+                    foreach (tbClienteEndereco objClienteEndereco in this._objPedido.tbCliente.tbClienteEndereco)
+                        arrClienteEnderecoViewModelAux.Add(new ClienteEnderecoViewModel(objClienteEndereco));
+                    this._arrClienteEndereco = arrClienteEnderecoViewModelAux;
+                    if (this._objPedido.ped_codigo > 0)
+                        this._arrClienteEndereco.Where(cen => cen.cen_logradouro == this._objPedido.ped_logradouro).FirstOrDefault().blnSelecionado = true;
+                }
+                else
+                {
+                    this._arrEntregaPedidoProdutoViewModel = null;
+                    this._arrClienteEndereco = null;
+                }
+
+                //Prepara propriedades da viewmodel
+                this._intSelectedIndexTab = 0;
+                RaisePropertyChanged(null);
+            }
+        }
+
+        private ObservableCollection<EntregaPedidoProdutoViewModel> _arrEntregaPedidoProdutoViewModel;
+        public ObservableCollection<EntregaPedidoProdutoViewModel> arrEntregaPedidoProdutoViewModel
+        {
+            get { return this._arrEntregaPedidoProdutoViewModel; }
+            set
+            {
+                this._arrEntregaPedidoProdutoViewModel = value;
+                RaisePropertyChanged();
+            }
+        }
+        
+        private List<tbPedido> _arrPedidoPesquisa;
+        public List<tbPedido> arrPedidoPesquisa
+        {
+            get { return this._arrPedidoPesquisa; }
+            set
+            {
+                this._arrPedidoPesquisa = value;
+                RaisePropertyChanged("arrPedidoPesquisa", false);
+                if (this._arrPedidoPesquisa.Count > 0)
+                    base.intSelectedIndexGrid = 0;
+            }
+        }
+
+        private int _intSelectedIndexTab;
+        public int intSelectedIndexTab
+        {
+            get { return this._intSelectedIndexTab; }
+            set
+            {
+                this._intSelectedIndexTab = value;
+                RaisePropertyChanged();
+                if (value == 2)
+                    this.ImprimirCupom("Tela");
+            }
+        }
+
+        public decimal ped_valorSubTotal
+        {
+            get { return this.objPedido == null ? 0 : this.objPedido.ped_valorSubTotal; }
+            set
+            {
+                if (this.objPedido.ped_valorSubTotal != value)
+                {
+                    this.objPedido.ped_valorSubTotal = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        public decimal ped_valorTaxaEntrega
+        {
+            get { return this.objPedido == null ? 0 : this.objPedido.ped_valorTaxaEntrega; }
+            set
+            {
+                if (this.objPedido.ped_valorTaxaEntrega != value)
+                {
+                    this.objPedido.ped_valorTaxaEntrega = value;
+                    CalculaValores();
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        public decimal ped_valorDespesa
+        {
+            get { return this.objPedido == null ? 0 : this.objPedido.ped_valorDespesa; }
+            set
+            {
+                if (this.objPedido.ped_valorDespesa != value)
+                {
+                    this.objPedido.ped_valorDespesa = value;
+                    CalculaValores();
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        public decimal ped_valorDesconto
+        {
+            get { return this.objPedido == null ? 0 : this.objPedido.ped_valorDesconto; }
+            set
+            {
+                if (this.objPedido.ped_valorDesconto != value)
+                {
+                    this.objPedido.ped_valorDesconto = value;
+                    CalculaValores();
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [Required(ErrorMessage = "Valor recebido obrigatório")]
+        [Range(0.1, double.MaxValue, ErrorMessage = "Valor recebido inválido")]
+        public decimal ped_valorRecebido
+        {
+            get { return this.objPedido == null ? 0 : this.objPedido.ped_valorRecebido; }
+            set
+            {
+                if (this.objPedido.ped_valorRecebido != value)
+                {
+                    this.objPedido.ped_valorRecebido = value;
+                    CalculaValores();
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        public decimal ped_valorTroco
+        {
+            get { return this.objPedido == null ? 0 : this.objPedido.ped_valorTroco; }
+            set
+            {
+                if (this.objPedido.ped_valorTroco != value)
+                {
+                    this.objPedido.ped_valorTroco = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        public decimal ped_valorTotal
+        {
+            get { return this.objPedido == null ? 0 : this.objPedido.ped_valorTotal; }
+            set
+            {
+                if (this.objPedido.ped_valorTotal != value)
+                {
+                    this.objPedido.ped_valorTotal = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [StringLength(250, ErrorMessage = "É permitido apenas 250 caracteres")]
+        public string ped_observacao
+        {
+            get { return this.objPedido == null ? string.Empty : this.objPedido.ped_observacao; }
+            set
+            {
+                if (this.objPedido.ped_observacao != value)
+                {
+                    this.objPedido.ped_observacao = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [StringLength(250, ErrorMessage = "É permitido apenas 250 caracteres")]
+        public string ped_motivoCancelamento
+        {
+            get { return this.objPedido == null ? string.Empty : this.objPedido.ped_motivoCancelamento; }
+            set
+            {
+                if (this.objPedido.ped_motivoCancelamento != value)
+                {
+                    this.objPedido.ped_motivoCancelamento = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        private string _strRelatorioTela;
+        public string strRelatorioTela 
+        {
+            get { return this._strRelatorioTela; }
+            set
+            {
+                this._strRelatorioTela = value;
+                RaisePropertyChanged("strRelatorioTela", false);
+            }
+        }
+
+        private bool _blnProdutoFoco;
+        public bool blnProdutoFoco 
+        {
+            get 
+            {
+                //if (this._blnProdutoFoco)
+                //{
+                //    Task.Run(() =>
+                //    {
+                //        Task.Delay(2000);
+                //        this.blnProdutoFoco = false;
+                //    });
+                //}
+                return this._blnProdutoFoco; 
+            }
+            set
+            {
+                this._blnProdutoFoco = value;
+                RaisePropertyChanged("blnProdutoFoco", false);
+            }
+        }
+
+        private bool _blnFormaPagamentoFoco;
+        public bool blnFormaPagamentoFoco
+        {
+            get 
+            {
+                //if (this._blnFormaPagamentoFoco)
+                //{
+                //    Task.Run(() =>
+                //    {
+                //        Task.Delay(1000);
+                //        this.blnFormaPagamentoFoco = false;
+                //    });
+                //}
+                return this._blnFormaPagamentoFoco; 
+            }
+            set
+            {
+                this._blnFormaPagamentoFoco = value;
+                RaisePropertyChanged("blnFormaPagamentoFoco", false);
+            }
+        }
+
+        private bool _blnValorRecebidoFoco;
+        public bool blnValorRecebidoFoco
+        {
+            get 
+            {
+                //if (this._blnValorRecebidoFoco)
+                //{
+                //    Task.Run(() =>
+                //    {
+                //        Task.Delay(1000);
+                //        this.blnValorRecebidoFoco = false;
+                //    });
+                //}                
+                return this._blnValorRecebidoFoco; 
+            }
+            set
+            {
+                this._blnValorRecebidoFoco = value;
+                RaisePropertyChanged("blnValorRecebidoFoco", false);
+            }
+        }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+        private bool CanAnterior(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao || base.enStatusTelaAtual == enStatusTela.Padrao);
+        }
+        private void Anterior(object objParam)
+        {
+            Retorno objRetorno;
+            using (Vendas objBLL = new Vendas())
+            {
+                objRetorno = objBLL.RetornaPedido(this.objPedido == null ? 0 : this.objPedido.ped_codigo, enNavegacao.Anterior, enOrigemPedido.Entrega);
+            }
+            if (objRetorno.intCodigoErro == 0)
+            {
+                this.objPedido = (tbPedido)objRetorno.objRetorno;
+                base.enStatusTelaAtual = enStatusTela.Navegacao;
+            }
+            else
+                MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+        }
+
+        private bool CanProximo(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao || base.enStatusTelaAtual == enStatusTela.Padrao);
+        }
+        private void Proximo(object objParam)
+        {
+            Retorno objRetorno;
+            using (Vendas objBLL = new Vendas())
+            {
+                objRetorno = objBLL.RetornaPedido(this.objPedido == null ? 0 : this.objPedido.ped_codigo, enNavegacao.Proximo, enOrigemPedido.Entrega);
+            }
+            if (objRetorno.intCodigoErro == 0)
+            {
+                this.objPedido = (tbPedido)objRetorno.objRetorno;
+                base.enStatusTelaAtual = enStatusTela.Navegacao;
+            }
+            else
+                MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+        }
+
+        private bool CanNovo(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao || base.enStatusTelaAtual == enStatusTela.Padrao) && base.blnPermiteInclusaoRegistro;
+        }
+        private void Novo(object objParam)
+        {
+            if (Util.objConfigStorage.intCaiCodigo > 0)
+            {
+                tbPedido objPedidoAux = new tbPedido();
+                objPedidoAux.ped_data = DateTime.Now;
+                objPedidoAux.tbFuncionarioEntregador = new tbFuncionario();
+                objPedidoAux.tbFormaPagamento = new tbFormaPagamento();
+                objPedidoAux.tbCliente = new tbCliente();
+                objPedidoAux.tbCliente.tbClienteEndereco = new List<tbClienteEndereco>();
+                objPedidoAux.tbPedidoProduto = new List<tbPedidoProduto>();
+
+                tbPedidoProduto objPedidoProduto = new tbPedidoProduto();
+                objPedidoProduto.tbProduto = new tbProduto();
+                objPedidoAux.tbPedidoProduto.Add(objPedidoProduto);
+
+                this.objPedido = objPedidoAux;
+                base.enStatusTelaAtual = enStatusTela.EmInclusaoOuAlteracao;
+            }
+            else
+                MessageBox.Show("Não existe caixa aberto!", "Anteção", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+
+        private bool CanEditar(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao && base.blnPermiteAlteracaoRegistro && (this.objPedido != null && this.objPedido.ped_status != "X"));
+        }
+        private void Editar(object objParam)
+        {
+            base.enStatusTelaAtual = enStatusTela.EmInclusaoOuAlteracao;
+        }
+
+        private bool CanSalvar(object objParam)
+        {
+            return base.enStatusTelaAtual == enStatusTela.EmInclusaoOuAlteracao;
+        }
+        private void Salvar(object objParam)
+        {
+            var focusedElement = Keyboard.FocusedElement as FrameworkElement;
+            if (focusedElement is TextBox)
+            {
+                var expression = focusedElement.GetBindingExpression(TextBox.TextProperty);
+                if (expression != null && expression.ParentBinding.UpdateSourceTrigger == System.Windows.Data.UpdateSourceTrigger.LostFocus)
+                    expression.UpdateSource();
+            }
+
+            bool blnAchouErro = false;
+            foreach (EntregaPedidoProdutoViewModel objEntregaPedidoProdutoViewModel in this.arrEntregaPedidoProdutoViewModel)
+            {
+                objEntregaPedidoProdutoViewModel.Validate();
+                blnAchouErro = objEntregaPedidoProdutoViewModel.HasErrors;
+                if (blnAchouErro)
+                    break;
+            }
+
+            this.Validate();
+            if (!this.HasErrors && !blnAchouErro)
+            {
+                bool blnContinuar = false;
+                if (this.objPedido.ped_cobranca == "P" && this.objPedido.ped_valorTotal > this.objPedido.tbCliente.cli_limiteCredito)
+                {
+                    if (MessageBox.Show("Limite de credito excedido, deseja continuar?", "Atenção", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                        blnContinuar = true;
+                }
+                else
+                    blnContinuar = true;
+
+                if (blnContinuar)
+                {
+                    int intImprimirCupom = this.objPedido.ped_codigo;
+                    this.objPedido.tbPedidoProduto.Clear();
+                    foreach (EntregaPedidoProdutoViewModel objEntregaPedidoProdutoViewModel in this.arrEntregaPedidoProdutoViewModel)
+                        this.objPedido.tbPedidoProduto.Add(objEntregaPedidoProdutoViewModel.objPedidoProduto);
+
+                    Retorno objRetorno;
+                    using (Vendas objBLL = new Vendas())
+                    {
+                        objRetorno = objBLL.SalvarPedido(this.objPedido, enOrigemPedido.Entrega);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objPedido = (tbPedido)objRetorno.objRetorno;
+                        if (intImprimirCupom == 0)
+                            this.ImprimirCupom(null);
+                        base.enStatusTelaAtual = enStatusTela.Navegacao;
+                    }
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                }
+            }
+        }
+
+        private bool CanCancelar(object objParam)
+        {
+            return base.enStatusTelaAtual == enStatusTela.EmInclusaoOuAlteracao;
+        }
+        private void Cancelar(object objParam)
+        {
+            if (MessageBox.Show("Todas as alterações serão perdidas, deseja cancelar a edição?", "Atenção", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                if (this.objPedido.ped_codigo > 0)
+                {
+                    Retorno objRetorno;
+                    using (Vendas objBLL = new Vendas())
+                    {
+                        objRetorno = objBLL.RetornaPedido(this.objPedido.ped_codigo, null, enOrigemPedido.Entrega);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objPedido = (tbPedido)objRetorno.objRetorno;
+                        base.enStatusTelaAtual = enStatusTela.Navegacao;
+                    }
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                }
+                else
+                {
+                    this.objPedido = null;
+                    this.ClearAllErrorsAsync();
+                    base.enStatusTelaAtual = enStatusTela.Padrao;
+                }
+            }
+        }
+
+        private bool CanExcluir(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao && base.blnPermiteExclusaoRegistro && (this.objPedido != null && this.objPedido.ped_status != "X"));
+        }
+        private void Excluir(object objParam)
+        {
+            if (objParam == null)
+            {
+                winMotivoExclusaoPedido objTelaMotivoExclusaoPedido = new winMotivoExclusaoPedido();
+                objTelaMotivoExclusaoPedido.DataContext = this;
+                objTelaMotivoExclusaoPedido.Owner = (Window)Application.Current.MainWindow;
+                objTelaMotivoExclusaoPedido.Closed += (sen, eve) => { objTelaMotivoExclusaoPedido = null; };
+                objTelaMotivoExclusaoPedido.ShowDialog();
+            }
+            else
+            {
+                if (this.objPedido != null)
+                {
+                    if (!string.IsNullOrWhiteSpace(this.ped_motivoCancelamento))
+                    {
+                        if (MessageBox.Show("Tem Certeza que deseja excluir o registro selecionado?", "Atenção", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                        {
+                            Retorno objRetorno;
+                            using (Vendas objBLL = new Vendas())
+                            {
+                                objRetorno = objBLL.ExcluirPedido(this.objPedido.ped_codigo, this.ped_motivoCancelamento);
+                            }
+                            if (objRetorno.intCodigoErro == 0)
+                            {
+                                this.objPedido = null;
+                                this.ClearAllErrorsAsync();
+                                base.enStatusTelaAtual = enStatusTela.Padrao;
+                            }
+                            else
+                                MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                        }
+                        else
+                            this.ped_motivoCancelamento = string.Empty;
+                        ((Window)objParam).Close();
+                    }
+                    else
+                        MessageBox.Show("Informe o motivo da exclusão!", "Atenção", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+                else
+                    ((Window)objParam).Close();
+            }
+        }
+
+        private bool CanPesquisar(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao || base.enStatusTelaAtual == enStatusTela.Padrao);
+        }
+        public void Pesquisar(object objParam)
+        {
+            if (objParam != null)
+            {
+                if (objParam.ToString() == "AbrirTela")
+                {
+                    this.objTelaPesquisa = new winPesquisa();
+                    this.objTelaPesquisa.Title = "Pesquisa - " + base.strNomeTela;
+                    this.objTelaPesquisa.DataContext = this;
+                    this.objTelaPesquisa.Owner = (Window)Application.Current.MainWindow;
+                    this.objTelaPesquisa.Closed += (sen, eve) =>
+                    {
+                        this.objTelaPesquisa = null;
+                        var handler = OnPesquisa;
+                        if (handler != null)
+                            handler(this, null);
+                    };
+                    this.objTelaPesquisa.ShowDialog();
+                }
+                else if (objParam.ToString() == "FecharTela")
+                {
+                    if (this.objTelaPesquisa != null)
+                        this.objTelaPesquisa.Close();
+                }
+                else if (objParam.GetType() == typeof(tbPedido))
+                {
+                    this.ped_codigo = ((tbPedido)objParam).ped_codigo;
+                    if (this.objTelaPesquisa != null)
+                        this.objTelaPesquisa.Close();
+                }
+                else
+                {
+                    Retorno objRetorno;
+                    using (Vendas objBLL = new Vendas())
+                    {
+                        objRetorno = objBLL.RetornaListaPedido(objParam.ToString(),enOrigemPedido.Entrega);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                        this.arrPedidoPesquisa = (List<tbPedido>)objRetorno.objRetorno;
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                }
+            }
+        }
+
+        private bool CanLog(object objParam)
+        {
+            return base.enStatusTelaAtual == enStatusTela.Navegacao;
+        }
+        private void Log(object objParam)
+        {
+            if (objParam != null)
+            {
+                if (objParam.ToString() == "AbrirTela")
+                {
+                    Retorno objRetorno;
+                    using (Auditoria objBLL = new Auditoria())
+                    {
+                        objRetorno = objBLL.RetornaListaAuditoria(this.objPedido.ped_codigo, this.objPedido);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        base.arrAuditoria = (List<tbAuditoria>)objRetorno.objRetorno;
+                        winAuditoria objTelaAuditoria = new winAuditoria();
+                        objTelaAuditoria.Title = "Auditoria - " + base.strNomeTela;
+                        objTelaAuditoria.DataContext = this;
+                        objTelaAuditoria.Owner = (Window)Application.Current.MainWindow;
+                        objTelaAuditoria.Closed += (sen, eve) =>
+                        {
+                            base.arrAuditoria = null;
+                            objTelaAuditoria = null;
+                        };
+                        objTelaAuditoria.ShowDialog();
+                    }
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                }
+                else if (objParam.GetType() == typeof(winAuditoria))
+                {
+                    ((Window)objParam).Close();
+                }
+            }
+        }
+
+        private bool CanBuscar(object objParam)
+        {
+            return true;
+        }
+        private void Buscar(object objParam)
+        {
+            if (objParam != null)
+            {
+                int intCodigo;
+                if (int.TryParse(objParam.ToString(), out intCodigo))
+                    this.ped_codigo = intCodigo;
+                else
+                    Pesquisar("AbrirTela");
+            }
+        }
+
+        private bool CanCliente(object objParam)
+        {
+            return true;
+        }
+        private void Cliente(object objParam)
+        {
+            if (objParam != null)
+            {
+                if (objParam.ToString() == "Novo")
+                {
+                    NovoCliente(null);
+                }
+                else if (objParam.ToString() == "Pesquisar")
+                {
+                    ClienteViewModel objClienteViewModel = new ClienteViewModel();
+                    objClienteViewModel.OnPesquisa += (sen, eve) =>
+                    {
+                        if (objClienteViewModel.cli_codigo != null)
+                        {
+                            //this.objPedido.cli_codigo = (int)objClienteViewModel.cli_codigo;
+                            //RaisePropertyChanged("cli_codigo");
+                            //this.objPedido.tbCliente.cli_nome = objClienteViewModel.cli_nome;
+                            //RaisePropertyChanged("cli_nome");
+                            //this.objPedido.tbCliente.tbClienteEndereco = objClienteViewModel.objCliente.tbClienteEndereco;
+                            //RaisePropertyChanged("arrClienteEndereco");
+                            ComplementaDadosCliente(objClienteViewModel.objCliente, (int)objClienteViewModel.cli_codigo);
+                        }
+                        objClienteViewModel.Dispose();
+                    };
+                    objClienteViewModel.Pesquisar("AbrirTela");
+                }
+                else
+                {
+                    int intCodigo;
+                    if (int.TryParse(objParam.ToString(), out intCodigo))
+                        this.cli_codigo = intCodigo;
+                    else
+                        Cliente("Pesquisar");
+                }
+            }
+        }
+
+        private bool CanFuncionarioEntregador(object objParam)
+        {
+            return true;
+        }
+        private void FuncionarioEntregador(object objParam)
+        {
+            if (objParam != null)
+            {
+                if (objParam.ToString() == "Novo")
+                {
+                    winCadastro objTelaCadastro = new winCadastro();
+                    FuncionarioViewModel objFuncionarioViewModel = new FuncionarioViewModel();
+                    if (this.objPedido.fun_funcionarioEntregador > 0)
+                        objFuncionarioViewModel.fun_codigo = this.objPedido.fun_funcionarioEntregador;
+                    objFuncionarioViewModel.OnDispose += (sen1, eve1) => { objTelaCadastro.Close(); };
+                    objTelaCadastro.Title = "Cadastro - " + objFuncionarioViewModel.strNomeTela;
+                    objTelaCadastro.DataContext = objFuncionarioViewModel;
+                    objTelaCadastro.Owner = (Window)Application.Current.MainWindow;
+                    objTelaCadastro.Closed += (sen, eve) =>
+                    {
+                        if (objFuncionarioViewModel.fun_codigo != null)
+                        {
+                            this.objPedido.fun_funcionarioEntregador = (int)objFuncionarioViewModel.fun_codigo;
+                            RaisePropertyChanged("fun_funcionarioEntregador");
+                            this.objPedido.tbFuncionarioEntregador.fun_nome = objFuncionarioViewModel.fun_nome;
+                            RaisePropertyChanged("fun_nomeEntregador");
+                        }
+                        objFuncionarioViewModel = null;
+                        objTelaCadastro = null;
+                    };
+                    objTelaCadastro.ShowDialog();
+                }
+                else if (objParam.ToString() == "Pesquisar")
+                {
+                    FuncionarioViewModel objFuncionarioViewModel = new FuncionarioViewModel();
+                    objFuncionarioViewModel.OnPesquisa += (sen, eve) =>
+                    {
+                        if (objFuncionarioViewModel.fun_codigo != null)
+                        {
+                            this.objPedido.fun_funcionarioEntregador = (int)objFuncionarioViewModel.fun_codigo;
+                            RaisePropertyChanged("fun_funcionarioEntregador");
+                            this.objPedido.tbFuncionarioEntregador.fun_nome = objFuncionarioViewModel.fun_nome;
+                            RaisePropertyChanged("fun_nomeEntregador");
+                        }
+                        objFuncionarioViewModel.Dispose();
+                    };
+                    objFuncionarioViewModel.Pesquisar("AbrirTela");
+                }
+                else
+                {
+                    int intCodigo;
+                    if (int.TryParse(objParam.ToString(), out intCodigo))
+                        this.fun_funcionarioEntregador = intCodigo;
+                    else
+                        FuncionarioEntregador("Pesquisar");
+                }
+            }
+        }
+
+        private bool CanFormaPagamento(object objParam)
+        {
+            return true;
+        }
+        private void FormaPagamento(object objParam)
+        {
+            if (objParam != null)
+            {
+                if (objParam.ToString() == "Novo")
+                {
+                    winCadastro objTelaCadastro = new winCadastro();
+                    FormaPagamentoViewModel objFormaPagamentoViewModel = new FormaPagamentoViewModel();
+                    if (this.objPedido.fpg_codigo > 0)
+                        objFormaPagamentoViewModel.fpg_codigo = this.objPedido.fpg_codigo;
+                    objFormaPagamentoViewModel.OnDispose += (sen1, eve1) => { objTelaCadastro.Close(); };
+                    objTelaCadastro.Title = "Cadastro - " + objFormaPagamentoViewModel.strNomeTela;
+                    objTelaCadastro.DataContext = objFormaPagamentoViewModel;
+                    objTelaCadastro.Owner = (Window)Application.Current.MainWindow;
+                    objTelaCadastro.Closed += (sen, eve) =>
+                    {
+                        if (objFormaPagamentoViewModel.fpg_codigo != null)
+                        {
+                            this.objPedido.fpg_codigo = (int)objFormaPagamentoViewModel.fpg_codigo;
+                            RaisePropertyChanged("fpg_codigo");
+                            this.objPedido.tbFormaPagamento.fpg_descricao = objFormaPagamentoViewModel.fpg_descricao;
+                            RaisePropertyChanged("fpg_descricao");
+                            this.objPedido.ped_cobranca = objFormaPagamentoViewModel.fpg_cobranca;
+                        }
+                        objFormaPagamentoViewModel = null;
+                        objTelaCadastro = null;
+                    };
+                    objTelaCadastro.ShowDialog();
+                }
+                else if (objParam.ToString() == "Pesquisar")
+                {
+                    FormaPagamentoViewModel objFormaPagamentoViewModel = new FormaPagamentoViewModel();
+                    objFormaPagamentoViewModel.OnPesquisa += (sen, eve) =>
+                    {
+                        if (objFormaPagamentoViewModel.fpg_codigo != null)
+                        {
+                            this.objPedido.fpg_codigo = (int)objFormaPagamentoViewModel.fpg_codigo;
+                            RaisePropertyChanged("fpg_codigo");
+                            this.objPedido.tbFormaPagamento.fpg_descricao = objFormaPagamentoViewModel.fpg_descricao;
+                            RaisePropertyChanged("fpg_descricao");
+                            this.objPedido.ped_cobranca = objFormaPagamentoViewModel.fpg_cobranca;
+                        }
+                        objFormaPagamentoViewModel.Dispose();
+                    };
+                    objFormaPagamentoViewModel.Pesquisar("AbrirTela");
+                }
+                else if (objParam.ToString() == "Foco")
+                {
+                    this.blnFormaPagamentoFoco = true;
+                    this.blnFormaPagamentoFoco = false;
+                }
+                else
+                {
+                    int intCodigo;
+                    if (int.TryParse(objParam.ToString(), out intCodigo))
+                        this.fpg_codigo = intCodigo;
+                    else
+                        FormaPagamento("Pesquisar");
+                }
+            }
+        }
+
+        private bool CanAdicionaProduto(object objParam)
+        {
+            return true;
+        }
+        private void AdicionaProduto(object objParam)
+        {
+            tbPedidoProduto objPedidoProduto = new tbPedidoProduto();
+            objPedidoProduto.tbProduto = new tbProduto();
+            EntregaPedidoProdutoViewModel objEntregaPedidoProdutoViewModel = new EntregaPedidoProdutoViewModel(objPedidoProduto);
+            objEntregaPedidoProdutoViewModel.OnDispose += objEntregaPedidoProdutoViewModel_OnDispose;
+            objEntregaPedidoProdutoViewModel.PropertyChanged += objEntregaPedidoProdutoViewModel_PropertyChanged;
+            this.arrEntregaPedidoProdutoViewModel.Add(objEntregaPedidoProdutoViewModel);
+        }
+
+        private bool CanSelecionaEndereco(object objParam)
+        {
+            return true;
+        }
+        private void SelecionaEndereco(object objParam)
+        {
+            int intCodigo;
+            if (int.TryParse(objParam.ToString(), out intCodigo))
+            {
+                tbClienteEndereco objClienteEndereco = this.arrClienteEndereco.Where(cen => cen.cen_codigo == intCodigo).FirstOrDefault().objClienteEndereco;
+                this.ped_valorTaxaEntrega = objClienteEndereco.tbBairro.bai_taxaEntrega;
+                this.objPedido.ped_logradouro = objClienteEndereco.cen_logradouro;
+                this.objPedido.ped_numero = objClienteEndereco.cen_numero;
+                this.objPedido.ped_bairro = objClienteEndereco.tbBairro.bai_nome;
+                this.objPedido.ped_cep = objClienteEndereco.cen_cep;
+                this.objPedido.ped_complemento = objClienteEndereco.cen_complemento;
+                this.objPedido.cid_codigo = objClienteEndereco.cid_codigo;
+                this.objPedido.est_codigo = objClienteEndereco.est_codigo;
+                this.objPedido.bai_codigo = objClienteEndereco.bai_codigo;
+            }
+        }
+
+        private bool CanImprimirCupom(object objParam)
+        {
+            return true;
+        }
+        private void ImprimirCupom(object objParam)
+        {
+            if (this.objPedido != null && this.objPedido.ped_codigo > 0)
+            {
+                Retorno objRetorno;
+                using (Relatorios objBLL = new Relatorios())
+                {
+                    objRetorno = objBLL.RetornaCupomEntrega(this.objPedido);
+                }
+                if (objRetorno.intCodigoErro == 0)
+                {
+                    string strConteudo = (string)objRetorno.objRetorno;
+                    string[] arrLinhas = strConteudo.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+                    Util.objGerenciaCupom.AbreRelatorio();
+                    for (int i = 0; i < arrLinhas.Length; i++)
+                    {
+                        Util.objGerenciaCupom.LinhaRelatorio(arrLinhas[i]);
+                    }
+                    if (objParam != null && objParam.ToString() == "Tela")
+                        this.strRelatorioTela = Util.objGerenciaCupom.RetornaRelatorioTexto();
+                    else
+                    {
+                        if (string.IsNullOrWhiteSpace(Util.objConfigStorage.objConfiguracao.cfg_impressoraEntrega))
+                            MessageBox.Show("Impressora não configurada!", "Atenção", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        else
+                            Util.objGerenciaCupom.FechaRelatorio(Util.objConfigStorage.objConfiguracao.cfg_impressoraEntrega);
+                    }
+                }
+                else
+                    MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));                
+                
+                
+                //Util.objGerenciaCupom.AbreRelatorio();
+                //Util.objGerenciaCupom.LinhaRelatorio("        COMPROVANTE DE ENTREGA");
+                //Util.objGerenciaCupom.LinhaRelatorio("");
+                //Util.objGerenciaCupom.LinhaRelatorio("PEDIDO..: " + this.objPedido.ped_codigo.ToString());
+                //Util.objGerenciaCupom.LinhaRelatorio("CLIENTE.: " + this.objPedido.ped_nomeCliente.PadRight(30));
+                //Util.objGerenciaCupom.LinhaRelatorio((this.objPedido.ped_logradouro + "," + this.objPedido.ped_numero).PadRight(30));
+                //if (!string.IsNullOrWhiteSpace(this.objPedido.ped_complemento))
+                //    Util.objGerenciaCupom.LinhaRelatorio(this.objPedido.ped_complemento.PadRight(30));
+                //Util.objGerenciaCupom.LinhaRelatorio("BAIRRO..: " + this.objPedido.ped_bairro.PadRight(30));
+                //Util.objGerenciaCupom.LinhaRelatorio("TELEFONE: " + this.objPedido.ped_telefone.PadRight(30));
+                //Util.objGerenciaCupom.LinhaRelatorio("");
+                //Util.objGerenciaCupom.LinhaRelatorio("QTD PRODUTO               VALOR   TOTAL");
+                //Util.objGerenciaCupom.LinhaRelatorio("---------------------------------------");
+                //foreach (tbPedidoProduto objPedidoProduto in this.objPedido.tbPedidoProduto)
+                //{
+                //    string strQuantidade;
+                //    if (objPedidoProduto.ppr_quantidade < 1)
+                //        strQuantidade = objPedidoProduto.ppr_quantidade.ToString("0.0");
+                //    else
+                //        strQuantidade = objPedidoProduto.ppr_quantidade.ToString("000");
+                //    Util.objGerenciaCupom.LinhaRelatorio(strQuantidade + " " +
+                //        objPedidoProduto.ppr_descricao.PadRight(19, ' ').Substring(0, 19) + " " +
+                //        objPedidoProduto.ppr_valorUnitario.ToString("#,##0.00").PadLeft(7) + " " +
+                //        objPedidoProduto.ppr_valorTotal.ToString("#,##0.00").PadLeft(7));
+                //}
+                //Util.objGerenciaCupom.LinhaRelatorio("              TOTAL PRODUTOS -> " + this.objPedido.ped_valorSubTotal.ToString("#,##0.00").PadLeft(7));
+                //Util.objGerenciaCupom.LinhaRelatorio("                                -------");
+                //if (this.objPedido.ped_valorTaxaEntrega > 0 || this.objPedido.ped_valorDespesa > 0 || this.objPedido.ped_valorDesconto > 0)
+                //{
+                //    if (this.objPedido.ped_valorTaxaEntrega > 0)
+                //        Util.objGerenciaCupom.LinhaRelatorio("                 TX. ENTREGA -> " + this.objPedido.ped_valorTaxaEntrega.ToString("#,##0.00").PadLeft(7));
+                //    if (this.objPedido.ped_valorDespesa > 0)
+                //        Util.objGerenciaCupom.LinhaRelatorio("                    DESPESAS -> " + this.objPedido.ped_valorDespesa.ToString("#,##0.00").PadLeft(7));
+                //    if (this.objPedido.ped_valorDesconto > 0)
+                //        Util.objGerenciaCupom.LinhaRelatorio("                    DESCONTO -> " + this.objPedido.ped_valorDesconto.ToString("#,##0.00").PadLeft(7));
+                //    Util.objGerenciaCupom.LinhaRelatorio("             TOTAL DO PEDIDO -> " + this.objPedido.ped_valorTotal.ToString("#,##0.00").PadLeft(7));
+                //}
+                //Util.objGerenciaCupom.LinhaRelatorio("              VALOR RECEBIDO -> " + this.objPedido.ped_valorRecebido.ToString("#,##0.00").PadLeft(7));
+                //Util.objGerenciaCupom.LinhaRelatorio("                       TROCO -> " + this.objPedido.ped_valorTroco.ToString("#,##0.00").PadLeft(7));
+                //Util.objGerenciaCupom.LinhaRelatorio("OBSERVACOES: " + this.objPedido.ped_observacao);
+                //if (objParam != null && objParam.ToString() == "Tela")
+                //    this.strRelatorioTela = Util.objGerenciaCupom.RetornaRelatorioTexto();
+                //else
+                //{
+                //    if (string.IsNullOrWhiteSpace(Util.objConfigStorage.objConfiguracao.cfg_impressoraEntrega))
+                //        MessageBox.Show("Impressora não configurada!", "Atenção", MessageBoxButton.OK, MessageBoxImage.Warning);
+                //    else
+                //        Util.objGerenciaCupom.FechaRelatorio(Util.objConfigStorage.objConfiguracao.cfg_impressoraEntrega);
+                //}
+            }
+        }
+
+        #endregion Comandos
+
+
+
+        #region Eventos
+
+        public event EventHandler OnPesquisa;
+
+        void objEntregaPedidoProdutoViewModel_OnDispose(object sender, EventArgs e)
+        {
+            this.arrEntregaPedidoProdutoViewModel.Remove((EntregaPedidoProdutoViewModel)sender);
+            CalculaValores();
+            this.blnFormaPagamentoFoco = true;
+            this.blnFormaPagamentoFoco = false;
+        }
+
+        void objEntregaPedidoProdutoViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "ppr_quantidade")
+                CalculaValores();
+        }
+
+        #endregion Eventos
+
+
+
+        #region Métodos
+
+        private void CalculaValores()
+        {
+            this.ped_valorSubTotal = arrEntregaPedidoProdutoViewModel.Sum(ppr => ppr.ppr_valorTotal);
+            this.ped_valorTotal = (this.ped_valorSubTotal + this.ped_valorTaxaEntrega + this.ped_valorDespesa) - this.ped_valorDesconto;
+            if ((this.ped_valorRecebido - this.ped_valorTotal) > 0)
+                this.ped_valorTroco = this.ped_valorRecebido - this.ped_valorTotal;
+            else
+                this.ped_valorTroco = 0;
+        }
+
+        private void ComplementaDadosCliente(tbCliente objCliente, int? intCodCliente)
+        {
+            if (objCliente != null)
+            {
+                this.objPedido.cli_codigo = objCliente.cli_codigo;
+                this.objPedido.tbCliente.cli_nome = objCliente.cli_nome + " R$" + objCliente.cli_limiteCredito.ToString("#,##0.00");
+                this.objPedido.tbCliente.tbClienteEndereco = objCliente.tbClienteEndereco;
+                this.objPedido.tbCliente.cli_limiteCredito = objCliente.cli_limiteCredito;
+                List<ClienteEnderecoViewModel> arrClienteEnderecoViewModelAux = new List<ClienteEnderecoViewModel>();
+                foreach (tbClienteEndereco objClienteEndereco in this.objPedido.tbCliente.tbClienteEndereco)
+                    arrClienteEnderecoViewModelAux.Add(new ClienteEnderecoViewModel(objClienteEndereco));
+                this._arrClienteEndereco = arrClienteEnderecoViewModelAux;
+                this._arrClienteEndereco.FirstOrDefault().blnSelecionado = true;
+                SelecionaEndereco(this._arrClienteEndereco.FirstOrDefault().cen_codigo);
+
+                if (this.objPedido.cli_codigo != intCodCliente)
+                    this.objPedido.ped_telefone = intCodCliente.ToString();
+                else
+                    this.objPedido.ped_telefone = objCliente.tbClienteTelefone.FirstOrDefault().ctl_numero;
+                this.objPedido.ped_nomeCliente = objCliente.cli_nome;
+            }
+            else
+            {
+                this.objPedido.cli_codigo = 0;
+                this.objPedido.tbCliente.cli_nome = string.Empty;
+                this.objPedido.tbCliente.tbClienteEndereco = null;
+                this._arrClienteEndereco = null;
+                this.objPedido.ped_telefone = string.Empty;
+                this.objPedido.ped_nomeCliente = string.Empty;
+            }
+            RaisePropertyChanged("cli_codigo");
+            RaisePropertyChanged("cli_nome");
+            RaisePropertyChanged("arrClienteEndereco");
+        }
+
+        private void NovoCliente(string strTelefone)
+        {
+            winCadastro objTelaCadastro = new winCadastro();
+            ClienteViewModel objClienteViewModel;
+            if(string.IsNullOrWhiteSpace(strTelefone))
+                objClienteViewModel = new ClienteViewModel();
+            else
+                objClienteViewModel = new ClienteViewModel(strTelefone);
+
+            if (this.objPedido.cli_codigo > 0)
+                objClienteViewModel.cli_codigo = this.objPedido.cli_codigo;
+            objClienteViewModel.OnDispose += (sen1, eve1) => { objTelaCadastro.Close(); };
+            objTelaCadastro.Title = "Cadastro - " + objClienteViewModel.strNomeTela;
+            objTelaCadastro.DataContext = objClienteViewModel;
+            objTelaCadastro.Owner = (Window)Application.Current.MainWindow;
+            objTelaCadastro.Closed += (sen, eve) =>
+            {
+                if (objClienteViewModel.cli_codigo != null)
+                {
+                    //this.objPedido.cli_codigo = (int)objClienteViewModel.cli_codigo;
+                    //RaisePropertyChanged("cli_codigo");
+                    //this.objPedido.tbCliente.cli_nome = objClienteViewModel.cli_nome;
+                    //RaisePropertyChanged("cli_nome");
+                    //this.objPedido.tbCliente.tbClienteEndereco = objClienteViewModel.objCliente.tbClienteEndereco;
+                    //RaisePropertyChanged("arrClienteEndereco");
+                    ComplementaDadosCliente(objClienteViewModel.objCliente, (int)objClienteViewModel.cli_codigo);
+                }
+                objClienteViewModel = null;
+                objTelaCadastro = null;
+            };
+            objTelaCadastro.ShowDialog();
+        }
+
+        #endregion Métodos
+    }
+}

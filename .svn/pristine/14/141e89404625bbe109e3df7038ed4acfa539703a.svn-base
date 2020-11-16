@@ -1,0 +1,29 @@
+﻿using BSFoodServer.Models;
+using System;
+using System.Collections.Generic;
+using System.Data.Entity.ModelConfiguration;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.DAL.Config
+{
+    public class PerfilAcessoMenuConfig : EntityTypeConfiguration<PerfilAcessoMenu>
+    {
+        public PerfilAcessoMenuConfig()
+        {
+            this.ToTable("tbPerfilAcessoMenu");
+            this.HasKey(e => new { e.CodigoMenu, e.CodigoPerfilAcesso });
+
+            this.Property(e => e.PermiteAlteracao).HasColumnName("pam_permiteAlteracao");
+            this.Property(e => e.PermiteExclusao).HasColumnName("pam_permiteExclusao");
+            this.Property(e => e.PermiteInclusao).HasColumnName("pam_permiteInclusao");
+            this.Property(e => e.PermiteVisualizacao).HasColumnName("pam_permiteVisualizacao");
+            this.Property(e => e.ToolBar).HasColumnName("pam_toolBar");
+            this.HasRequired(e => e.Menu).WithMany(e => e.PerfilAcessoMenus).HasForeignKey(e => e.CodigoMenu);
+            this.Property(e => e.CodigoMenu).HasColumnName("men_codigo");
+            this.HasRequired(e => e.PerfilAcesso).WithMany(e => e.PerfilAcessoMenus).HasForeignKey(e => e.CodigoPerfilAcesso);
+            this.Property(e => e.CodigoPerfilAcesso).HasColumnName("pac_codigo");
+        }
+    }
+}

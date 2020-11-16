@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BSFood", "BSFood\BSFood.csproj", "{F12A7F04-F747-4A58-99BF-1EDBDA1957F6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BSFoodPDV", "BSFoodPDV\BSFoodPDV.csproj", "{50E7A556-32E5-4136-99AA-44B4CBB021A9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BSFoodPrinter", "BSFoodPrinter\BSFoodPrinter.csproj", "{C65EA981-1529-4E33-B864-91B068835DE6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BSFoodFramework", "BSFoodFramework\BSFoodFramework.csproj", "{32912675-BED1-433B-9A1A-5FA22AAE834A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F12A7F04-F747-4A58-99BF-1EDBDA1957F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F12A7F04-F747-4A58-99BF-1EDBDA1957F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F12A7F04-F747-4A58-99BF-1EDBDA1957F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F12A7F04-F747-4A58-99BF-1EDBDA1957F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{50E7A556-32E5-4136-99AA-44B4CBB021A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{50E7A556-32E5-4136-99AA-44B4CBB021A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{50E7A556-32E5-4136-99AA-44B4CBB021A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{50E7A556-32E5-4136-99AA-44B4CBB021A9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C65EA981-1529-4E33-B864-91B068835DE6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C65EA981-1529-4E33-B864-91B068835DE6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C65EA981-1529-4E33-B864-91B068835DE6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C65EA981-1529-4E33-B864-91B068835DE6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{32912675-BED1-433B-9A1A-5FA22AAE834A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{32912675-BED1-433B-9A1A-5FA22AAE834A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{32912675-BED1-433B-9A1A-5FA22AAE834A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{32912675-BED1-433B-9A1A-5FA22AAE834A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		VisualSVNWorkingCopyRoot = .
+	EndGlobalSection
+EndGlobal

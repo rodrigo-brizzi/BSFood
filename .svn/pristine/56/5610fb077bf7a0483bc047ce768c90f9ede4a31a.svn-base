@@ -1,0 +1,32 @@
+namespace BSFoodServer.Migrations
+{
+    using System;
+    using System.Data.Entity.Migrations;
+    
+    public partial class V1 : DbMigration
+    {
+        public override void Up()
+        {
+            CreateTable(
+                "dbo.tbConfiguracao",
+                c => new
+                    {
+                        cfg_codigo = c.Int(nullable: false, identity: true),
+                        cfg_ultimoLogin = c.DateTime(nullable: false),
+                        cfg_senhaMaster = c.String(maxLength: 30),
+                        cid_codigo = c.Int(nullable: false),
+                    })
+                .PrimaryKey(t => t.cfg_codigo)
+                .ForeignKey("dbo.tbCidade", t => t.cid_codigo)
+                .Index(t => t.cid_codigo);
+            
+        }
+        
+        public override void Down()
+        {
+            DropForeignKey("dbo.tbConfiguracao", "cid_codigo", "dbo.tbCidade");
+            DropIndex("dbo.tbConfiguracao", new[] { "cid_codigo" });
+            DropTable("dbo.tbConfiguracao");
+        }
+    }
+}

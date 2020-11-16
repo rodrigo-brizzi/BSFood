@@ -1,0 +1,460 @@
+﻿using BSFood.View;
+using BSFood.Apoio;
+using BSFood.Models;
+using BSFood.BusinessLogic;
+using BSFood.DataTransfer;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
+
+namespace BSFood.ViewModel
+{
+    public class ProdutoGrupoViewModel : ViewModelBase
+    {
+        public ICommand AnteriorCommand { get; set; }
+        public ICommand ProximoCommand { get; set; }
+        public ICommand NovoCommand { get; set; }
+        public ICommand EditarCommand { get; set; }
+        public ICommand SalvarCommand { get; set; }
+        public ICommand CancelarCommand { get; set; }
+        public ICommand ExcluirCommand { get; set; }
+        public ICommand PesquisarCommand { get; set; }
+        public ICommand LogCommand { get; set; }
+        public ICommand BuscarCommand { get; set; }
+        public ICommand AdicionaSubGrupoCommand { get; set; }
+
+        private winPesquisa objTelaPesquisa;
+
+        public ProdutoGrupoViewModel()
+        {
+            AnteriorCommand = new DelegateCommand(Anterior, CanAnterior);
+            ProximoCommand = new DelegateCommand(Proximo, CanProximo);
+            NovoCommand = new DelegateCommand(Novo, CanNovo);
+            EditarCommand = new DelegateCommand(Editar, CanEditar);
+            SalvarCommand = new DelegateCommand(Salvar, CanSalvar);
+            CancelarCommand = new DelegateCommand(Cancelar, CanCancelar);
+            ExcluirCommand = new DelegateCommand(Excluir, CanExcluir);
+            PesquisarCommand = new DelegateCommand(Pesquisar, CanPesquisar);
+            LogCommand = new DelegateCommand(Log, CanLog);
+            BuscarCommand = new DelegateCommand(Buscar, CanBuscar);
+            AdicionaSubGrupoCommand = new DelegateCommand(AdicionaSubGrupo, CanAdicionaSubGrupo);
+        }
+
+
+        #region Propriedades
+
+        public int? pgr_codigo
+        {
+            get
+            {
+                if (this.objProdutoGrupo == null)
+                    return null;
+                else
+                    return this.objProdutoGrupo.pgr_codigo;
+            }
+            set
+            {
+                if (this.objProdutoGrupo == null || this.objProdutoGrupo.pgr_codigo != value)
+                {
+                    Retorno objRetorno;
+                    using (Produtos objBLL = new Produtos())
+                    {
+                        objRetorno = objBLL.RetornaProdutoGrupo(value == null ? 0 : (int)value, null);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objProdutoGrupo = (tbProdutoGrupo)objRetorno.objRetorno;
+                        base.enStatusTelaAtual = enStatusTela.Navegacao;
+                    }
+                    else
+                    {
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                        RaisePropertyChanged();
+                    }
+                }
+            }
+        }
+
+        [Required(ErrorMessage = "Nome do grupo obrigatório")]
+        [StringLength(100, ErrorMessage = "É permitido apenas 100 caracteres")]
+        public string pgr_nome
+        {
+            get { return this.objProdutoGrupo == null ? string.Empty : this.objProdutoGrupo.pgr_nome; }
+            set
+            {
+                if (this.objProdutoGrupo.pgr_nome != value)
+                {
+                    this.objProdutoGrupo.pgr_nome = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        private tbProdutoGrupo _objProdutoGrupo;
+        public tbProdutoGrupo objProdutoGrupo
+        {
+            get { return this._objProdutoGrupo; }
+            set
+            {
+                this._objProdutoGrupo = value;
+                //Prepara a coleção ProdutoSubGrupo
+                if (this._objProdutoGrupo != null)
+                {
+                    ObservableCollection<ProdutoSubGrupoViewModel> arrProdutoSubGrupoViewModelAux = new ObservableCollection<ProdutoSubGrupoViewModel>();
+                    foreach (tbProdutoSubGrupo objProdutoSubGrupo in this._objProdutoGrupo.tbProdutoSubGrupo)
+                    {
+                        ProdutoSubGrupoViewModel objProdutoSubGrupoViewModel = new ProdutoSubGrupoViewModel(objProdutoSubGrupo);
+                        objProdutoSubGrupoViewModel.OnDispose += objProdutoSubGrupoViewModel_OnDispose;
+                        arrProdutoSubGrupoViewModelAux.Add(objProdutoSubGrupoViewModel);
+                    }
+                    this._arrProdutoSubGrupoViewModel = arrProdutoSubGrupoViewModelAux;
+                }
+                else
+                    this._arrProdutoSubGrupoViewModel = null;
+
+                //Prepara propriedades da viewmodel
+                RaisePropertyChanged(null);
+            }
+        }
+
+        private ObservableCollection<ProdutoSubGrupoViewModel> _arrProdutoSubGrupoViewModel;
+        public ObservableCollection<ProdutoSubGrupoViewModel> arrProdutoSubGrupoViewModel
+        {
+            get { return this._arrProdutoSubGrupoViewModel; }
+            set
+            {
+                this._arrProdutoSubGrupoViewModel = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private List<tbProdutoGrupo> _arrProdutoGrupoPesquisa;
+        public List<tbProdutoGrupo> arrProdutoGrupoPesquisa
+        {
+            get { return this._arrProdutoGrupoPesquisa; }
+            set
+            {
+                this._arrProdutoGrupoPesquisa = value;
+                RaisePropertyChanged("arrProdutoGrupoPesquisa", false);
+                if (this._arrProdutoGrupoPesquisa.Count > 0)
+                    base.intSelectedIndexGrid = 0;
+            }
+        }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+        private bool CanAnterior(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao || base.enStatusTelaAtual == enStatusTela.Padrao);
+        }
+        private void Anterior(object objParam)
+        {
+            Retorno objRetorno;
+            using (Produtos objBLL = new Produtos())
+            {
+                objRetorno = objBLL.RetornaProdutoGrupo(this.objProdutoGrupo == null ? 0 : this.objProdutoGrupo.pgr_codigo, enNavegacao.Anterior);
+            }
+            if (objRetorno.intCodigoErro == 0)
+            {
+                this.objProdutoGrupo = (tbProdutoGrupo)objRetorno.objRetorno;
+                base.enStatusTelaAtual = enStatusTela.Navegacao;
+            }
+            else
+                MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+        }
+
+        private bool CanProximo(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao || base.enStatusTelaAtual == enStatusTela.Padrao);
+        }
+        private void Proximo(object objParam)
+        {
+            Retorno objRetorno;
+            using (Produtos objBLL = new Produtos())
+            {
+                objRetorno = objBLL.RetornaProdutoGrupo(this.objProdutoGrupo == null ? 0 : this.objProdutoGrupo.pgr_codigo, enNavegacao.Proximo);
+            }
+            if (objRetorno.intCodigoErro == 0)
+            {
+                this.objProdutoGrupo = (tbProdutoGrupo)objRetorno.objRetorno;
+                base.enStatusTelaAtual = enStatusTela.Navegacao;
+            }
+            else
+                MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+        }
+
+        private bool CanNovo(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao || base.enStatusTelaAtual == enStatusTela.Padrao) && base.blnPermiteInclusaoRegistro;
+        }
+        private void Novo(object objParam)
+        {
+            tbProdutoGrupo objProdutoGrupoAux = new tbProdutoGrupo();
+            objProdutoGrupoAux.tbProdutoSubGrupo = new List<tbProdutoSubGrupo>();
+            tbProdutoSubGrupo objProdutoSubGrupo = new tbProdutoSubGrupo();
+            objProdutoGrupoAux.tbProdutoSubGrupo.Add(objProdutoSubGrupo);
+            this.objProdutoGrupo = objProdutoGrupoAux;
+            base.enStatusTelaAtual = enStatusTela.EmInclusaoOuAlteracao;
+        }
+
+        private bool CanEditar(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao && base.blnPermiteAlteracaoRegistro);
+        }
+        private void Editar(object objParam)
+        {
+            base.enStatusTelaAtual = enStatusTela.EmInclusaoOuAlteracao;
+        }
+
+        private bool CanSalvar(object objParam)
+        {
+            return base.enStatusTelaAtual == enStatusTela.EmInclusaoOuAlteracao;
+        }
+        private void Salvar(object objParam)
+        {
+            bool blnAchouErro = false;
+            foreach (ProdutoSubGrupoViewModel objProdutoSubGrupoViewModel in this.arrProdutoSubGrupoViewModel)
+            {
+                objProdutoSubGrupoViewModel.Validate();
+                blnAchouErro = objProdutoSubGrupoViewModel.HasErrors;
+                if (blnAchouErro)
+                    break;
+            }
+
+            this.Validate();
+            if (!this.HasErrors && !blnAchouErro)
+            {
+                this.objProdutoGrupo.tbProdutoSubGrupo.Clear();
+                foreach (ProdutoSubGrupoViewModel objProdutoSubGrupoViewModel in this.arrProdutoSubGrupoViewModel)
+                    this.objProdutoGrupo.tbProdutoSubGrupo.Add(objProdutoSubGrupoViewModel.objProdutoSubGrupo);
+
+                Retorno objRetorno;
+                using (Produtos objBLL = new Produtos())
+                {
+                    objRetorno = objBLL.SalvarProdutoGrupo(this.objProdutoGrupo);
+                }
+                if (objRetorno.intCodigoErro == 0)
+                {
+                    this.objProdutoGrupo = (tbProdutoGrupo)objRetorno.objRetorno;
+                    base.enStatusTelaAtual = enStatusTela.Navegacao;
+                }
+                else
+                    MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+            }
+        }
+
+        private bool CanCancelar(object objParam)
+        {
+            return base.enStatusTelaAtual == enStatusTela.EmInclusaoOuAlteracao;
+        }
+        private void Cancelar(object objParam)
+        {
+            if (MessageBox.Show("Todas as alterações serão perdidas, deseja cancelar a edição?", "Atenção", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                if (this.objProdutoGrupo.pgr_codigo > 0)
+                {
+                    Retorno objRetorno;
+                    using (Produtos objBLL = new Produtos())
+                    {
+                        objRetorno = objBLL.RetornaProdutoGrupo(this.objProdutoGrupo.pgr_codigo, null);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objProdutoGrupo = (tbProdutoGrupo)objRetorno.objRetorno;
+                        base.enStatusTelaAtual = enStatusTela.Navegacao;
+                    }
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                }
+                else
+                {
+                    this.objProdutoGrupo = null;
+                    this.ClearAllErrorsAsync();
+                    base.enStatusTelaAtual = enStatusTela.Padrao;
+                }
+            }
+        }
+
+        private bool CanExcluir(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao && base.blnPermiteExclusaoRegistro);
+        }
+        private void Excluir(object objParam)
+        {
+            if (this.objProdutoGrupo != null)
+            {
+                if (MessageBox.Show("Tem Certeza que deseja excluir o registro selecionado?", "Atenção", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                {
+                    Retorno objRetorno;
+                    using (Produtos objBLL = new Produtos())
+                    {
+                        objRetorno = objBLL.ExcluirProdutoGrupo(this.objProdutoGrupo.pgr_codigo);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objProdutoGrupo = null;
+                        this.ClearAllErrorsAsync();
+                        base.enStatusTelaAtual = enStatusTela.Padrao;
+                    }
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                }
+            }
+        }
+
+        private bool CanPesquisar(object objParam)
+        {
+            return (base.enStatusTelaAtual == enStatusTela.Navegacao || base.enStatusTelaAtual == enStatusTela.Padrao);
+        }
+        public void Pesquisar(object objParam)
+        {
+            if (objParam != null)
+            {
+                if (objParam.ToString() == "AbrirTela")
+                {
+                    this.objTelaPesquisa = new winPesquisa();
+                    this.objTelaPesquisa.Title = "Pesquisa - " + base.strNomeTela;
+                    this.objTelaPesquisa.DataContext = this;
+                    this.objTelaPesquisa.Owner = (Window)Application.Current.MainWindow;
+                    this.objTelaPesquisa.Closed += (sen, eve) =>
+                    {
+                        this.objTelaPesquisa = null;
+                        var handler = OnPesquisa;
+                        if (handler != null)
+                            handler(this, null);
+                    };
+                    this.objTelaPesquisa.ShowDialog();
+                }
+                else if (objParam.ToString() == "FecharTela")
+                {
+                    if (this.objTelaPesquisa != null)
+                        this.objTelaPesquisa.Close();
+                }
+                else if (objParam.GetType() == typeof(tbProdutoGrupo))
+                {
+                    this.pgr_codigo = ((tbProdutoGrupo)objParam).pgr_codigo;
+                    if (this.objTelaPesquisa != null)
+                        this.objTelaPesquisa.Close();
+                }
+                else
+                {
+                    Retorno objRetorno;
+                    using (Produtos objBLL = new Produtos())
+                    {
+                        objRetorno = objBLL.RetornaListaProdutoGrupo(objParam.ToString());
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                        this.arrProdutoGrupoPesquisa = (List<tbProdutoGrupo>)objRetorno.objRetorno;
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                }
+            }
+        }
+
+        private bool CanLog(object objParam)
+        {
+            return base.enStatusTelaAtual == enStatusTela.Navegacao;
+        }
+        private void Log(object objParam)
+        {
+            if (objParam != null)
+            {
+                if (objParam.ToString() == "AbrirTela")
+                {
+                    Retorno objRetorno;
+                    using (Auditoria objBLL = new Auditoria())
+                    {
+                        objRetorno = objBLL.RetornaListaAuditoria(this.objProdutoGrupo.pgr_codigo, this.objProdutoGrupo);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        base.arrAuditoria = (List<tbAuditoria>)objRetorno.objRetorno;
+                        winAuditoria objTelaAuditoria = new winAuditoria();
+                        objTelaAuditoria.Title = "Auditoria - " + base.strNomeTela;
+                        objTelaAuditoria.DataContext = this;
+                        objTelaAuditoria.Owner = (Window)Application.Current.MainWindow;
+                        objTelaAuditoria.Closed += (sen, eve) =>
+                        {
+                            base.arrAuditoria = null;
+                            objTelaAuditoria = null;
+                        };
+                        objTelaAuditoria.ShowDialog();
+                    }
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                }
+                else if (objParam.GetType() == typeof(winAuditoria))
+                {
+                    ((Window)objParam).Close();
+                }
+            }
+        }
+
+        private bool CanBuscar(object objParam)
+        {
+            return true;
+        }
+        private void Buscar(object objParam)
+        {
+            if (objParam != null)
+            {
+                int intCodigo;
+                if (int.TryParse(objParam.ToString(), out intCodigo))
+                    this.pgr_codigo = intCodigo;
+                else
+                    Pesquisar("AbrirTela");
+            }
+        }
+
+
+        private bool CanAdicionaSubGrupo(object objParam)
+        {
+            return true;
+        }
+        private void AdicionaSubGrupo(object objParam)
+        {
+            tbProdutoSubGrupo objProdutoSubGrupo = new tbProdutoSubGrupo();
+            ProdutoSubGrupoViewModel objProdutoSubGrupoViewModel = new ProdutoSubGrupoViewModel(objProdutoSubGrupo);
+            objProdutoSubGrupoViewModel.OnDispose += objProdutoSubGrupoViewModel_OnDispose;
+            this.arrProdutoSubGrupoViewModel.Add(objProdutoSubGrupoViewModel);
+        }
+
+        #endregion Comandos
+
+
+
+        #region Eventos
+
+        public event EventHandler OnPesquisa;
+
+        void objProdutoSubGrupoViewModel_OnDispose(object sender, EventArgs e)
+        {
+            this.arrProdutoSubGrupoViewModel.Remove((ProdutoSubGrupoViewModel)sender);
+        }
+
+        #endregion Eventos
+
+
+
+        #region Métodos
+
+
+
+        #endregion Métodos
+    }
+}

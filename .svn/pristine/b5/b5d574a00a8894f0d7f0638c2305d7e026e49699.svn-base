@@ -1,0 +1,17 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Media;
+
+namespace BSFoodServer.Apoio
+{
+    public class LogServices
+    {
+        public int intId { get; set; }
+        public DateTime dtDataHora { get; set; }
+        public string strMensagem { get; set; }
+        public Brush clCorLinha { get; set; }
+    }
+}

@@ -1,0 +1,46 @@
+﻿using BSFood.Apoio;
+using BSFood.DataTransfer;
+using BSFood.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFood.BusinessLogic.Interfaces
+{
+    public interface IVendas
+    {
+
+        #region Entrega Pedido
+
+        Retorno RetornaPedido(int intCodigo, enNavegacao? enDirecao, enOrigemPedido enOrigem);
+
+        Retorno RetornaListaPedido(string strParametro, enOrigemPedido enOrigem, bool blnProducao = true, bool blnEntrega = true, bool blnFinalizado = true, bool blnExcluido = true, int? intFunCodigo = null, int? intCaiCodigo = null);
+
+        Retorno SalvarPedido(tbPedido objPedido, enOrigemPedido enOrigem);
+
+        Retorno ExcluirPedido(int intCodigo, string strMotivoCancelamento);
+
+        Retorno SalvarEntregador(tbPedido objPedido);
+
+        #endregion Entrega Pedido
+
+
+
+        #region Mesa Pedido
+
+        Retorno RetornaMesa(int intCodigo);
+
+        Retorno RetornaListaMesa(string strParametro, bool blnLivre = true, bool blnOcupado = true);
+
+        Retorno SalvarMesa(tbMesa objMesa);
+
+        Retorno FecharMesa(tbMesa objMesa);
+
+        Retorno ExcluirMesa(tbMesa objMesa);
+
+        #endregion Mesa Pedido
+
+    }
+}

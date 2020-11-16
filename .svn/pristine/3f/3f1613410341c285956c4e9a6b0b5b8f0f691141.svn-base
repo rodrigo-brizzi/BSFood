@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:tns="http://schemas.datacontract.org/2004/07/BSFoodWEB.DAL" elementFormDefault="qualified" targetNamespace="http://schemas.datacontract.org/2004/07/BSFoodWEB.DAL" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:complexType name="ArrayOftbMenu">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="tbMenu" nillable="true" type="tns:tbMenu" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ArrayOftbMenu" nillable="true" type="tns:ArrayOftbMenu" />
+  <xs:complexType name="tbMenu">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="men_cabecalho" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="men_codigo" type="xs:int" />
+      <xs:element minOccurs="0" name="men_codigoPai" nillable="true" type="xs:int" />
+      <xs:element minOccurs="0" name="men_imagem" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="men_nivel" nillable="true" type="xs:int" />
+      <xs:element minOccurs="0" name="men_nomeControle" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="men_ordem" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="men_status" nillable="true" type="xs:boolean" />
+      <xs:element minOccurs="0" name="tbMenu1" nillable="true" type="tns:ArrayOftbMenu" />
+      <xs:element minOccurs="0" name="tbMenu2" nillable="true" type="tns:tbMenu" />
+      <xs:element minOccurs="0" name="tbPerfilAcessoMenu" nillable="true" type="tns:ArrayOftbPerfilAcessoMenu" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="tbMenu" nillable="true" type="tns:tbMenu" />
+  <xs:complexType name="ArrayOftbPerfilAcessoMenu">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="tbPerfilAcessoMenu" nillable="true" type="tns:tbPerfilAcessoMenu" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ArrayOftbPerfilAcessoMenu" nillable="true" type="tns:ArrayOftbPerfilAcessoMenu" />
+  <xs:complexType name="tbPerfilAcessoMenu">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="men_codigo" type="xs:int" />
+      <xs:element minOccurs="0" name="pac_codigo" type="xs:int" />
+      <xs:element minOccurs="0" name="pam_alteracao" nillable="true" type="xs:boolean" />
+      <xs:element minOccurs="0" name="pam_exclusao" nillable="true" type="xs:boolean" />
+      <xs:element minOccurs="0" name="pam_inclusao" nillable="true" type="xs:boolean" />
+      <xs:element minOccurs="0" name="pam_visualizacao" nillable="true" type="xs:boolean" />
+      <xs:element minOccurs="0" name="tbMenu" nillable="true" type="tns:tbMenu" />
+      <xs:element minOccurs="0" name="tbPerfilAcesso" nillable="true" type="tns:tbPerfilAcesso" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="tbPerfilAcessoMenu" nillable="true" type="tns:tbPerfilAcessoMenu" />
+  <xs:complexType name="tbPerfilAcesso">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="pac_codigo" type="xs:int" />
+      <xs:element minOccurs="0" name="pac_descricao" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="pac_permiteCancelaCupom" nillable="true" type="xs:boolean" />
+      <xs:element minOccurs="0" name="pac_permiteCancelaItem" nillable="true" type="xs:boolean" />
+      <xs:element minOccurs="0" name="pac_permiteDesconto" nillable="true" type="xs:boolean" />
+      <xs:element minOccurs="0" name="pac_permiteVendaClienteBloqueado" nillable="true" type="xs:boolean" />
+      <xs:element minOccurs="0" name="pac_permiteVendaClienteNegativo" nillable="true" type="xs:boolean" />
+      <xs:element minOccurs="0" name="tbFuncionario" nillable="true" type="tns:ArrayOftbFuncionario" />
+      <xs:element minOccurs="0" name="tbPerfilAcessoMenu" nillable="true" type="tns:ArrayOftbPerfilAcessoMenu" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="tbPerfilAcesso" nillable="true" type="tns:tbPerfilAcesso" />
+  <xs:complexType name="ArrayOftbFuncionario">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="tbFuncionario" nillable="true" type="tns:tbFuncionario" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ArrayOftbFuncionario" nillable="true" type="tns:ArrayOftbFuncionario" />
+  <xs:complexType name="tbFuncionario">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="cid_codigo" nillable="true" type="xs:int" />
+      <xs:element minOccurs="0" name="est_codigo" nillable="true" type="xs:int" />
+      <xs:element minOccurs="0" name="fun_codigo" type="xs:int" />
+      <xs:element minOccurs="0" name="fun_login" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="fun_nome" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="fun_senha" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="pac_codigo" nillable="true" type="xs:int" />
+      <xs:element minOccurs="0" name="tbCidade" nillable="true" type="tns:tbCidade" />
+      <xs:element minOccurs="0" name="tbEstado" nillable="true" type="tns:tbEstado" />
+      <xs:element minOccurs="0" name="tbPerfilAcesso" nillable="true" type="tns:tbPerfilAcesso" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="tbFuncionario" nillable="true" type="tns:tbFuncionario" />
+  <xs:complexType name="tbCidade">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="cid_codigo" type="xs:int" />
+      <xs:element minOccurs="0" name="cid_ibge" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="cid_nome" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="est_codigo" nillable="true" type="xs:int" />
+      <xs:element minOccurs="0" name="tbClienteEndereco" nillable="true" type="tns:ArrayOftbClienteEndereco" />
+      <xs:element minOccurs="0" name="tbEmpresa" nillable="true" type="tns:ArrayOftbEmpresa" />
+      <xs:element minOccurs="0" name="tbEmpresa1" nillable="true" type="tns:ArrayOftbEmpresa" />
+      <xs:element minOccurs="0" name="tbEstado" nillable="true" type="tns:tbEstado" />
+      <xs:element minOccurs="0" name="tbFuncionario" nillable="true" type="tns:ArrayOftbFuncionario" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="tbCidade" nillable="true" type="tns:tbCidade" />
+  <xs:complexType name="ArrayOftbClienteEndereco">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="tbClienteEndereco" nillable="true" type="tns:tbClienteEndereco" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ArrayOftbClienteEndereco" nillable="true" type="tns:ArrayOftbClienteEndereco" />
+  <xs:complexType name="tbClienteEndereco">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="bai_codigo" nillable="true" type="xs:int" />
+      <xs:element minOccurs="0" name="cen_cep" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="cen_codigo" type="xs:int" />
+      <xs:element minOccurs="0" name="cen_complemento" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="cen_logradouro" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="cen_numero" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="cid_codigo" nillable="true" type="xs:int" />
+      <xs:element minOccurs="0" name="cli_codigo" nillable="true" type="xs:int" />
+      <xs:element minOccurs="0" name="est_codigo" nillable="true" type="xs:int" />
+      <xs:element minOccurs="0" name="tbBairro" nillable="true" type="tns:tbBairro" />
+      <xs:element minOccurs="0" name="tbCidade" nillable="true" type="tns:tbCidade" />
+      <xs:element minOccurs="0" name="tbCliente" nillable="true" type="tns:tbCliente" />
+      <xs:element minOccurs="0" name="tbEstado" nillable="true" type="tns:tbEstado" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="tbClienteEndereco" nillable="true" type="tns:tbClienteEndereco" />
+  <xs:complexType name="tbBairro">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="bai_codigo" type="xs:int" />
+      <xs:element minOccurs="0" name="bai_nome" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="tbClienteEndereco" nillable="true" type="tns:ArrayOftbClienteEndereco" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="tbBairro" nillable="true" type="tns:tbBairro" />
+  <xs:complexType name="tbCliente">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="cli_codigo" type="xs:int" />
+      <xs:element minOccurs="0" name="cli_cpfCnpj" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="cli_email" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="cli_nome" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="cli_nomeFantasia" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="cli_observacao" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="cli_rgIe" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="cli_sexo" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="cli_tipo" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="tbClienteEndereco" nillable="true" type="tns:ArrayOftbClienteEndereco" />
+      <xs:element minOccurs="0" name="tbClienteTelefone" nillable="true" type="tns:ArrayOftbClienteTelefone" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="tbCliente" nillable="true" type="tns:tbCliente" />
+  <xs:complexType name="ArrayOftbClienteTelefone">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="tbClienteTelefone" nillable="true" type="tns:tbClienteTelefone" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ArrayOftbClienteTelefone" nillable="true" type="tns:ArrayOftbClienteTelefone" />
+  <xs:complexType name="tbClienteTelefone">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="cli_codigo" nillable="true" type="xs:int" />
+      <xs:element minOccurs="0" name="ctl_codigo" type="xs:int" />
+      <xs:element minOccurs="0" name="ctl_numero" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="tbCliente" nillable="true" type="tns:tbCliente" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="tbClienteTelefone" nillable="true" type="tns:tbClienteTelefone" />
+  <xs:complexType name="tbEstado">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="est_codigo" type="xs:int" />
+      <xs:element minOccurs="0" name="est_nome" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="est_sigla" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="tbCidade" nillable="true" type="tns:ArrayOftbCidade" />
+      <xs:element minOccurs="0" name="tbClienteEndereco" nillable="true" type="tns:ArrayOftbClienteEndereco" />
+      <xs:element minOccurs="0" name="tbEmpresa" nillable="true" type="tns:ArrayOftbEmpresa" />
+      <xs:element minOccurs="0" name="tbEmpresa1" nillable="true" type="tns:ArrayOftbEmpresa" />
+      <xs:element minOccurs="0" name="tbFuncionario" nillable="true" type="tns:ArrayOftbFuncionario" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="tbEstado" nillable="true" type="tns:tbEstado" />
+  <xs:complexType name="ArrayOftbCidade">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="tbCidade" nillable="true" type="tns:tbCidade" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ArrayOftbCidade" nillable="true" type="tns:ArrayOftbCidade" />
+  <xs:complexType name="ArrayOftbEmpresa">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="tbEmpresa" nillable="true" type="tns:tbEmpresa" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ArrayOftbEmpresa" nillable="true" type="tns:ArrayOftbEmpresa" />
+  <xs:complexType name="tbEmpresa">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="cid_cidadePadrao" nillable="true" type="xs:int" />
+      <xs:element minOccurs="0" name="cid_codigo" nillable="true" type="xs:int" />
+      <xs:element minOccurs="0" name="emp_codigo" type="xs:int" />
+      <xs:element minOccurs="0" name="emp_nome" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="emp_nomeFantasia" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="est_codigo" nillable="true" type="xs:int" />
+      <xs:element minOccurs="0" name="est_estadoPadrao" nillable="true" type="xs:int" />
+      <xs:element minOccurs="0" name="tbCidade" nillable="true" type="tns:tbCidade" />
+      <xs:element minOccurs="0" name="tbCidade1" nillable="true" type="tns:tbCidade" />
+      <xs:element minOccurs="0" name="tbEstado" nillable="true" type="tns:tbEstado" />
+      <xs:element minOccurs="0" name="tbEstado1" nillable="true" type="tns:tbEstado" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="tbEmpresa" nillable="true" type="tns:tbEmpresa" />
+</xs:schema>

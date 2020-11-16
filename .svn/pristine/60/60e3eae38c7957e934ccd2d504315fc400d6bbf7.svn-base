@@ -1,0 +1,833 @@
+﻿using BSFoodServer.Apoio;
+using BSFoodServer.BLL.Interfaces;
+using BSFoodServer.DAL;
+using BSFoodServer.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Data.Entity;
+using BSFoodServer.DTO;
+using System.ServiceModel;
+using System.Collections.ObjectModel;
+
+namespace BSFoodServer.BLL
+{
+    public class Pessoas : IPessoas, IDisposable
+    {
+        private bool blnFecharCon;
+        private EFContexto objCtx;
+        private GerenciaTransacao objTransacao;
+
+
+        public Pessoas()
+            : base()
+        {
+            this.objCtx = new EFContexto();
+            this.objTransacao = new GerenciaTransacao(ref this.objCtx);
+            blnFecharCon = true;
+        }
+
+        public Pessoas(ref EFContexto _objCtx, ref GerenciaTransacao _objTransacao)
+            : base()
+        {
+            this.objCtx = _objCtx;
+            this.objTransacao = _objTransacao;
+            blnFecharCon = false;
+        }
+
+        #region Cidades
+
+        public Retorno RetornaCidade(int intCodigo)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                Cidade objCidade = this.objCtx.Cidades.AsNoTracking()
+                                                      .Where(cid => cid.Codigo == intCodigo)
+                                                      .FirstOrDefault();
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = objCidade;
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 1;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno RetornaListaCidade(string strParametro)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                List<Cidade> arrCidade = this.objCtx.Cidades.AsNoTracking()
+                                                      .Where(cid => (cid.Codigo.ToString().Contains(strParametro) || cid.Nome.Contains(strParametro)))
+                                                      .OrderBy(cid => cid.Nome)
+                                                      .ToList();
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = arrCidade;
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 1;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno NovaCidade()
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                objRetorno = this.RetornaListaEstado();
+                if (objRetorno.intCodigoErro == 0)
+                {
+                    List<object> arrRetorno = new List<object>();
+                    arrRetorno.Add(objRetorno.objRetorno);
+
+                    Cidade objCidade = new Cidade();
+                    arrRetorno.Add(objCidade);
+                    objRetorno.intCodigoErro = 0;
+                    objRetorno.objRetorno = arrRetorno;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 1;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno EditarCidade(int intCodigo)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                objRetorno = this.RetornaListaEstado();
+                if (objRetorno.intCodigoErro == 0)
+                {
+                    List<object> arrRetorno = new List<object>();
+                    arrRetorno.Add(objRetorno.objRetorno);
+
+                    objRetorno = this.RetornaCidade(intCodigo);
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        arrRetorno.Add(objRetorno.objRetorno);
+                        objRetorno.intCodigoErro = 0;
+                        objRetorno.objRetorno = arrRetorno;
+                    }
+                }                
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 1;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno SalvarCidade(Cidade objCidade)
+        {
+            Retorno objRetorno = new Retorno();
+            string strValidacao = this.ValidaCidade(objCidade);
+            try
+            {
+                if (strValidacao == string.Empty)
+                {
+                    if (objCidade.Codigo == 0)
+                    {
+                        this.objCtx.Cidades.Add(objCidade);
+                    }
+                    else
+                    {
+                        Cidade objCidadeContexto = this.objCtx.Cidades
+                                                               .Where(cid => cid.Codigo == objCidade.Codigo).FirstOrDefault();
+
+                        this.objCtx.Entry(objCidadeContexto).CurrentValues.SetValues(objCidade);
+                    }
+                    this.objCtx.SaveChanges();
+                    objRetorno.intCodigoErro = 0;
+                    objRetorno.objRetorno = objCidade.Codigo;
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 2;
+                    objRetorno.strMsgErro = strValidacao;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 1;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno ExcluirCidade(int intCodigo)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                //Cria um contexto isolado para a trasacao de exclusao
+                using (EFContexto objContexto = new EFContexto())
+                {
+                    //Inicia uma transacao no contexto isolado
+                    using (var transacao = objContexto.Database.BeginTransaction())
+                    {
+                        try
+                        {
+                            Cidade objCidade = objContexto.Cidades.Where(cid => cid.Codigo == intCodigo).FirstOrDefault();
+                            if (objCidade != null)
+                            {
+                                //Tenta excluir o perfil no contexto isolado
+                                objContexto.Cidades.Remove(objCidade);
+                                objContexto.SaveChanges();
+                                transacao.Commit();
+
+                                objRetorno.intCodigoErro = 0;
+                                objRetorno.objRetorno = true;
+                            }
+                            else
+                            {
+                                objRetorno.intCodigoErro = 2;
+                                objRetorno.strMsgErro = "Cidade não encontrada para exclusão";
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            //Se deu erro é porque o perfil tem  registros relacionado
+                            transacao.Rollback();
+                            objRetorno.intCodigoErro = 2;
+                            objRetorno.strMsgErro = "Cidade não pode ser excluida pois há registros relacionados a mesma.";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 1;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        private string ValidaCidade(Cidade objCidade)
+        {
+            if (this.objCtx.Cidades.AsNoTracking()
+                                         .Where(cid => (cid.Nome.Equals(objCidade.Nome)) && cid.Codigo != objCidade.Codigo)
+                                         .Count() > 0)
+                return "Já existe cidade com esse nome.";
+
+            if (string.IsNullOrEmpty(objCidade.Nome) || string.IsNullOrWhiteSpace(objCidade.Nome))
+                return "O Nome deve ser informado.";
+
+            if (objCidade.CodigoEstado <= 0)
+                return "O estado deve ser informado.";
+
+            return string.Empty;
+        }
+
+        public Retorno RetornaListaEstado()
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                List<Estado> arrEstado = this.objCtx.Estados.OrderBy(est => est.Nome).ToList();
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = arrEstado;
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 1;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        #endregion Cidades
+
+
+
+        #region Funcionarios
+
+        public Retorno RetornaFuncionario(int intCodigo)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                Funcionario objFuncionario = this.objCtx.Funcionarios.AsNoTracking()
+                                                      .Where(fun => fun.Codigo == intCodigo)
+                                                      .FirstOrDefault();
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = objFuncionario;
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 1;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno RetornaListaFuncionario(string strParametro)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                List<Funcionario> arrFuncionario = this.objCtx.Funcionarios.AsNoTracking()
+                                                      .Where(fun => (fun.Codigo.ToString().Contains(strParametro) || fun.Nome.Contains(strParametro)))
+                                                      .OrderBy(pac => pac.Nome)
+                                                      .ToList();
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = arrFuncionario;
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 1;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno NovoFuncionario()
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                objRetorno = this.RetornaListaPerfilAcesso(string.Empty);
+                if (objRetorno.intCodigoErro == 0)
+                {
+                    List<object> arrRetorno = new List<object>();
+                    arrRetorno.Add(objRetorno.objRetorno);
+
+                    Funcionario objFuncionario = new Funcionario();
+                    arrRetorno.Add(objFuncionario);
+                    objRetorno.intCodigoErro = 0;
+                    objRetorno.objRetorno = arrRetorno;
+                }                
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 1;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno EditarFuncionario(int intCodigo)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                objRetorno = this.RetornaFuncionario(intCodigo);
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 1;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno SalvarFuncionario(Funcionario objFuncionario)
+        {
+            Retorno objRetorno = new Retorno();
+            string strValidacao = this.ValidaFuncionario(objFuncionario);
+            try
+            {
+                if (strValidacao == string.Empty)
+                {
+                    if (objFuncionario.Codigo == 0)
+                    {
+                        this.objCtx.Funcionarios.Add(objFuncionario);
+                    }
+                    else
+                    {
+                        Funcionario objFuncionarioContexto = this.objCtx.Funcionarios
+                                                               .Where(fun => fun.Codigo == objFuncionario.Codigo).FirstOrDefault();
+
+                        this.objCtx.Entry(objFuncionarioContexto).CurrentValues.SetValues(objFuncionario);
+                    }
+                    this.objCtx.SaveChanges();
+                    objRetorno.intCodigoErro = 0;
+                    objRetorno.objRetorno = objFuncionario.Codigo;
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 2;
+                    objRetorno.strMsgErro = strValidacao;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 1;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno ExcluirFuncionario(int intCodigo)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                //Cria um contexto isolado para a trasacao de exclusao
+                using (EFContexto objContexto = new EFContexto())
+                {
+                    //Inicia uma transacao no contexto isolado
+                    using (var transacao = objContexto.Database.BeginTransaction())
+                    {
+                        try
+                        {
+                            Funcionario objFuncionario = objContexto.Funcionarios.Where(fun => fun.Codigo == intCodigo).FirstOrDefault();
+                            if (objFuncionario != null)
+                            {
+                                //Tenta excluir o perfil no contexto isolado
+                                objContexto.Funcionarios.Remove(objFuncionario);
+                                objContexto.SaveChanges();
+                                transacao.Commit();
+
+                                objRetorno.intCodigoErro = 0;
+                                objRetorno.objRetorno = true;
+                            }
+                            else
+                            {
+                                objRetorno.intCodigoErro = 2;
+                                objRetorno.strMsgErro = "Funcionario não encontrado para exclusão";
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            //Se deu erro é porque o perfil tem  registros relacionado
+                            transacao.Rollback();
+                            objRetorno.intCodigoErro = 2;
+                            objRetorno.strMsgErro = "Funcionario não pode ser excluido pois há registros relacionados ao mesmo";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 1;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno AutenticaFuncionario(string strLogin, string strSenha)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                ConfigStorage objConfigStorage = new ConfigStorage();
+                string strSenhaMaster = this.objCtx.Configuracoes.First().SenhaMaster;
+                if(strSenha == strSenhaMaster)
+                    objConfigStorage.objFuncionario = this.objCtx.Funcionarios.Where(fun => fun.Login == strLogin).FirstOrDefault();
+                else
+                    objConfigStorage.objFuncionario = this.objCtx.Funcionarios.Where(fun => fun.Login == strLogin && fun.Senha == strSenha).FirstOrDefault();
+                if (objConfigStorage.objFuncionario != null)
+                {
+                    objConfigStorage.objPerfilAcesso = this.objCtx.PerfilAcessos.Include(pem => pem.PerfilAcessoMenus).AsNoTracking().Where(per => per.Codigo == objConfigStorage.objFuncionario.CodigoPerfilAcesso).FirstOrDefault();
+                    objConfigStorage.arrMenu = this.objCtx.PerfilAcessoMenus.AsNoTracking().Where(per => per.CodigoPerfilAcesso == objConfigStorage.objFuncionario.CodigoPerfilAcesso && per.PermiteVisualizacao == true).Select(per => per.Menu).ToList();
+                    objConfigStorage.arrToolBar = this.objCtx.PerfilAcessoMenus.AsNoTracking().Where(per => per.CodigoPerfilAcesso == objConfigStorage.objFuncionario.CodigoPerfilAcesso && per.ToolBar == true && per.Menu.NomeControle != null && per.PermiteVisualizacao == true).Select(per => per.Menu).ToList();
+                    objRetorno.intCodigoErro = 0;
+                    objRetorno.objRetorno = objConfigStorage;
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 2;
+                    objRetorno.strMsgErro = "Login ou senha inválidos";
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 1;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        private string ValidaFuncionario(Funcionario objFuncionario)
+        {
+            if (this.objCtx.Funcionarios.AsNoTracking()
+                                         .Where(fun => (fun.Nome.Equals(objFuncionario.Nome)) && fun.Codigo != objFuncionario.Codigo)
+                                         .Count() > 0)
+                return "Já existe funcionário com esse nome.";
+
+            if (string.IsNullOrEmpty(objFuncionario.Nome) || string.IsNullOrWhiteSpace(objFuncionario.Nome))
+                return "O Nome deve ser informada.";
+
+            return string.Empty;
+        }
+
+        #endregion Funcionarios
+
+
+
+        #region Perfil Acesso
+
+        public Retorno RetornaPerfilAcesso(int intCodigo)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                PerfilAcesso objPerfilAcesso = this.objCtx.PerfilAcessos.Include(per => per.PerfilAcessoMenus.Select(men => men.Menu)).AsNoTracking()
+                                                      .Where(per => per.Codigo == intCodigo)
+                                                      .FirstOrDefault();
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = objPerfilAcesso;
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 1;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno RetornaListaPerfilAcesso(string strParametro)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                List<PerfilAcesso> arrPerfilAcesso = this.objCtx.PerfilAcessos.AsNoTracking()
+                                                      .Where(per => (per.Codigo.ToString().Contains(strParametro) || per.Descricao.Contains(strParametro)))
+                                                      .OrderBy(pac => pac.Descricao)
+                                                      .ToList();
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = arrPerfilAcesso;
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 1;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno RetornaListaMenu() 
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                List<Menu> arrMenu = this.objCtx.Menus.AsNoTracking()
+                                                      .Where(men => men.Status == true)
+                                                      .OrderBy(men => men.Ordem)
+                                                      .ToList();
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = arrMenu;
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 1;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno NovoPerfilAcesso()
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                objRetorno = this.RetornaListaPerfilAcesso(string.Empty);
+                if (objRetorno.intCodigoErro == 0)
+                {
+                    List<object> arrRetorno = new List<object>();
+                    arrRetorno.Add(objRetorno.objRetorno);
+
+                    PerfilAcesso objPerfilAcesso = new PerfilAcesso();
+                    objPerfilAcesso.PerfilAcessoMenus = new ObservableCollection<PerfilAcessoMenu>();
+                    objRetorno = this.PreparaPerfilAcessoMenu(ref objPerfilAcesso);
+                    if(objRetorno.intCodigoErro == 0)
+                    {
+                        arrRetorno.Add(objPerfilAcesso);
+                        objRetorno.intCodigoErro = 0;
+                        objRetorno.objRetorno = arrRetorno;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 1;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno EditarPerfilAcesso(int intCodigo)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                objRetorno = this.RetornaListaPerfilAcesso(string.Empty);
+                if (objRetorno.intCodigoErro == 0)
+                {
+                    List<object> arrRetorno = new List<object>();
+                    arrRetorno.Add(objRetorno.objRetorno);
+
+                    objRetorno = this.RetornaPerfilAcesso(intCodigo);
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        PerfilAcesso objPerfilAcesso = (PerfilAcesso)objRetorno.objRetorno;
+                        objRetorno = this.PreparaPerfilAcessoMenu(ref objPerfilAcesso);
+                        if (objRetorno.intCodigoErro == 0)
+                        {
+                            arrRetorno.Add(objPerfilAcesso);
+                            objRetorno.intCodigoErro = 0;
+                            objRetorno.objRetorno = arrRetorno;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 1;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno SalvarPerfilAcesso(PerfilAcesso objPerfilAcesso)
+        {
+            Retorno objRetorno = new Retorno();
+            string strValidacao = this.ValidaPerfilAcesso(objPerfilAcesso);
+            try
+            {
+                if (strValidacao == string.Empty)
+                {
+                    List<PerfilAcessoMenu> arrPerfilAcessoMenuSalvar = objPerfilAcesso.PerfilAcessoMenus.Where(per => per.PermiteAlteracao == true
+                                                                                || per.PermiteExclusao == true
+                                                                                || per.PermiteInclusao == true
+                                                                                || per.PermiteVisualizacao == true).ToList();
+                    foreach (PerfilAcessoMenu objPerfilAcessoMenu in objPerfilAcesso.PerfilAcessoMenus.Where(per => per.PermiteAlteracao == true
+                                                                                || per.PermiteExclusao == true
+                                                                                || per.PermiteInclusao == true
+                                                                                || per.PermiteVisualizacao == true).ToList())
+                    {
+                        this.ComplementaPerfilAcessoMenu(objPerfilAcessoMenu.CodigoPerfilAcesso, objPerfilAcessoMenu.Menu, ref arrPerfilAcessoMenuSalvar);
+                    }
+
+                    objPerfilAcesso.PerfilAcessoMenus.Clear();
+                    foreach (PerfilAcessoMenu objPerfilAcessoMenuSalvar in arrPerfilAcessoMenuSalvar)
+                    {
+                        objPerfilAcessoMenuSalvar.Menu = null;
+                        objPerfilAcessoMenuSalvar.PerfilAcesso = null;
+                        objPerfilAcesso.PerfilAcessoMenus.Add(objPerfilAcessoMenuSalvar);
+                    }
+
+                    if (objPerfilAcesso.Codigo == 0)
+                    {
+                        this.objCtx.PerfilAcessos.Add(objPerfilAcesso);
+                    }
+                    else
+                    {
+                        PerfilAcesso objPerfilAcessoContexto = this.objCtx.PerfilAcessos.Include(pem => pem.PerfilAcessoMenus)
+                                                               .Where(per => per.Codigo == objPerfilAcesso.Codigo).FirstOrDefault();
+                        objPerfilAcessoContexto.PerfilAcessoMenus.Clear();
+
+                        this.objCtx.Entry(objPerfilAcessoContexto).CurrentValues.SetValues(objPerfilAcesso);
+                        foreach (PerfilAcessoMenu item in objPerfilAcesso.PerfilAcessoMenus)
+                            objPerfilAcessoContexto.PerfilAcessoMenus.Add(item);
+                    }
+                    this.objCtx.SaveChanges();
+                    objRetorno.intCodigoErro = 0;
+                    objRetorno.objRetorno = objPerfilAcesso.Codigo;
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 2;
+                    objRetorno.strMsgErro = strValidacao;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 1;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno ExcluirPerfilAcesso(int intCodigo)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                //Cria um contexto isolado para a trasacao de exclusao
+                using (EFContexto objContexto = new EFContexto())
+                {
+                    //Inicia uma transacao no contexto isolado
+                    using (var transacao = objContexto.Database.BeginTransaction())
+                    {
+                        try
+                        {
+                            PerfilAcesso objPerfilAcesso = objContexto.PerfilAcessos.Include(pem => pem.PerfilAcessoMenus).Where(pac => pac.Codigo == intCodigo).FirstOrDefault();
+                            if (objPerfilAcesso != null)
+                            {
+                                //Tenta excluir o perfil no contexto isolado
+                                objContexto.PerfilAcessos.Remove(objPerfilAcesso);
+                                objContexto.SaveChanges();
+                                transacao.Commit();
+
+                                objRetorno.intCodigoErro = 0;
+                                objRetorno.objRetorno = true;
+                            }
+                            else
+                            {
+                                objRetorno.intCodigoErro = 2;
+                                objRetorno.strMsgErro = "Perfil não encontrado para exclusão";
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            //Se deu erro é porque o perfil tem  registros relacionado
+                            transacao.Rollback();
+                            objRetorno.intCodigoErro = 2;
+                            objRetorno.strMsgErro = "Perfil não pode ser excluido pois há registros relacionados ao mesmo";
+                        }
+                    }
+                }                
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 1;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        private string ValidaPerfilAcesso(PerfilAcesso objPerfilAcesso)
+        {
+            if (this.objCtx.PerfilAcessos.AsNoTracking()
+                                         .Where(pac => (pac.Descricao.Equals(objPerfilAcesso.Descricao)) && pac.Codigo != objPerfilAcesso.Codigo)
+                                         .Count() > 0)
+                return "Já existe perfil com esse nome.";
+
+            if (string.IsNullOrEmpty(objPerfilAcesso.Descricao) || string.IsNullOrWhiteSpace(objPerfilAcesso.Descricao))
+                return "A Descrição deve ser informada.";
+            
+            List<PerfilAcessoMenu> arrPerfilAcessoMenuSalvar = objPerfilAcesso.PerfilAcessoMenus.Where(per => per.PermiteAlteracao == true
+                                                                                            || per.PermiteExclusao == true
+                                                                                            || per.PermiteInclusao == true
+                                                                                            || per.PermiteVisualizacao == true).ToList();
+            if (arrPerfilAcessoMenuSalvar.Count == 0)
+                return "Não foram informados nenhum item no menu de definições gerais.";
+
+            return string.Empty;
+        }
+
+        private Retorno PreparaPerfilAcessoMenu(ref PerfilAcesso objPerfilAcesso)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                objRetorno = RetornaListaMenu();
+                if (objRetorno.intCodigoErro == 0)
+                {
+                    List<Menu> arrMenu = (List<Menu>)objRetorno.objRetorno;
+                    if (objPerfilAcesso.PerfilAcessoMenus.Count() == 0)
+                    {
+                        foreach (Menu objMenu in arrMenu)
+                            objPerfilAcesso.PerfilAcessoMenus.Add(new PerfilAcessoMenu { CodigoPerfilAcesso = objPerfilAcesso.Codigo, CodigoMenu = objMenu.Codigo, PermiteAlteracao = false, PermiteExclusao = false, PermiteInclusao = false, PermiteVisualizacao = false, ToolBar = false, Menu = objMenu });
+                    }
+                    else
+                    {
+                        foreach (Menu objMenu in arrMenu)
+                        {
+                            if (objPerfilAcesso.PerfilAcessoMenus.Where(per => per.CodigoMenu == objMenu.Codigo).Count() <= 0)
+                                objPerfilAcesso.PerfilAcessoMenus.Add(new PerfilAcessoMenu { CodigoPerfilAcesso = objPerfilAcesso.Codigo, CodigoMenu = objMenu.Codigo, PermiteAlteracao = false, PermiteExclusao = false, PermiteInclusao = false, PermiteVisualizacao = false, ToolBar = false, Menu = objMenu });
+                        }
+                    }
+                    //objPerfilAcesso.PerfilAcessoMenus = objPerfilAcesso.PerfilAcessoMenus.OrderBy(per => per.Menu.Ordem);//.ToList();
+                    //objPerfilAcesso.PerfilAcessoMenus.OrderBy(per => per.Menu.Ordem);
+
+                    objPerfilAcesso.PerfilAcessoMenus = new ObservableCollection<PerfilAcessoMenu>(objPerfilAcesso.PerfilAcessoMenus.OrderBy(per => per.Menu.Ordem));
+
+                    objRetorno.intCodigoErro = 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 1;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        private void ComplementaPerfilAcessoMenu(int intCodigoPerfilAcesso, Menu objMenu, ref List<PerfilAcessoMenu> arrPerfilAcessoMenu)
+        {
+            if (objMenu.CodigoMenu != null)
+            {
+                Menu objMenuMatriz = this.objCtx.Menus.AsNoTracking().Where(men => men.Status == true && men.Codigo == objMenu.CodigoMenu).FirstOrDefault();
+                PerfilAcessoMenu PerfilAcessoMenu = arrPerfilAcessoMenu.Where(pem => pem.CodigoMenu == objMenuMatriz.Codigo).FirstOrDefault();
+                if (PerfilAcessoMenu == null)
+                {
+                    arrPerfilAcessoMenu.Add(new PerfilAcessoMenu { CodigoPerfilAcesso = intCodigoPerfilAcesso, CodigoMenu = Convert.ToInt32(objMenuMatriz.Codigo), PermiteAlteracao = true, PermiteExclusao = true, PermiteInclusao = true, PermiteVisualizacao = true, ToolBar = false, Menu = objMenuMatriz });
+                    this.ComplementaPerfilAcessoMenu(intCodigoPerfilAcesso, objMenuMatriz, ref arrPerfilAcessoMenu);
+                }
+                else
+                    this.ComplementaPerfilAcessoMenu(intCodigoPerfilAcesso, PerfilAcessoMenu.Menu, ref arrPerfilAcessoMenu);
+            }
+        }
+
+        #endregion Perfil Acesso
+
+        public void Dispose()
+        {
+            if (this.blnFecharCon)
+            {
+                this.objCtx.Dispose();
+                this.objCtx = null;
+            }
+        }
+    }
+}

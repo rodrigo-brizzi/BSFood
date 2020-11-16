@@ -1,0 +1,177 @@
+﻿using BSFood.Apoio;
+using BSFood.BusinessLogic;
+using BSFood.DataTransfer;
+using BSFood.Models;
+using BSFood.View;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Input;
+
+namespace BSFood.ViewModel
+{
+    public class EntregaDetalheViewModel : ViewModelBase
+    {
+        public ICommand FuncionarioEntregadorCommand { get; set; }
+        public EntregaDetalheViewModel(tbPedido _objPedido)
+        {
+            FuncionarioEntregadorCommand = new DelegateCommand(FuncionarioEntregador, CanFuncionarioEntregador);
+            this.objPedido = _objPedido;
+        }
+
+        #region Propriedades
+
+        public tbPedido objPedido { get; set; }
+
+        public int? fun_funcionarioEntregador
+        {
+            get
+            {
+                if (this.objPedido == null || this.objPedido.fun_funcionarioEntregador == 0)
+                    return null;
+                else
+                    return this.objPedido.fun_funcionarioEntregador;
+            }
+            set
+            {
+                if ((this.objPedido == null || this.objPedido.fun_funcionarioEntregador != value) && this.objPedido.ped_status != "X")
+                {
+                    Retorno objRetorno;
+                    using (Pessoas objBLL = new Pessoas())
+                    {
+                        objRetorno = objBLL.RetornaFuncionario(value == null ? 0 : (int)value, null);
+                    }
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        this.objPedido.fun_funcionarioEntregador = ((tbFuncionario)objRetorno.objRetorno).fun_codigo;
+                        this.objPedido.tbFuncionarioEntregador.fun_nome = ((tbFuncionario)objRetorno.objRetorno).fun_nome;
+                        SalvarEntregador();
+                    }
+                    else
+                    {
+                        MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+                        //this.objPedido.fun_funcionarioEntregador = 0;
+                        //this.objPedido.tbFuncionarioEntregador.fun_nome = string.Empty;
+                    }
+                    RaisePropertyChanged("fun_funcionarioEntregador");
+                    RaisePropertyChanged("fun_nomeEntregador");
+                }
+                else
+                {
+                    if(this.objPedido.ped_status == "X")
+                        MessageBox.Show("Pedido excluído não pode ser alterado!", "Atenção", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+        }
+        public string fun_nomeEntregador
+        {
+            get { return this.objPedido == null ? string.Empty : (this.objPedido.tbFuncionarioEntregador == null ? string.Empty : this.objPedido.tbFuncionarioEntregador.fun_nome); }
+            set
+            {
+                if (this.objPedido.tbFuncionarioEntregador.fun_nome != value)
+                {
+                    this.objPedido.tbFuncionarioEntregador.fun_nome = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+        private bool CanFuncionarioEntregador(object objParam)
+        {
+            return true;
+        }
+        private void FuncionarioEntregador(object objParam)
+        {
+            if (objParam != null && this.objPedido.ped_status != "X")
+            {
+                if (objParam.ToString() == "Novo")
+                {
+                    winCadastro objTelaCadastro = new winCadastro();
+                    FuncionarioViewModel objFuncionarioViewModel = new FuncionarioViewModel();
+                    if (this.objPedido.fun_funcionarioEntregador > 0)
+                        objFuncionarioViewModel.fun_codigo = this.objPedido.fun_funcionarioEntregador;
+                    objFuncionarioViewModel.OnDispose += (sen1, eve1) => { objTelaCadastro.Close(); };
+                    objTelaCadastro.Title = "Cadastro - " + objFuncionarioViewModel.strNomeTela;
+                    objTelaCadastro.DataContext = objFuncionarioViewModel;
+                    objTelaCadastro.Owner = (Window)Application.Current.MainWindow;
+                    objTelaCadastro.Closed += (sen, eve) =>
+                    {
+                        if (objFuncionarioViewModel.fun_codigo != null)
+                        {
+                            this.objPedido.fun_funcionarioEntregador = (int)objFuncionarioViewModel.fun_codigo;
+                            RaisePropertyChanged("fun_funcionarioEntregador");
+                            this.objPedido.tbFuncionarioEntregador.fun_nome = objFuncionarioViewModel.fun_nome;
+                            RaisePropertyChanged("fun_nomeEntregador");
+                            SalvarEntregador();
+                        }
+                        objFuncionarioViewModel = null;
+                        objTelaCadastro = null;
+                    };
+                    objTelaCadastro.ShowDialog();
+                }
+                else if (objParam.ToString() == "Pesquisar")
+                {
+                    FuncionarioViewModel objFuncionarioViewModel = new FuncionarioViewModel();
+                    objFuncionarioViewModel.OnPesquisa += (sen, eve) =>
+                    {
+                        if (objFuncionarioViewModel.fun_codigo != null)
+                        {
+                            this.objPedido.fun_funcionarioEntregador = (int)objFuncionarioViewModel.fun_codigo;
+                            RaisePropertyChanged("fun_funcionarioEntregador");
+                            this.objPedido.tbFuncionarioEntregador.fun_nome = objFuncionarioViewModel.fun_nome;
+                            RaisePropertyChanged("fun_nomeEntregador");
+                            SalvarEntregador();
+                        }
+                        objFuncionarioViewModel.Dispose();
+                    };
+                    objFuncionarioViewModel.Pesquisar("AbrirTela");
+                }
+                else
+                {
+                    int intCodigo;
+                    if (int.TryParse(objParam.ToString(), out intCodigo))
+                        this.fun_funcionarioEntregador = intCodigo;
+                    else
+                        FuncionarioEntregador("Pesquisar");
+                }
+            }
+            else
+                if (this.objPedido.ped_status == "X")
+                    MessageBox.Show("Pedido excluído não pode ser alterado!", "Atenção", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+
+        #endregion Comandos
+
+
+
+        #region Métodos
+
+        private void SalvarEntregador()
+        {
+            Retorno objRetorno;
+            using (Vendas objBLL = new Vendas())
+            {
+                objRetorno = objBLL.SalvarEntregador(this.objPedido);
+            }
+            if (objRetorno.intCodigoErro == 0)
+            {
+                this.objPedido = (tbPedido)objRetorno.objRetorno;
+                RaisePropertyChanged("objPedido");
+            }
+            else
+                MessageBox.Show(objRetorno.strMsgErro, "Atenção", MessageBoxButton.OK, Util.GetMessageImage(objRetorno.intCodigoErro));
+        }
+
+        #endregion Métodos
+    }
+}

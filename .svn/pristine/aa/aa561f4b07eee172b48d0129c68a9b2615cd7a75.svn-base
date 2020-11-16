@@ -1,0 +1,17 @@
+﻿using BSFood.Apoio;
+using BSFood.DataTransfer;
+using BSFood.Models;
+
+namespace BSFood.BusinessLogic.Interfaces
+{
+    public interface ICaixa
+    {
+        Retorno RetornaCaixa(int intCodigo);
+
+        Retorno AbrirCaixa(tbCaixa objCaixa, int intFunCodigo);
+
+        Retorno RetornaCaixaFechamento(int intCodigo);
+
+        Retorno FecharCaixa(FechamentoCaixa objFechamentoCaixa, int intFunCodigo);
+    }
+}

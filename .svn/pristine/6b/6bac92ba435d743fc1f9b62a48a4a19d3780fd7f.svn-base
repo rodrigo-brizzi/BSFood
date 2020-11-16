@@ -1,0 +1,21 @@
+﻿using BSFoodWEB.DTO;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.ServiceModel;
+using System.Text;
+
+namespace BSFoodWEB.BLL
+{
+    /// <summary>
+    /// Classe responsável pelas operações que respondem diretamente as atividades de pessoas
+    /// </summary>    
+    [ServiceContract]
+    public interface IPessoas
+    {
+        //Regions
+    }
+
+    //Enumeradores
+}

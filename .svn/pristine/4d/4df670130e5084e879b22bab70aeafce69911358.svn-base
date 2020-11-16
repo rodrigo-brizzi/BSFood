@@ -1,0 +1,216 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Reflection;
+
+namespace BSFood.ViewModel
+{
+    public class ViewModelBase : INotifyPropertyChanged, INotifyDataErrorInfo
+    {
+        public ViewModelBase()
+        {
+            this.arrErros = new ObservableCollection<string>();
+            this.blnConsulta = true;
+        }
+        
+        #region INotifyPropertyChanged method plus event
+        
+        public event PropertyChangedEventHandler PropertyChanged = delegate { };
+
+        /// <summary>
+        /// Notifica que a propriedade informada foi alterada. Se não informado a propriedade, todas as propriedades serão marcadas como alterada
+        /// </summary>
+        protected void RaisePropertyChanged(string propertyName)
+        {
+            if (!string.IsNullOrWhiteSpace(propertyName))
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));    
+            }
+        }
+
+        protected void RaiseAllPropertyChanged<T>()
+        {
+            var handler = PropertyChanged;
+            if (handler != null)
+            {
+                PropertyInfo[] arrPropertyInfos;
+                arrPropertyInfos = typeof(T).GetProperties();
+                for (int i = 0; i < arrPropertyInfos.Length; i++)
+                {
+                    if (typeof(T).GetProperty(arrPropertyInfos[i].Name).GetCustomAttributes(false).Count() > 0)
+                        handler(this, new PropertyChangedEventArgs(arrPropertyInfos[i].Name));
+                }
+            }
+        }
+
+        #endregion
+
+
+
+        #region INotifyDataErrorInfo methods and helpers
+
+        private readonly Dictionary<string, List<string>> _errors = new Dictionary<string, List<string>>();
+
+        public void SetError(string propertyName, string errorMessage)
+        {
+            if (!_errors.ContainsKey(propertyName))
+                _errors.Add(propertyName, new List<string> { errorMessage });
+
+            RaiseErrorsChanged(propertyName);
+            RaisePropertyChanged("HasErrors");
+        }
+
+        protected void ClearError(string propertyName)
+        {
+            if (_errors.ContainsKey(propertyName))
+            {
+                _errors.Remove(propertyName);
+                RaiseErrorsChanged(propertyName);
+                RaisePropertyChanged("HasErrors");
+            }            
+        }
+
+        protected void ClearAllErrors()
+        {
+            var errors = _errors.Select(error => error.Key).ToList();
+
+            foreach (var propertyName in errors)
+                ClearError(propertyName);
+        }
+
+        public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged = delegate { };
+
+        public void RaiseErrorsChanged(string propertyName)
+        {
+            if (propertyName != null)
+            {
+                ErrorsChanged(this, new DataErrorsChangedEventArgs(propertyName));
+            }
+        }
+
+        public IEnumerable GetErrors(string propertyName)
+        {
+            if (propertyName == null) return null;
+            return _errors.ContainsKey(propertyName)
+                    ? _errors[propertyName]
+                    : null;
+        }
+
+        public bool HasErrors
+        {
+            get { return _errors.Count > 0; }
+        }
+
+        public Dictionary<string, List<string>> RetornaTodosErros()
+        {
+            return _errors;
+        }
+
+        #endregion
+
+
+
+        #region Tratamentos de Erros
+
+        private Dictionary<int, List<string>> arrTodosErros = new Dictionary<int, List<string>>();
+        public ObservableCollection<string> arrErros { get; set; }
+
+        public void AtualizaErros()
+        {
+            arrErros.Clear();
+            var errors = arrTodosErros.Select(error => error.Value).ToList();
+            foreach (var objValue in errors)
+                foreach (string strErro in objValue)
+                    arrErros.Add(strErro);
+        }
+
+        public void AdicionaErros(object objItem)
+        {
+            int intId = objItem.GetHashCode();
+            if (arrTodosErros.ContainsKey(intId))
+                arrTodosErros[intId].Clear();
+            else
+                arrTodosErros.Add(intId, new List<string>());
+
+            Dictionary<string, List<string>> _errors = (Dictionary<string, List<string>>)((ViewModelBase)objItem).RetornaTodosErros();
+            var errors = _errors.Select(error => error.Value).ToList();
+            foreach (var propertyValue in errors)
+                foreach (string strErro in propertyValue)
+                    arrTodosErros[intId].Add(strErro);
+
+            this.AtualizaErros();
+        }
+
+        public void RemoveErros(object objItem)
+        {
+            int intId = objItem.GetHashCode();
+            if (arrTodosErros.ContainsKey(intId))
+            {
+                arrTodosErros.Remove(intId);
+                this.AtualizaErros();
+            }
+        }
+
+        #endregion
+
+
+
+        #region Propriedades padrões
+
+        private bool _blnConsulta;
+        public bool blnConsulta 
+        {
+            get { return this._blnConsulta; }
+            set
+            {
+                this._blnConsulta = value;
+                RaisePropertyChanged("blnConsulta");
+            }
+        }
+
+        public bool blnPermiteInclusaoRegistro { get; set; }
+        
+        public bool blnPermiteAlteracaoRegistro { get; set; }
+
+        public bool blnPermiteExclusaoRegistro { get; set; }
+
+        private bool _blnFocus;
+        public bool blnFocus
+        {
+            get { return this._blnFocus; }
+            set
+            {
+                this._blnFocus = value;
+                RaisePropertyChanged("blnFocus");
+            }
+        }
+
+        #endregion Propriedades padrões
+
+
+
+        #region Implementação de eventos padrões
+
+        public void ViewModelBase_PropertyChanged<T>(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != "blnConsulta")
+            {
+                ClearError(e.PropertyName);
+                try
+                {
+                    Validator.ValidateProperty(((T)sender).GetType().GetProperty(e.PropertyName).GetValue(((T)sender), null), new ValidationContext(this, null, null) { MemberName = e.PropertyName });
+                }
+                catch (ValidationException ve)
+                {
+                    SetError(e.PropertyName, ve.Message);
+                }
+            }
+        }
+
+        #endregion Implementação de eventos padrões
+    }
+}

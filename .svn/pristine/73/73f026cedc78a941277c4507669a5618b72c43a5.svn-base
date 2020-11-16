@@ -1,0 +1,20 @@
+namespace BSFood.Migrations
+{
+    using System;
+    using System.Data.Entity.Migrations;
+    
+    public partial class tbCaixa : DbMigration
+    {
+        public override void Up()
+        {
+            AddColumn("dbo.tbCaixa", "cai_ordemPedido", c => c.Int(nullable: false));
+            Sql("UPDATE tbMenu SET men_cabecalho = 'Pedidos' WHERE men_cabecalho = 'Vendas'");
+            Sql("UPDATE tbMenu SET men_nomeControle = 'BSFood.ViewModel.RelPedidoEntregadorViewModel' WHERE men_nomeControle = 'BSFood.View.cwRelVendaEntregador'"); 
+        }
+        
+        public override void Down()
+        {
+            DropColumn("dbo.tbCaixa", "cai_ordemPedido");
+        }
+    }
+}

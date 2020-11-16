@@ -1,0 +1,475 @@
+﻿using BSFood.DataAccess;
+using BSFood.DataTransfer;
+using BSFood.Apoio;
+using BSFood.BusinessLogic.Interfaces;
+using BSFood.Models;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Printing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Data.Entity;
+using System.ServiceModel;
+using System.Collections.ObjectModel;
+using System.Reflection;
+using System.IO;
+using System.Globalization;
+
+
+namespace BSFood.BusinessLogic
+{
+    public class Relatorios : IRelatorios, IDisposable
+    {
+        private bool blnFecharCon;
+        private EFContexto objCtx;
+        private GerenciaTransacao objTransacao;
+
+
+        public Relatorios()
+            : base()
+        {
+            this.objCtx = new EFContexto();
+            this.objTransacao = new GerenciaTransacao(ref this.objCtx);
+            blnFecharCon = true;
+        }
+
+        public Relatorios(ref EFContexto _objCtx, ref GerenciaTransacao _objTransacao)
+            : base()
+        {
+            this.objCtx = _objCtx;
+            this.objTransacao = _objTransacao;
+            blnFecharCon = false;
+        }
+
+
+
+        #region Cupons
+
+        public Retorno RetornaCupomEntrega(tbPedido objPedido, int? intPedCodigo = null)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                StringBuilder sbConteudo = new StringBuilder();
+                if (intPedCodigo != null)
+                    objPedido = objCtx.tbPedido.AsNoTracking().Where(ped => ped.ped_codigo == intPedCodigo).FirstOrDefault();
+
+                sbConteudo.Append("        COMPROVANTE DE ENTREGA" + Environment.NewLine);
+                sbConteudo.Append(" " + Environment.NewLine);
+                sbConteudo.Append("PEDIDO..: " + objPedido.ped_codigo.ToString() + Environment.NewLine);
+                sbConteudo.Append("CLIENTE.: " + objPedido.ped_nomeCliente.PadRight(30) + Environment.NewLine);
+                sbConteudo.Append((objPedido.ped_logradouro + "," + objPedido.ped_numero).PadRight(30) + Environment.NewLine);
+                if (!string.IsNullOrWhiteSpace(objPedido.ped_complemento))
+                    sbConteudo.Append(objPedido.ped_complemento.PadRight(30) + Environment.NewLine);
+                sbConteudo.Append("BAIRRO..: " + objPedido.ped_bairro.PadRight(30) + Environment.NewLine);
+                sbConteudo.Append("TELEFONE: " + objPedido.ped_telefone.PadRight(30) + Environment.NewLine);
+                sbConteudo.Append(Environment.NewLine);
+                sbConteudo.Append("QTD PRODUTO               VALOR   TOTAL" + Environment.NewLine);
+                sbConteudo.Append("---------------------------------------" + Environment.NewLine);
+                foreach (tbPedidoProduto objPedidoProduto in objPedido.tbPedidoProduto)
+                {
+                    string strQuantidade;
+                    if (objPedidoProduto.ppr_quantidade < 1)
+                        strQuantidade = objPedidoProduto.ppr_quantidade.ToString("0.0");
+                    else
+                        strQuantidade = objPedidoProduto.ppr_quantidade.ToString("000");
+                    sbConteudo.Append(strQuantidade + " " +
+                        objPedidoProduto.ppr_descricao.PadRight(19, ' ').Substring(0, 19) + " " +
+                        objPedidoProduto.ppr_valorUnitario.ToString("#,##0.00").PadLeft(7) + " " +
+                        objPedidoProduto.ppr_valorTotal.ToString("#,##0.00").PadLeft(7) + Environment.NewLine);
+                }
+                sbConteudo.Append("              TOTAL PRODUTOS -> " + objPedido.ped_valorSubTotal.ToString("#,##0.00").PadLeft(7) + Environment.NewLine);
+                sbConteudo.Append("                                -------" + Environment.NewLine);
+                if (objPedido.ped_valorTaxaEntrega > 0 || objPedido.ped_valorDespesa > 0 || objPedido.ped_valorDesconto > 0)
+                {
+                    if (objPedido.ped_valorTaxaEntrega > 0)
+                        sbConteudo.Append("                 TX. ENTREGA -> " + objPedido.ped_valorTaxaEntrega.ToString("#,##0.00").PadLeft(7) + Environment.NewLine);
+                    if (objPedido.ped_valorDespesa > 0)
+                        sbConteudo.Append("                    DESPESAS -> " + objPedido.ped_valorDespesa.ToString("#,##0.00").PadLeft(7) + Environment.NewLine);
+                    if (objPedido.ped_valorDesconto > 0)
+                        sbConteudo.Append("                    DESCONTO -> " + objPedido.ped_valorDesconto.ToString("#,##0.00").PadLeft(7) + Environment.NewLine);
+                    sbConteudo.Append("             TOTAL DO PEDIDO -> " + objPedido.ped_valorTotal.ToString("#,##0.00").PadLeft(7) + Environment.NewLine);
+                }
+                sbConteudo.Append("              VALOR RECEBIDO -> " + objPedido.ped_valorRecebido.ToString("#,##0.00").PadLeft(7) + Environment.NewLine);
+                sbConteudo.Append("                       TROCO -> " + objPedido.ped_valorTroco.ToString("#,##0.00").PadLeft(7) + Environment.NewLine);
+                sbConteudo.Append("OBSERVACOES: " + objPedido.ped_observacao);
+
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = sbConteudo.ToString();
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno RetornaCaixaFechamento(tbCaixa objCaixa)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                //if (objCaixa.cai_dataFechamento != null)
+                //{
+                var arrPedidoVista = this.objCtx.tbPedido.AsNoTracking().Where(ped => ped.cai_codigo == objCaixa.cai_codigo &&
+                                                                                ped.tbFormaPagamento.fpg_cobranca == "V").ToList();
+                decimal decTotalVista = 0;
+                if (arrPedidoVista.Count > 0)
+                    decTotalVista = arrPedidoVista.Sum(ped => ped.ped_valorTotal);
+
+
+                var arrPedidoPrazo = this.objCtx.tbPedido.AsNoTracking().Where(ped => ped.cai_codigo == objCaixa.cai_codigo &&
+                                                                                ped.tbFormaPagamento.fpg_cobranca == "P").ToList();
+                decimal decTotalPrazo = 0;
+                if (arrPedidoPrazo.Count > 0)
+                    decTotalPrazo = arrPedidoPrazo.Sum(ped => ped.ped_valorTotal);
+
+                decimal decTotalSaida = 0; //Providenciar
+
+                var arrPedidoEntrega = (from ped in this.objCtx.tbPedido
+                                            .AsNoTracking()
+                                            .Where(ped => ped.cai_codigo == objCaixa.cai_codigo &&
+                                            ped.ped_origem == "E" &&
+                                            (ped.ped_status == "F" || ped.ped_status == "E"))
+                                        group ped by new
+                                        {
+                                            codigo = ped.fun_funcionarioEntregador,
+                                            nome = ped.tbFuncionarioEntregador.fun_nome
+                                        }
+                                            into grupo
+                                            select new
+                                            {
+                                                codigo = grupo.Key.codigo,
+                                                nome = grupo.Key.nome,
+                                                decValorTotal = grupo.Sum(ped => ped.ped_valorTotal)
+                                            }).ToList();
+                decimal decTotalEntrega = 0;
+                if (arrPedidoEntrega.Count > 0)
+                    decTotalEntrega = arrPedidoEntrega.Sum(ped => ped.decValorTotal);
+
+
+                var arrPedidoComanda = this.objCtx.tbPedido
+                                                .AsNoTracking()
+                                                .Where(ped => ped.cai_codigo == objCaixa.cai_codigo &&
+                                                ped.ped_origem == "C" && ped.ped_status == "F").ToList();
+                decimal decTotalComanda = 0;
+                if (arrPedidoComanda.Count > 0)
+                    decTotalComanda = arrPedidoComanda.Sum(ped => ped.ped_valorTotal);
+
+                var arrPedidoExcluido = this.objCtx.tbPedido
+                                            .AsNoTracking()
+                                            .Where(ped => ped.cai_codigo == objCaixa.cai_codigo &&
+                                            ped.ped_status == "X").ToList();
+                decimal decTotalExcluido = 0;
+                if (arrPedidoExcluido.Count > 0)
+                    decTotalExcluido = arrPedidoExcluido.Sum(ped => ped.ped_valorTotal);
+
+                decimal decTotalRecebimento = 0;
+
+                var arrPedidoForma = (from ped in this.objCtx.tbPedido
+                                            .AsNoTracking()
+                                            .Where(ped => ped.cai_codigo == objCaixa.cai_codigo)
+                                      group ped by new
+                                      {
+                                          codigo = ped.fpg_codigo,
+                                          descricao = ped.tbFormaPagamento.fpg_descricao,
+                                          cobranca = ped.tbFormaPagamento.fpg_cobranca
+                                      }
+                                          into grupo
+                                          select new
+                                          {
+                                              codigo = grupo.Key.codigo,
+                                              descricao = grupo.Key.descricao,
+                                              cobranca = grupo.Key.cobranca,
+                                              decValorTotalForma = grupo.Sum(ped => ped.ped_valorTotal)
+                                          }).ToList();
+                decimal decTotalForma = 0;
+                if (arrPedidoForma.Count > 0)
+                    decTotalForma = arrPedidoForma.Sum(ped => ped.decValorTotalForma);
+
+                StringBuilder sbRelatorio = new StringBuilder();
+                sbRelatorio.Append("          FECHAMENTO DE CAIXA          " + Environment.NewLine);
+                sbRelatorio.Append(" " + Environment.NewLine);
+                sbRelatorio.Append("Data da abertura..: " + objCaixa.cai_dataAbertura.Value.ToString("dd/MM/yyyy HH:mm") + Environment.NewLine);
+                if (objCaixa.cai_dataFechamento != null)
+                    sbRelatorio.Append("Data do fechamento: " + objCaixa.cai_dataFechamento.Value.ToString("dd/MM/yyyy HH:mm") + Environment.NewLine);
+                sbRelatorio.Append("Data da impressao.: " + DateTime.Now.ToString("dd/MM/yyyy HH:mm") + Environment.NewLine);
+                sbRelatorio.Append(" " + Environment.NewLine);
+                sbRelatorio.Append("             RESUMO PEDIDOS            " + Environment.NewLine);
+                sbRelatorio.Append(" " + Environment.NewLine);
+                sbRelatorio.Append("TOTAL A VISTA..............: " + decTotalVista.ToString("#,##0.00").PadLeft(10) + Environment.NewLine);
+                sbRelatorio.Append("TOTAL A PRAZO..............: " + decTotalPrazo.ToString("#,##0.00").PadLeft(10) + Environment.NewLine);
+                sbRelatorio.Append("TOTAL SAIDAS...............: " + decTotalSaida.ToString("#,##0.00").PadLeft(10) + Environment.NewLine);
+                sbRelatorio.Append("TOTAL......................: " + ((decTotalVista + decTotalPrazo) - decTotalSaida).ToString("#,##0.00").PadLeft(10) + Environment.NewLine);
+                sbRelatorio.Append("---------------------------------------" + Environment.NewLine);
+                sbRelatorio.Append("                A VISTA                " + Environment.NewLine);
+                sbRelatorio.Append("ENTREGAS...................: " + decTotalEntrega.ToString("#,##0.00").PadLeft(10) + Environment.NewLine);
+                foreach (var objEntregador in arrPedidoEntrega)
+                {
+                    sbRelatorio.Append("  " +
+                        (objEntregador.codigo.ToString() + " " + objEntregador.nome).PadRight(15).Substring(0, 15) + " " +
+                        (objEntregador.decValorTotal * 14 / 100).ToString("#,##0.00").PadLeft(10) + " " +
+                        objEntregador.decValorTotal.ToString("#,##0.00").PadLeft(10) + Environment.NewLine);
+                }
+                sbRelatorio.Append("COMANDAS...................: " + decTotalComanda.ToString("#,##0.00").PadLeft(10) + Environment.NewLine);
+                sbRelatorio.Append("RECEBIMENTOS...............: " + decTotalRecebimento.ToString("#,##0.00").PadLeft(10) + Environment.NewLine);
+                sbRelatorio.Append("---------------------------------------" + Environment.NewLine);
+                sbRelatorio.Append("                A PRAZO                " + Environment.NewLine);
+                foreach (var objPedidoPrazo in arrPedidoPrazo)
+                {
+                    sbRelatorio.Append(objPedidoPrazo.ped_nomeCliente.PadRight(28).Substring(0, 28) + " " +
+                        objPedidoPrazo.ped_valorTotal.ToString("#,##0.00").PadLeft(10) + Environment.NewLine);
+                }
+                sbRelatorio.Append("TOTAL......................: " + decTotalPrazo.ToString("#,##0.00").PadLeft(10) + Environment.NewLine);
+                sbRelatorio.Append("---------------------------------------" + Environment.NewLine);
+                sbRelatorio.Append("                SAIDAS                 " + Environment.NewLine);
+                //sbRelatorio.Append("POUPA DE FRUTAS............: " + Environment.NewLine);
+                sbRelatorio.Append("TOTAL......................: " + Environment.NewLine);
+                sbRelatorio.Append("---------------------------------------" + Environment.NewLine);
+                sbRelatorio.Append("               EXCLUIDO                " + Environment.NewLine);
+                foreach (var objPedidoExcluido in arrPedidoExcluido)
+                {
+                    if (objPedidoExcluido.ped_nomeCliente != null)
+                    {
+                        sbRelatorio.Append(objPedidoExcluido.ped_nomeCliente.PadRight(28).Substring(0, 28) + " " +
+                            objPedidoExcluido.ped_valorTotal.ToString("#,##0.00").PadLeft(10) + Environment.NewLine);
+                    }
+                }
+                sbRelatorio.Append("TOTAL......................: " + decTotalExcluido.ToString("#,##0.00").PadLeft(10) + Environment.NewLine);
+                sbRelatorio.Append("---------------------------------------" + Environment.NewLine);
+                sbRelatorio.Append("RESUMO DE PEDIDOS POR GRUPO DE PRODUTO " + Environment.NewLine);
+                //sbRelatorio.Append("C/ CLB.....................: " + Environment.NewLine);
+                //sbRelatorio.Append("TOTAL......................: " + Environment.NewLine);
+                sbRelatorio.Append("---------------------------------------" + Environment.NewLine);
+                sbRelatorio.Append("         REGISTRO DE ALTERACAO         " + Environment.NewLine);
+                //sbRelatorio.Append("M FULANO DE VA            VD           " + Environment.NewLine);
+                //sbRelatorio.Append("E MARIA DA  VA            VD           " + Environment.NewLine);
+                sbRelatorio.Append("---------------------------------------" + Environment.NewLine);
+                sbRelatorio.Append("          FORMAS DE PAGAMENTO          " + Environment.NewLine);
+                foreach (var objPedidoForma in arrPedidoForma)
+                {
+                    if (objPedidoForma.descricao != null)
+                    {
+                        sbRelatorio.Append((objPedidoForma.descricao + "(" + objPedidoForma.cobranca + ")").PadRight(28).Substring(0, 28) + " " +
+                            objPedidoForma.decValorTotalForma.ToString("#,##0.00").PadLeft(10) + Environment.NewLine);
+                    }
+                }
+                sbRelatorio.Append("TOTAL......................: " + decTotalForma.ToString("#,##0.00").PadLeft(10) + Environment.NewLine);
+
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = sbRelatorio.ToString();
+                //}
+                //else
+                //{
+                //    objRetorno.intCodigoErro = 0;
+                //    objRetorno.objRetorno = string.Empty;
+                //}
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        public Retorno RetornaTicketConferencia(tbPedido objPedido, int? intPedCodigo = null)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                StringBuilder sbConteudo = new StringBuilder();
+                if (intPedCodigo != null)
+                    objPedido = objCtx.tbPedido.AsNoTracking().Where(ped => ped.ped_codigo == intPedCodigo).FirstOrDefault();
+
+                sbConteudo.Append("         TICKET DE CONFERENCIA" + Environment.NewLine);
+                sbConteudo.Append(" " + Environment.NewLine);
+                sbConteudo.Append("QTD PRODUTO               VALOR   TOTAL" + Environment.NewLine);
+                sbConteudo.Append("---------------------------------------" + Environment.NewLine);
+                foreach (tbPedidoProduto objPedidoProduto in objPedido.tbPedidoProduto)
+                {
+                    string strQuantidade;
+                    if (objPedidoProduto.ppr_quantidade < 1)
+                        strQuantidade = objPedidoProduto.ppr_quantidade.ToString("0.0");
+                    else
+                        strQuantidade = objPedidoProduto.ppr_quantidade.ToString("000");
+                    sbConteudo.Append(strQuantidade + " " +
+                        objPedidoProduto.ppr_descricao.PadRight(19, ' ').Substring(0, 19) + " " +
+                        objPedidoProduto.ppr_valorUnitario.ToString("#,##0.00").PadLeft(7) + " " +
+                        objPedidoProduto.ppr_valorTotal.ToString("#,##0.00").PadLeft(7) + Environment.NewLine);
+                }
+                sbConteudo.Append("                    SUBTOTAL -> " + objPedido.ped_valorSubTotal.ToString("#,##0.00").PadLeft(7) + Environment.NewLine);
+                sbConteudo.Append("                                -------" + Environment.NewLine);
+                if (objPedido.ped_valorTaxaEntrega > 0 || objPedido.ped_valorDespesa > 0 || objPedido.ped_valorDesconto > 0)
+                {
+                    if (objPedido.ped_valorTaxaEntrega > 0)
+                        sbConteudo.Append("                 TX. ENTREGA -> " + objPedido.ped_valorTaxaEntrega.ToString("#,##0.00").PadLeft(7) + Environment.NewLine);
+                    if (objPedido.ped_valorDespesa > 0)
+                        sbConteudo.Append("                    DESPESAS -> " + objPedido.ped_valorDespesa.ToString("#,##0.00").PadLeft(7) + Environment.NewLine);
+                    if (objPedido.ped_valorDesconto > 0)
+                        sbConteudo.Append("                    DESCONTO -> " + objPedido.ped_valorDesconto.ToString("#,##0.00").PadLeft(7) + Environment.NewLine);
+                    sbConteudo.Append("                       TOTAL -> " + objPedido.ped_valorTotal.ToString("#,##0.00").PadLeft(7) + Environment.NewLine);
+                }
+                sbConteudo.Append("                    RECEBIDO -> " + objPedido.ped_valorRecebido.ToString("#,##0.00").PadLeft(7) + Environment.NewLine);
+                sbConteudo.Append("                       TROCO -> " + objPedido.ped_valorTroco.ToString("#,##0.00").PadLeft(7) + Environment.NewLine);
+                sbConteudo.Append("OBSERVACOES: " + objPedido.ped_observacao + Environment.NewLine);
+
+                objRetorno.intCodigoErro = 0;
+                objRetorno.objRetorno = sbConteudo.ToString();
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        #endregion
+
+
+
+        #region Pedidos
+
+        public Retorno RetornaPedidoPorEntregador(DateTime dtDataInicial, DateTime dtDataFinal, int? intFunCodigo, int intCaiCodigo, string strEmpresa)
+        {
+            Retorno objRetorno = new Retorno();
+            try
+            {
+                string strTitulo = "RELATORIO DE PEDIDOS POR ENTREGADOR";
+                StringBuilder sbConteudo = new StringBuilder();
+                var objQuery = this.objCtx.tbPedido.AsNoTracking().Include(fun => fun.tbFuncionarioEntregador)
+                                                        .Where(ped => ped.ped_origem=="E" &&
+                                                            (ped.ped_status == "F" || ped.ped_status == "E") &&
+                                                            ped.ped_data >= dtDataInicial && ped.ped_data <= dtDataFinal &&
+                                                            ped.cai_codigo == intCaiCodigo)
+                                                      .AsQueryable();
+                if (intFunCodigo != null)
+                    objQuery = objQuery.Where(fun => fun.fun_funcionarioEntregador == intFunCodigo);
+
+                List<tbPedido> arrPedido = objQuery.OrderBy(ped => ped.fun_funcionarioEntregador).ThenBy(ped => ped.ped_codigo).ToList();
+
+                if(arrPedido.Count > 0)
+                {
+                    sbConteudo.Append(RetornaCabecalho(strEmpresa, strTitulo, dtDataInicial.ToShortDateString() + "&nbsp;à&nbsp;" + dtDataFinal.ToShortDateString(), 1, 1));
+                    int? intFunCodigoAux = 0;
+                    decimal decTotal = 0;
+                    arrPedido.ForEach(fun =>
+                    {
+                        if (intFunCodigoAux != fun.fun_funcionarioEntregador)
+                        {
+                            if (intFunCodigoAux == 0)
+                                sbConteudo.Append("<table border=\"0\" width=\"100%\">" + Environment.NewLine);
+                            else
+                                sbConteudo.Append(string.Format("<tr><td colspan=\"5\" align=\"right\">{0}</td></tr>" + Environment.NewLine, decTotal.ToString("0.00")));
+                            sbConteudo.Append(string.Format("<tr><td>Funcionário:</td><td>{0}&nbsp;-&nbsp;{1}</td><td>Quantidade:</td><td>{2}</td><td>&nbsp;</td></tr>" + Environment.NewLine, 
+                                fun.fun_funcionarioEntregador, 
+                                fun.tbFuncionarioEntregador.fun_nome, 
+                                arrPedido.Where(ped => ped.fun_funcionarioEntregador == fun.fun_funcionarioEntregador).Count().ToString()));
+                            sbConteudo.Append("<tr><th align=\"left\">PEDIDO</th><th align=\"left\">CLIENTE</th><th align=\"left\">DATA</th><th align=\"left\">ORDEM</th><th align=\"right\">VALOR</th></tr>" + Environment.NewLine);
+                            intFunCodigoAux = fun.fun_funcionarioEntregador;
+                            decTotal = 0;
+                        }
+                        sbConteudo.Append(string.Format("<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td align=\"right\">{4}</td></tr>" + Environment.NewLine, 
+                            fun.ped_codigo,
+                            fun.cli_codigo + "&nbsp;-&nbsp;" + fun.ped_nomeCliente,
+                            fun.ped_data.Value.ToShortDateString(),
+                            fun.ped_codigo,
+                            fun.ped_valorTotal.ToString("0.00")));
+                        decTotal += fun.ped_valorTotal;
+                    });
+                    sbConteudo.Append(string.Format("<tr><td colspan=\"5\" align=\"right\">{0}</td></tr>" + Environment.NewLine, decTotal.ToString("0.00")));
+                    sbConteudo.Append("</table>" + Environment.NewLine);
+                    sbConteudo.Append(RetornaRodape());
+
+                    var objAssembly = Assembly.GetExecutingAssembly();
+                    string strTemplate = "&nbsp;";
+                    using (Stream stream = objAssembly.GetManifestResourceStream("BSFood.Dependencia.RelTemplate.html"))
+                    {
+                        using (StreamReader reader = new StreamReader(stream, Encoding.GetEncoding(CultureInfo.GetCultureInfo("pt-BR").TextInfo.ANSICodePage)))
+                        {
+                            strTemplate = reader.ReadToEnd();
+                        }
+                    }
+                    objRetorno.intCodigoErro = 0;
+                    objRetorno.objRetorno = string.Format(strTemplate, strTitulo, sbConteudo.ToString());
+                }
+                else
+                {
+                    objRetorno.intCodigoErro = 48;
+                    objRetorno.strMsgErro = "Registro não encontrado";
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.LogErro(ex);
+                objRetorno.intCodigoErro = 16;
+                objRetorno.strMsgErro = ex.Message;
+                objRetorno.strExceptionToString = ex.ToString();
+            }
+            return objRetorno;
+        }
+
+        #endregion Pedidos
+
+
+
+        #region Apoio
+
+        private string RetornaCabecalho(string strEmpresa, string strTitulo, string strFiltro, int intPaginaAtual, int intPaginaTotal)
+        {
+            StringBuilder sbCabecalho = new StringBuilder();
+            sbCabecalho.Append("<table width=\"800\" align=\"center\" border=\"0\">" + Environment.NewLine);
+            sbCabecalho.Append("<tr>" + Environment.NewLine);
+            sbCabecalho.Append("    <td width=\"80\" rowspan=\"2\"><img src=\"{0}logo.jpg\" width=\"64\" height=\"64\" /></td>" + Environment.NewLine);
+            sbCabecalho.Append("    <td width=\"550\"><strong>{1}</strong></td>" + Environment.NewLine);
+            sbCabecalho.Append("    <td width=\"170\" align=\"right\" rowspan=\"2\" valign=\"top\">Página:{2}/{3}</td>" + Environment.NewLine);
+            sbCabecalho.Append("</tr>" + Environment.NewLine);
+            sbCabecalho.Append("<tr>" + Environment.NewLine);
+            sbCabecalho.Append("    <td valign=\"top\"><strong>{4}</strong></td>" + Environment.NewLine);
+            sbCabecalho.Append("</tr>" + Environment.NewLine);
+            sbCabecalho.Append("<tr>" + Environment.NewLine);
+            sbCabecalho.Append("    <td colspan=\"3\"><hr /></td>" + Environment.NewLine);
+            sbCabecalho.Append("</tr>" + Environment.NewLine);
+            sbCabecalho.Append("<tr>" + Environment.NewLine);
+            sbCabecalho.Append("    <td colspan=\"3\">" + Environment.NewLine);
+            return string.Format(sbCabecalho.ToString(), AppDomain.CurrentDomain.BaseDirectory, strEmpresa, intPaginaAtual.ToString(), intPaginaTotal.ToString(), strTitulo + "<br />" + strFiltro);
+        }
+
+        private string RetornaRodape()
+        {
+            StringBuilder sbRodape = new StringBuilder();
+            sbRodape.Append("    </td>" + Environment.NewLine);
+            sbRodape.Append("</tr>" + Environment.NewLine);
+            sbRodape.Append("<tr>" + Environment.NewLine);
+            sbRodape.Append("    <td colspan=\"3\"><hr /></td>" + Environment.NewLine);
+            sbRodape.Append("</tr>" + Environment.NewLine);
+            sbRodape.Append("<tr>" + Environment.NewLine);
+            sbRodape.Append("    <td colspan=\"2\">www.brizzisoft.com.br</td>" + Environment.NewLine);
+            sbRodape.Append("    <td align=\"right\">{0}</td>" + Environment.NewLine);
+            sbRodape.Append("</tr>" + Environment.NewLine);
+            sbRodape.Append("</table>" + Environment.NewLine);
+            return string.Format(sbRodape.ToString(), DateTime.Now);
+        }
+
+        #endregion Apoio
+
+        public void Dispose()
+        {
+            if (this.blnFecharCon)
+            {
+                this.objCtx.Dispose();
+                this.objCtx = null;
+            }
+        }
+    }
+}

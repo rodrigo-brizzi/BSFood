@@ -1,0 +1,123 @@
+﻿using BSFood.svcPessoas;
+using BSFoodDTO.svcBSFoodDTO;
+using DanielVaughan;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.ServiceModel;
+using System.Threading;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+
+namespace BSFood
+{
+    public partial class MainPage : UserControl
+    {
+        public MainPage()
+        {
+            InitializeComponent();
+            UISynchronizationContext.Instance.Initialize(Dispatcher);
+        }
+
+        private void UserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            var resetEvent = new ManualResetEvent(false);
+            //App.objSvcPessoa.RetornaListaMenuCompleted += (sen, eve) =>
+            //{
+            //    if (!eve.Result.blnTemErro)
+            //    {
+            //        lbMenu.ItemsSource = (List<tbMenu>)eve.Result.objRetorno;
+            //        resetEvent.Set();
+            //    }
+            //};
+            //App.objSvcPessoa.RetornaListaMenuAsync();
+            //resetEvent.WaitOne();
+            //List<tbMenu> arrRetorno = new List<tbMenu>();
+            //ThreadPool.QueueUserWorkItem(delegate
+            //{
+               
+            //});
+            //resetEvent.WaitOne();
+            //BasicHttpBinding objHttpBinding;
+            //objHttpBinding = new BasicHttpBinding(BasicHttpSecurityMode.None);
+            //objHttpBinding.MaxBufferSize = 2147483647;
+            //objHttpBinding.MaxReceivedMessageSize = 2147483647;
+            //objHttpBinding.CloseTimeout = new TimeSpan(0, 10, 0);
+            //objHttpBinding.OpenTimeout = new TimeSpan(0, 10, 0);
+            //objHttpBinding.ReceiveTimeout = new TimeSpan(0, 10, 0);
+            //objHttpBinding.SendTimeout = new TimeSpan(0, 10, 0);
+
+            //EndpointAddress objEndereco = new EndpointAddress("http://localhost/BSFoodWEB/svc/svcPessoas.svc");
+
+            ////var factory = new ChannelFactory<IPessoas>(objHttpBinding, objEndereco);
+            //var factory = new ChannelFactory<IPessoas>("*");
+            //IPessoas service = factory.CreateChannel();
+            //var result = service.BeginRetornaListaMenu(null, null);
+
+            //try
+            //{
+            //    var retorno = service.EndRetornaListaMenu(result);
+                
+            //    //arrRetorno = (List<tbMenu>)service.EndRetornaListaMenu(result).objRetorno;
+            //    //resetEvent.Set();
+            //}
+            //catch (Exception ex)
+            //{
+            //    //MessageBox.Show(string.Format("Unable to communicate with server. {0} {1}", ex.Message, ex.StackTrace));
+            //}
+            ////resetEvent.WaitOne();
+            //if (Dispatcher.CheckAccess())
+            //{
+            //    lbMenu.ItemsSource = arrRetorno;
+            //}
+            //else
+            //{
+            //    Dispatcher.BeginInvoke(delegate
+            //    {
+            //        lbMenu.ItemsSource = arrRetorno;
+            //    });
+            //}        
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+
+
+            List<tbMenu> arrRetorno = new List<tbMenu>();
+            //var factory = new ChannelFactory<IPessoas>(objHttpBinding, objEndereco);
+            var factory = new ChannelFactory<IPessoas>("*");
+            IPessoas service = factory.CreateChannel();
+            var result = service.BeginRetornaListaMenu(null, null);
+
+            try
+            {
+                var retorno = service.EndRetornaListaMenu(result);
+
+                arrRetorno = (List<tbMenu>)retorno.objRetorno;
+                //resetEvent.Set();
+            }
+            catch (Exception ex)
+            {
+                //MessageBox.Show(string.Format("Unable to communicate with server. {0} {1}", ex.Message, ex.StackTrace));
+            }
+            //resetEvent.WaitOne();
+            if (Dispatcher.CheckAccess())
+            {
+                lbMenu.ItemsSource = arrRetorno;
+            }
+            else
+            {
+                Dispatcher.BeginInvoke(delegate
+                {
+                    lbMenu.ItemsSource = arrRetorno;
+                });
+            }        
+        }
+    }
+}

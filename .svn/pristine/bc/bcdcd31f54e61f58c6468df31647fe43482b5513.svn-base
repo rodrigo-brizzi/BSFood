@@ -1,0 +1,56 @@
+﻿using BSFood.Apoio;
+using BSFood.Models;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Input;
+
+namespace BSFood.ViewModel
+{
+    public class ClienteTelefoneViewModel : ViewModelBase
+    {
+        public ICommand RemoveTelefoneCommand { get; set; }
+        public ClienteTelefoneViewModel(tbClienteTelefone _objClienteTelefone)
+        {
+            RemoveTelefoneCommand = new DelegateCommand(RemoveTelefone, CanRemoveTelefone);
+            this.objClienteTelefone = _objClienteTelefone;
+        }
+
+        #region Propriedades
+
+        public tbClienteTelefone objClienteTelefone { get; set; }
+
+        [Required(ErrorMessage = "Telefone obrigatório")]
+        [StringLength(20, ErrorMessage = "É permitido apenas 20 caracteres")]
+        [Range(0, double.MaxValue, ErrorMessage = "Informe apenas números")]
+        public string ctl_numero
+        {
+            get { return this.objClienteTelefone.ctl_numero; }
+            set
+            {
+                this.objClienteTelefone.ctl_numero = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+        private bool CanRemoveTelefone(object objParam)
+        {
+            return true;
+        }
+        private void RemoveTelefone(object objParam)
+        {
+            this.Dispose();
+        }
+
+        #endregion Comandos
+    }
+}

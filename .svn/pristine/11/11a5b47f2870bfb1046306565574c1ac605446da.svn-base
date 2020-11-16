@@ -1,0 +1,248 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Entity.Validation;
+using System.Data.SqlClient;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Media;
+
+namespace BSFoodServer.Apoio
+{
+    public static class Util
+    {
+
+        #region Propriedades e métodos para uso geral
+
+        private static string _strPath;
+        /// <summary>
+        /// Caminho da dll no sistema de arquivos (fora da pasta bin se estiver vinculada há um sistema web)
+        /// </summary>
+        public static string strPath
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_strPath))
+                    _strPath = Path.GetDirectoryName(Assembly.GetAssembly(typeof(Util)).CodeBase)
+                        .Replace(@"file:\", "")
+                        .Replace(@"\bin", "")
+                        .Replace(@"\Debug", "")
+                        .Replace(@"\Release", "");
+                return _strPath;
+            }
+        }
+
+        /// <summary>
+        /// Propriedade que retorna o ip da maquina onde a dll foi carregada
+        /// </summary>
+        public static string strIp
+        {
+            get
+            {
+                IPHostEntry objHost;
+                string strLocalIP = string.Empty;
+                objHost = Dns.GetHostEntry(Dns.GetHostName());
+                foreach (IPAddress ip in objHost.AddressList)
+                {
+                    if (ip.AddressFamily.ToString() == "InterNetwork")
+                    {
+                        strLocalIP = ip.ToString();
+                        break;
+                    }
+                }
+                return strLocalIP;
+            }
+        }
+
+        public static void FecharSistema()
+        {
+            Application.Current.Shutdown();
+            Environment.Exit(0);
+        }
+
+        #endregion Geral
+
+
+
+        #region Banco de Dados
+
+        /// <summary>
+        /// Usuário padrão utilizado para acesso ao banco
+        /// </summary>
+        public static string strUsuarioBanco { get { return "sa"; } }
+
+        /// <summary>
+        /// Senha do banco
+        /// </summary>
+        public static string strSenhaBanco { get { return "developer"; } }
+
+        /// <summary>
+        /// Endereço do banco de dados
+        /// </summary>
+        public static string strEnderecoBanco { get { return @".\sqlexpress"; } }
+
+        /// <summary>
+        /// Nome do Banco de dados
+        /// </summary>
+        public static string strNomeBanco { get { return "BSFOOD"; } }
+
+        /// <summary>
+        /// Método para criar a string de conexão para o banco
+        /// </summary>
+        public static string RetornaStringConexao()
+        {
+            string strConexao = string.Empty;
+            try
+            {
+                //if (string.IsNullOrEmpty(strConexao))
+                //{
+                //string strEnderecoBanco = @"192.168.0.4\SQLEXPRESS, 1433";
+                //string strNomeBanco = "GLOBAL_MSPDB";
+                //if (!blnUnitTeste)
+                //{
+                string strEnderecoBanco = Util.strEnderecoBanco;
+                string strNomeBanco = Util.strNomeBanco;
+                //}
+                //else
+                //{
+                //    strEnderecoBanco = @"192.168.0.4\SQLEXPRESS, 1433";
+                //    strNomeBanco = "GLOBAL_MSPDB";
+                //}
+                if (!string.IsNullOrWhiteSpace(strEnderecoBanco) && !string.IsNullOrWhiteSpace(strNomeBanco))
+                {
+
+                    SqlConnectionStringBuilder sqlBuilder = new SqlConnectionStringBuilder
+                    {
+                        DataSource = strEnderecoBanco,
+                        InitialCatalog = strNomeBanco,
+                        UserID = Util.strUsuarioBanco,
+                        Password = Util.strSenhaBanco,
+                        MultipleActiveResultSets = true
+                    };
+
+                    System.Data.Entity.Core.EntityClient.EntityConnectionStringBuilder entityBuilder = new System.Data.Entity.Core.EntityClient.EntityConnectionStringBuilder();
+                    entityBuilder.Provider = "System.Data.SqlClient";
+
+                    entityBuilder.ProviderConnectionString = sqlBuilder.ToString();
+
+                    entityBuilder.Metadata = @"res://*/DAL.BSFoodDAL.csdl|res://*/DAL.BSFoodDAL.ssdl|res://*/DAL.BSFoodDAL.msl";
+                    strConexao = entityBuilder.ConnectionString;
+                }
+                else
+                {
+                    throw new Exception("Endereço e Nome do banco não configurado!");
+                }
+                //}
+            }
+            catch (Exception ex)
+            {
+                LogErro(ex);
+            }
+            return strConexao;
+        }
+
+        #endregion Banco de Dados
+
+
+
+        #region Log e Auditoria
+
+        public static void LogTela(string strMensagem, Color? clCorLinha = null)
+        {
+            if (clCorLinha == null)
+                clCorLinha = Colors.Black;
+            Application.Current.Dispatcher.BeginInvoke(new Action(delegate()
+            {
+                App.arrLog.Add(new Apoio.LogServices { intId = App.arrLog.Count(), dtDataHora = DateTime.Now, strMensagem = strMensagem, clCorLinha = new SolidColorBrush((Color)clCorLinha) });
+            }));
+        }
+
+        /// <summary>
+        /// Método para tratamento de excessão (erros) da aplicação
+        /// </summary>
+        /// <param name="strMsg">Mensagem de erro do tipo "string"</param>
+        public static void LogErro(Exception ex)
+        {
+            try
+            {
+                string strMsg = ex.ToString();
+                DetalhaErro(ref strMsg, ex);
+
+                string strNomeArquivo = "log.txt";
+                string strPath = Util.strPath + @"\" + strNomeArquivo;
+                if (File.Exists(strPath))
+                {
+                    FileInfo fiArquivo = new FileInfo(strPath);
+                    if (fiArquivo.Length > 10000)
+                    {
+                        File.Delete(strPath);
+                        File.AppendAllText(strPath, DateTime.Now.ToString() + " " + strMsg);
+                    }
+                    else
+                    {
+                        using (StreamWriter sw = File.AppendText(strPath))
+                        {
+                            sw.WriteLine(DateTime.Now.ToString() + " " + strMsg);
+                        }
+                    }
+                }
+                else
+                    File.AppendAllText(strPath, DateTime.Now.ToString() + " " + strMsg);
+
+                //envia o log para o servidor da global ou por e-mail
+                //http://link4-glbautomacao.no-ip.org/SiggaWebService/svcGlobal.svc
+
+                using (System.Diagnostics.EventLog appLog = new System.Diagnostics.EventLog())
+                {
+                    appLog.Source = "BSFood";
+                    appLog.WriteEntry(strMsg, EventLogEntryType.Error);
+                }
+
+            }
+            catch (Exception)
+            {
+                //Random r = new Random();
+                //string strNomeArquivo = "log_" + r.Next(10000, 90000).ToString() + ".txt";
+                //string strPath = Path.GetDirectoryName(Assembly.GetAssembly(typeof(Util)).CodeBase);
+                //strPath = strPath.Replace(@"file:\", "") + @"\" + strNomeArquivo;
+                //File.AppendAllText(strPath, DateTime.Now.ToString() + " " + strMsg + "\nERR:" + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Método que vasculha a pilha de erro para capturar os detalhes da mensagem
+        /// </summary>
+        /// <param name="strMsg">string com a mensagem de erro padrão</param>
+        /// <param name="ex">objeto do tipo Exception para ser vasculhado</param>
+        private static void DetalhaErro(ref string strMsg, Exception ex)
+        {
+            if (ex.InnerException != null)
+            {
+                strMsg += "\n InnerException:\n " + ex.InnerException.ToString();
+            }
+            if (ex is DbEntityValidationException)
+            {
+                DbEntityValidationException entityEx = (DbEntityValidationException)ex;
+                foreach (var valError in entityEx.EntityValidationErrors)
+                {
+                    foreach (var item in valError.ValidationErrors)
+                    {
+                        strMsg += "\nEntity Error: " + item.ErrorMessage;
+                    }
+                }
+            }
+
+            if (ex.InnerException != null)
+            {
+                DetalhaErro(ref strMsg, ex.InnerException);
+            }
+        }
+
+        #endregion Log e Auditoria
+    }
+}

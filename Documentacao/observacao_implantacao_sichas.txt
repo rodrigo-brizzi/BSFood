@@ -1,0 +1,48 @@
+1-Mesa -> ao clicar na mesa, não está selecionando o caixa
+2-Mesa -> Colocar opção para imprimir e gravar para inserir itens na mesa sem imprimir
+3-Mesa -> ao clicar em uma mesa que esteja aberta, está mostrando o subtotal e o total da ultima comanda e não do total da mesa
+4-Mesa -> ao clicar em uma mesa livre, está carregando a forma 1 sem a descrição e não mostra o numero da mesa nem o caixa
+5-Mesa -> ao atualizar as mesas, a mesa selecionada desaparece
+6-Mesa -> ao informar a forma de pagamento cartão, preencher automaticamente o valor recebido com o valor total
+
+1-Comanda -> Não precisar de apertar o novo para lançar comanda
+2-Comanda -> Passar de campo com enter
+3-Comanda -> Separar por impressora os itens da comanda
+4-Comanda -> Criar opção para reimprimir o ultimo pedido
+
+OK 1-Geral -> parametrizar o contorno dos campos, pois a tela fica reclinada e não aparece a delimitação dos campos da tela
+OK 2-Geral -> ao abrir as telas de cadastros, mandar o foco para o nome
+OK 3-Geral -> em todos os cadastros, ao listar os registros, não mostrar os botoes de opção, apenas quando clicar na linha
+OK 4-Geral -> setar a propriedade delimitadora de foco no canvas dos formularios de cadastros e lançamentos em geral
+OK 5-Geral -> nos campos que realizam ação com o Enter, definir a tag "NoTab" para que o evento keydown não seja disparado mandando o foco para outro campo
+OK 6-Geral -> fazer com que os botões de pesquisa de chave estrangeira e demais botões de manutenção de lista não recebam foco
+OK 7-Geral -> em todos os cadastros ao listar os registros trazer em ordem de codigo descendente
+8-Geral -> migrar para o dapper todas as consultas do sistema
+10-Geral -> adequação geral dos menus
+
+
+OK 1-Entregas -> não está saindo cartão de credito no pedido de entrega
+OK 2-Entregas -> escolher o bairro no combo está muito ruim, tentar melhorar a pesquisa de bairro
+3-Entregas -> ao editar uma entrega, não aparece o titulo da janela e também não aparece o relatório de visualização
+4-Entregas -> ao atualizar as entregas, se estiver com alguma entrega aberta em detalhe, ela fecha
+5-Entregas -> ao tocar o telefone e o sistema detectar, deverá chamar atenção
+
+1-Produtos -> colocar a coluna de preço e o filtro por grupo e subgrupo
+
+http://julmar.com/blog/programming/part-2-changing-wpf-focus-in-code/
+http://julmar.com/blog/uncategorized/part-3-shifting-focus-to-the-first-available-element-in-wpf/
+
+
+<DataGrid.RowDetailsTemplate>
+<DataTemplate>
+<StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+</StackPanel>
+</DataTemplate>
+</DataGrid.RowDetailsTemplate>
+
+
+<intr:Interaction.Triggers>
+<intr:EventTrigger EventName="SelectionChanged">
+<intr:InvokeCommandAction Command="{Binding PesquisarCommand}" CommandParameter="0"/>
+</intr:EventTrigger>
+</intr:Interaction.Triggers>

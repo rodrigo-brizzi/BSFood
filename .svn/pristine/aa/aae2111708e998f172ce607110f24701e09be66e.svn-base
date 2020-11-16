@@ -1,0 +1,23 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFood.Models
+{
+    public class tbCidade
+    {
+        public int cid_codigo { get; set; }
+        public string cid_ibge { get; set; }
+        public string cid_nome { get; set; }
+
+        public int est_codigo { get; set; }
+        public tbEstado tbEstado { get; set; }
+
+        public List<tbClienteEndereco> tbClienteEndereco { get; set; }
+        public List<tbEmpresa> tbEmpresa { get; set; }
+        public List<tbEmpresa> tbEmpresaPadrao { get; set; }
+        public List<tbFuncionario> tbFuncionario { get; set; }
+    }
+}

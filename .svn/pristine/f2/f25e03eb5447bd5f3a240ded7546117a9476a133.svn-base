@@ -1,0 +1,265 @@
+﻿using BSFood.Apoio;
+using BSFood.View;
+using BSFoodServer.Models;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+using System.Collections.ObjectModel;
+
+namespace BSFood.ViewModel
+{
+    public class PrincipalViewModel : ViewModelBase
+    {
+        public ICommand AbreTelaCommand { get; set; }
+        public ICommand FechaTelaCommand { get; set; }
+
+        public PrincipalViewModel()
+        {
+            AbreTelaCommand = new DelegateCommand(AbreTela, CanAbreTela);
+            FechaTelaCommand = new DelegateCommand(FechaTela, CanFechaTela);
+            this.blnEscondeTela = false;
+            this.arrTelas = new ObservableCollection<TabItem>();
+        }
+
+        #region Propriedades
+
+        private Apoio.MenuItem _arrMenuItem;
+        public Apoio.MenuItem arrMenuItem
+        {
+            get
+            {
+                return this._arrMenuItem;
+            }
+            set
+            {
+                this._arrMenuItem = value;
+                RaisePropertyChanged("arrMenuItem");
+            }
+        }
+
+        public List<BSFoodServer.Models.Menu> _arrToolBar;
+        public List<BSFoodServer.Models.Menu> arrToolBar 
+        {
+            get 
+            {
+                return this._arrToolBar;
+            }
+            set 
+            {
+                this._arrToolBar = value;
+                RaisePropertyChanged("arrToolBar");
+            }
+        }
+
+        private string _strCaminhoImagens;
+        public string strCaminhoImagens
+        {
+            get
+            {
+                return this._strCaminhoImagens;
+            }
+            set
+            {
+                this._strCaminhoImagens = value;
+                RaisePropertyChanged("strCaminhoImagens");
+            }
+        }
+
+        public ObservableCollection<TabItem> arrTelas { get; set; }
+
+        private bool _blnEscondeTela;
+        public bool blnEscondeTela 
+        {
+            get 
+            {
+                return this._blnEscondeTela;
+            }
+            set
+            {
+                this._blnEscondeTela = value;
+                RaisePropertyChanged("blnEscondeTela");
+            }
+        }
+
+        private string _strFuncionario;
+        public string strFuncionario 
+        { 
+            get 
+            {
+                return this._strFuncionario;
+            }
+            set 
+            {
+                this._strFuncionario = value;
+                RaisePropertyChanged("strFuncionario");
+            }
+        }
+
+        private string _strVersao;
+        public string strVersao
+        {
+            get
+            {
+                return this._strVersao;
+            }
+            set
+            {
+                this._strVersao = value;
+                RaisePropertyChanged("strVersao");
+            }
+        }
+
+        private TabItem _objTelaPrincipal;
+        public TabItem objTelaPrincipal
+        {
+            get
+            {
+                return this._objTelaPrincipal;
+            }
+            set
+            {
+                this._objTelaPrincipal = value;
+                RaisePropertyChanged("objTelaPrincipal");
+            }
+        }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+        private bool CanAbreTela(object objParam)
+        {
+            return true;
+        }
+        private void AbreTela(object objParam)
+        {
+            int intCodigoMenu;
+            if (objParam.GetType() == typeof(Apoio.MenuItem))
+            {
+                var objMenuItem = (Apoio.MenuItem)objParam;
+                intCodigoMenu = Convert.ToInt32(objMenuItem.Name);
+            }
+            else
+            {
+                intCodigoMenu = (int)objParam;
+            }
+
+            PerfilAcessoMenu objPerfilAcessoMenu = App.objConfigStorage.objPerfilAcesso.PerfilAcessoMenus.Where(pem => pem.CodigoMenu == intCodigoMenu).FirstOrDefault();
+            if (objPerfilAcessoMenu.PermiteVisualizacao)
+            {
+                if (arrTelas.Count == 0)
+                    this.blnEscondeTela = true;
+
+                TabItem objTela = arrTelas.Where(tl => tl.Name.Equals(intCodigoMenu.ToString())).FirstOrDefault();
+                if (objTela == null)
+                {
+                    BSFoodServer.Models.Menu objMenu = App.objConfigStorage.arrMenu.Where(men => men.Codigo == intCodigoMenu).FirstOrDefault();
+                    string strNomeControle = objMenu.NomeControle;
+                    string strCabecalho = objMenu.Cabecalho;
+
+                    Type t = Type.GetType(strNomeControle);
+                    UserControl objConteudoTela = (UserControl)Activator.CreateInstance(t);
+                    objConteudoTela.Loaded += (sen, eve) => { ((ViewModelBase)objConteudoTela.DataContext).blnFocus = true; };
+                    ((ViewModelBase)objConteudoTela.DataContext).blnPermiteInclusaoRegistro = objPerfilAcessoMenu.PermiteInclusao;
+                    ((ViewModelBase)objConteudoTela.DataContext).blnPermiteAlteracaoRegistro = objPerfilAcessoMenu.PermiteAlteracao;
+                    ((ViewModelBase)objConteudoTela.DataContext).blnPermiteExclusaoRegistro = objPerfilAcessoMenu.PermiteExclusao;
+
+                    TabItem tabItem = new TabItem();
+                    tabItem.Header = strCabecalho;
+                    tabItem.Name = intCodigoMenu.ToString();
+                    tabItem.Content = objConteudoTela;
+                    arrTelas.Add(tabItem);
+                    objTela = tabItem;
+
+                    Util.intTelasAbertas = arrTelas.Count();
+                }
+                this.objTelaPrincipal = objTela;
+            }
+            else
+                MensagemViewModel.Show("Seu perfil não tem permissão para visualizar esta tela!", "Aviso", MensagemViewModel.enMsgBotao.Ok, MensagemViewModel.enMsgIcone.Information, null);
+        }
+
+        private bool CanFechaTela(object objParam)
+        {
+            return true;
+        }
+        private void FechaTela(object objParam)
+        {
+            arrTelas.Remove(arrTelas.Where(tl => tl.Name.Equals(objParam.ToString())).First());
+            if (arrTelas.Count == 0)
+                this.blnEscondeTela = false;
+            Util.intTelasAbertas = arrTelas.Count();
+        }
+
+        #endregion Comandos
+
+
+
+        #region Eventos
+
+
+
+        #endregion Eventos
+
+
+
+        #region Métodos
+
+        public void AutenticaFuncionario(object sender, RoutedEventArgs e)
+        {
+            Login objLogin = new Login();
+            objLogin.Loaded += (sen1, eve1) =>
+            {
+                objLogin.DataContext = new LoginViewModel();
+            };
+            objLogin.Closed += (sen2, eve2) =>
+            {
+                this.PreparaTelaPrincipal();
+            };
+            objLogin.Show();
+        }
+
+        public void PreparaTelaPrincipal()
+        {
+            if (App.objConfigStorage != null)
+            {
+                Apoio.MenuItem objMenuRoot = new Apoio.MenuItem() { Name = "Root" };
+
+                foreach (BSFoodServer.Models.Menu objMenu in App.objConfigStorage.arrMenu.Where(men => men.CodigoMenu == null).OrderBy(men => men.Ordem))
+                {
+                    Apoio.MenuItem objMenuItem = new Apoio.MenuItem() { Name = objMenu.Codigo.ToString(), Text = objMenu.Cabecalho };
+                    AgrupaMenuItem(ref objMenuItem, objMenu.Codigo);
+                    objMenuRoot.Add(objMenuItem);
+                }
+                this.strCaminhoImagens = "../Imagens/";
+                this.arrMenuItem = objMenuRoot;
+                this.arrToolBar = App.objConfigStorage.arrToolBar;
+                this.strFuncionario = App.objConfigStorage.objFuncionario.Nome;
+                this.strVersao = Util.RetornaVersao();
+            }       
+        }
+
+        private void AgrupaMenuItem(ref Apoio.MenuItem objMenuItem, int intCodigoMenu)
+        {
+            foreach (BSFoodServer.Models.Menu objMenu in App.objConfigStorage.arrMenu.Where(men => men.CodigoMenu == intCodigoMenu).OrderBy(men => men.Ordem))
+            {
+                Apoio.MenuItem objMenuAux = new Apoio.MenuItem() { Name = objMenu.Codigo.ToString(), Text = objMenu.Cabecalho };
+                AgrupaMenuItem(ref objMenuAux, objMenu.Codigo);
+                objMenuItem.Add(objMenuAux);
+            }
+        }
+
+        #endregion Métodos
+    }
+}

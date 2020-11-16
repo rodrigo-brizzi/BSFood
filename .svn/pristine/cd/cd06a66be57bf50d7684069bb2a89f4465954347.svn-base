@@ -1,0 +1,139 @@
+﻿using BSFood.Apoio;
+using BSFood.View;
+using BSFoodServer.BLL.Interfaces;
+using BSFoodServer.Models;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Net;
+using System.ServiceModel;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+
+namespace BSFood.ViewModel
+{
+    public class LoginViewModel : ViewModelBase
+    {
+        public ICommand AutenticaFuncionarioCommand { get; set; }
+        
+        public LoginViewModel()
+        {
+            this.PropertyChanged += LoginViewModel_PropertyChanged;
+            this._Login = string.Empty;
+            this._Senha = string.Empty;
+            AutenticaFuncionarioCommand = new DelegateCommand(AutenticaFuncionario, CanAutenticaFuncionario);
+        }
+
+        
+
+        #region Propriedades
+
+        private string _Login;
+        [Required(ErrorMessage = "Campo obrigatório")]
+        [StringLength(50, ErrorMessage = "É permitido apenas 50 caracteres")]
+        public string Login
+        {
+            get { return this._Login; }
+            set
+            {
+                if (this._Login != value)
+                {
+                    this._Login = value;
+                    RaisePropertyChanged("Login");
+                }
+            }
+        }
+
+        private string _Senha;
+        [Required(ErrorMessage = "Campo obrigatório")]
+        [StringLength(50, ErrorMessage = "É permitido apenas 50 caracteres")]
+        public string Senha
+        {
+            get { return this._Senha; }
+            set
+            {
+                if (this._Senha != value)
+                {
+                    this._Senha = value;
+                    RaisePropertyChanged("Senha");
+                }
+            }
+        }
+
+        [Required(ErrorMessage = "Campo obrigatório")]
+        [StringLength(50, ErrorMessage = "É permitido apenas 50 caracteres")]
+        public string Servidor
+        {
+            get { return Util.strServidor; }
+            set
+            {
+                if (Util.strServidor != value)
+                {
+                    Util.strServidor = value;
+                    RaisePropertyChanged("Servidor");
+                }
+            }
+        }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+        private bool CanAutenticaFuncionario(object objParam)
+        {
+            return !string.IsNullOrWhiteSpace(this._Login) && !string.IsNullOrWhiteSpace(this._Senha) && !string.IsNullOrWhiteSpace(Util.strServidor);
+        }
+        
+        private void AutenticaFuncionario(object objParam)
+        {
+            this.blnConsulta = false;
+            var factory = new ChannelFactory<IPessoasAsync>(App.objHttpBinding, Util.RetornaEndpointAddress(enSvc.svcPessoas));
+            IPessoasAsync service = factory.CreateChannel();
+            service.BeginAutenticaFuncionario(this.Login, this.Senha, (sen) =>
+            {
+                Deployment.Current.Dispatcher.BeginInvoke((Action)(() =>
+                {
+                    Retorno objRetorno = service.EndAutenticaFuncionario(sen);
+                    if (objRetorno.intCodigoErro == 0)
+                    {
+                        App.objConfigStorage = (ConfigStorage)objRetorno.objRetorno;
+                        (objParam as cwLogin).Close();
+                    }
+                    else
+                        MessageBox.Show(objRetorno.strMsgErro);
+                    this.blnConsulta = true;
+                }));
+            }, null);
+        }
+
+        #endregion Comandos
+
+
+
+        #region Eventos
+
+        private void LoginViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            ClearError(e.PropertyName);
+            try
+            {
+                Validator.ValidateProperty(((LoginViewModel)sender).GetType().GetProperty(e.PropertyName).GetValue((sender as LoginViewModel), null), new ValidationContext(this, null, null) { MemberName = e.PropertyName });
+                AutenticaFuncionarioCommand.CanExecute(sender);
+            }
+            catch (ValidationException ve)
+            {
+                SetError(e.PropertyName, ve.Message);
+            }
+        }
+
+        #endregion
+    }
+}

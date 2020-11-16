@@ -1,0 +1,25 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.Models
+{
+    public class Cliente : EntityBase
+    {
+        public int Codigo { get; set; }
+        public string Nome { get; set; }
+        public string NomeFantasia { get; set; }
+        public string Tipo { get; set; }
+        public string CpfCnpj { get; set; }
+        public string RgIe { get; set; }
+        public string Sexo { get; set; }
+        public string Email { get; set; }
+        public string Observacao { get; set; }
+
+        public ICollection<ClienteEndereco> ClienteEnderecos { get; set; }
+        public ICollection<ClienteTelefone> ClienteTelefones { get; set; }
+    }
+}

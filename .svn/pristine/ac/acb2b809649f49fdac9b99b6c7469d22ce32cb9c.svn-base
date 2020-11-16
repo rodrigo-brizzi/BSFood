@@ -1,0 +1,86 @@
+﻿using BSFood.View;
+using BSFood.Apoio;
+using BSFood.Models;
+using BSFood.BusinessLogic;
+using BSFood.DataTransfer;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
+using System.Windows.Threading;
+
+namespace BSFood.ViewModel
+{
+    public class EntregaViewModel : TelaViewModel
+    {
+        public EntregaViewModel()
+        {
+            arrEntregaPedidoViewModel = new ObservableCollection<ViewModelBase>();
+            EntregaControleViewModel objEntregaControleViewModel = new EntregaControleViewModel(this);
+            objEntregaControleViewModel.strNomeTela = "Pesquisa";
+            arrEntregaPedidoViewModel.Add(objEntregaControleViewModel);
+            objEntregaPedidoViewModel = objEntregaControleViewModel;
+        }
+
+
+        #region Propriedades
+
+        private ViewModelBase _objEntregaPedidoViewModel;
+        public ViewModelBase objEntregaPedidoViewModel
+        {
+            get { return _objEntregaPedidoViewModel; }
+            set
+            {
+                _objEntregaPedidoViewModel = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private ObservableCollection<ViewModelBase> _arrEntregaPedidoViewModel;
+        public ObservableCollection<ViewModelBase> arrEntregaPedidoViewModel
+        {
+            get { return _arrEntregaPedidoViewModel; }
+            set
+            {
+                _arrEntregaPedidoViewModel = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+
+
+        #endregion Comandos
+
+
+
+        #region Eventos
+
+
+
+        #endregion Eventos
+
+
+
+        #region Métodos
+
+
+
+        #endregion Métodos
+    }
+}

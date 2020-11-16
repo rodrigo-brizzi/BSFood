@@ -1,0 +1,147 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Linq;
+
+namespace BSFood.ViewModel
+{
+    public class ViewModelBase : INotifyPropertyChanged, INotifyDataErrorInfo
+    {
+        public ViewModelBase()
+        {
+            this.arrErros = new ObservableCollection<string>();
+        }
+        
+        #region INotifyPropertyChanged method plus event
+
+        public event PropertyChangedEventHandler PropertyChanged = delegate { };
+
+        /// <summary>
+        /// Notifica que a propriedade informada foi alterada. Se não informado a propriedade, todas as propriedades serão marcadas como alterada
+        /// </summary>
+        protected void RaisePropertyChanged(string propertyName)
+        {
+            if (propertyName != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));    
+            }
+            else
+            {
+                //se for passado nulo, todas as propriedades da viewmodel serão indicadas como alteradas
+                var handler = PropertyChanged;
+                if (handler != null)
+                {
+                    handler(this, new PropertyChangedEventArgs(null));
+                }
+            }
+        }
+
+        #endregion
+
+        #region INotifyDataErrorInfo methods and helpers
+
+        private readonly Dictionary<string, List<string>> _errors = new Dictionary<string, List<string>>();
+
+        public void SetError(string propertyName, string errorMessage)
+        {
+            if (!_errors.ContainsKey(propertyName))
+                _errors.Add(propertyName, new List<string> { errorMessage });
+
+            RaiseErrorsChanged(propertyName);
+            RaisePropertyChanged("HasErrors");
+        }
+
+        protected void ClearError(string propertyName)
+        {
+            if (_errors.ContainsKey(propertyName))
+            {
+                _errors.Remove(propertyName);
+                RaiseErrorsChanged(propertyName);
+                RaisePropertyChanged("HasErrors");
+            }
+        }
+
+        protected void ClearAllErrors()
+        {
+            var errors = _errors.Select(error => error.Key).ToList();
+
+            foreach (var propertyName in errors)
+                ClearError(propertyName);
+        }
+
+        public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged = delegate { };
+
+        public void RaiseErrorsChanged(string propertyName)
+        {
+            if (propertyName != null)
+            {
+                ErrorsChanged(this, new DataErrorsChangedEventArgs(propertyName));
+            }
+        }
+
+        public IEnumerable GetErrors(string propertyName)
+        {
+            if (propertyName == null) return null;
+            return _errors.ContainsKey(propertyName)
+                    ? _errors[propertyName]
+                    : null;
+        }
+
+        public bool HasErrors
+        {
+            get { return _errors.Count > 0; }
+        }
+
+        public Dictionary<string, List<string>> RetornaTodosErros()
+        {
+            return _errors;
+        }
+
+        #endregion
+
+        #region Tratamentos de Erros
+
+        private Dictionary<int, List<string>> arrTodosErros = new Dictionary<int, List<string>>();
+        public ObservableCollection<string> arrErros { get; set; }
+
+        public void AtualizaErros()
+        {
+            arrErros.Clear();
+            var errors = arrTodosErros.Select(error => error.Value).ToList();
+            foreach (var objValue in errors)
+                foreach (string strErro in objValue)
+                    arrErros.Add(strErro);
+        }
+
+        public void AdicionaErros(object objItem)
+        {
+            int intId = objItem.GetHashCode();
+            if (arrTodosErros.ContainsKey(intId))
+                arrTodosErros[intId].Clear();
+            else
+                arrTodosErros.Add(intId, new List<string>());
+
+            Dictionary<string, List<string>> _errors = (Dictionary<string, List<string>>)((ViewModelBase)objItem).RetornaTodosErros();
+            var errors = _errors.Select(error => error.Value).ToList();
+            foreach (var propertyValue in errors)
+                foreach (string strErro in propertyValue)
+                    arrTodosErros[intId].Add(strErro);
+
+            this.AtualizaErros();
+        }
+
+        public void RemoveErros(object objItem)
+        {
+            int intId = objItem.GetHashCode();
+            if (arrTodosErros.ContainsKey(intId))
+            {
+                arrTodosErros.Remove(intId);
+                this.AtualizaErros();
+            }
+        }
+
+        #endregion
+    }
+}

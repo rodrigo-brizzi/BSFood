@@ -1,0 +1,55 @@
+﻿using BSFoodServer.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.ServiceModel;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.BLL.Interfaces
+{
+    [ServiceContract]
+    public interface IPessoas
+    {
+        #region Endereços
+
+        [OperationContract]
+        Retorno RetornaListaEstado();
+
+        #endregion
+
+
+
+        #region Funcionarios
+
+        [OperationContract]
+        Retorno AutenticaFuncionario(string strLogin, string strSenha);
+
+        #endregion
+    }
+
+    [ServiceContract(Name = "IPessoas")]
+    public interface IPessoasAsync
+    {
+
+        #region Endereços
+
+        [OperationContract(AsyncPattern = true)]
+        IAsyncResult BeginRetornaListaEstado(AsyncCallback callback, object state);
+
+        Retorno EndRetornaListaEstado(IAsyncResult result);
+
+        #endregion
+
+
+
+        #region Funcionarios
+
+        [OperationContract(AsyncPattern = true)]
+        IAsyncResult BeginAutenticaFuncionario(string strLogin, string strSenha, AsyncCallback callback, object state);
+
+        Retorno EndAutenticaFuncionario(IAsyncResult result);
+
+        #endregion
+    }
+}

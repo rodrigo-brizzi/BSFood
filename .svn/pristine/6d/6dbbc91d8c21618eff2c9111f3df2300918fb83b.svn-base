@@ -1,0 +1,30 @@
+﻿using BSFoodServer.Models;
+using System;
+using System.Collections.Generic;
+using System.Data.Entity.ModelConfiguration;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.DAL.Config
+{
+    public class MenuConfig : EntityTypeConfiguration<Menu>
+    {
+        public MenuConfig()
+        {
+            this.ToTable("tbMenu");
+            this.HasKey(e => e.Codigo);
+
+            this.Property(e => e.Codigo).HasColumnName("men_codigo");
+            this.Property(e => e.Nivel).HasColumnName("men_nivel");
+            this.Property(e => e.NomeControle).HasColumnName("men_nomeControle").HasMaxLength(100);
+            this.Property(e => e.Cabecalho).HasColumnName("men_cabecalho").HasMaxLength(35);
+            this.Property(e => e.Ordem).HasColumnName("men_ordem").HasMaxLength(50);
+            this.Property(e => e.Imagem).HasColumnName("men_imagem").HasMaxLength(50);
+            this.Property(e => e.Status).HasColumnName("men_status");
+            //this.HasRequired(e => e.MenuPai).WithMany(e => e.MenuPais).HasForeignKey(e => e.CodigoMenu);
+            this.HasOptional(e => e.MenuPai).WithMany(e => e.MenuPais).HasForeignKey(e => e.CodigoMenu);
+            this.Property(e => e.CodigoMenu).HasColumnName("men_codigoPai");
+        }
+    }
+}

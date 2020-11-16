@@ -1,0 +1,55 @@
+﻿using System.Collections.Generic;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Interactivity;
+
+namespace BSFood.Apoio
+{
+    public class UpperCaseBehaviour: Behavior<TextBox>
+    {
+        List<Key> _skipKeys = new List<Key>(new[] { Key.F1, Key.F2, Key.F3, Key.F4, Key.F5, Key.F6, Key.F7, Key.F8, Key.F9, Key.F10, Key.F11, Key.F12, Key.Tab });
+        List<Key> _enterKeys = new List<Key>(new[] { Key.A, Key.B, Key.C, Key.D, Key.E, Key.F, Key.G, Key.H, Key.I, Key.J, Key.K, Key.L, Key.M, Key.N, Key.O, Key.P, Key.Q, Key.R, Key.S, Key.T, Key.U, Key.V, Key.W, Key.Y, Key.X, Key.Z });
+        #region Behavior Initialization
+        //The two events required to wire up this behavior to the appropriate control are defined here: OnAttached(), and OnDetaching()
+        protected override void OnAttached()
+        {
+            base.OnAttached();
+            AssociatedObject.KeyDown += AssociatedObjectKeyDown;
+        }
+
+        void AssociatedObjectKeyDown(object sender, KeyEventArgs e)
+        {
+            var objTextBox = (TextBox)sender;
+            if ((objTextBox.MaxLength == 0) || (objTextBox.MaxLength > 0 && objTextBox.Text.Length < objTextBox.MaxLength))
+            {
+                if (_skipKeys.Contains(e.Key)) return;
+
+                //do not hanlde ModifierKeys
+                if (Keyboard.Modifiers == ModifierKeys.Shift) return;
+                if (Keyboard.Modifiers == ModifierKeys.Control) return;
+
+                //clear the selection 
+                if (objTextBox.SelectedText.Length > 0)
+                    objTextBox.SelectedText = "";
+
+                if (_enterKeys.Contains(e.Key))
+                {
+                    var s = new string(new[] { (char)e.PlatformKeyCode });
+                    var i = objTextBox.SelectionStart;
+                    objTextBox.Text = objTextBox.Text.Insert(i, s);
+                    objTextBox.Select(i + 1, 0);
+                }
+                e.Handled = true;
+            }
+        }
+
+        protected override void OnDetaching()
+        {
+            base.OnDetaching();
+            AssociatedObject.KeyDown -= AssociatedObjectKeyDown;
+        }
+
+        #endregion
+ 
+    }
+}

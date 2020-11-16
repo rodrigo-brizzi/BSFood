@@ -1,0 +1,52 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFood.Models
+{
+    public class tbPerfilAcesso : ModelBase
+    {
+        private int _pac_codigo;
+        public int pac_codigo 
+        {
+            get { return this._pac_codigo; }
+            set
+            {
+                if (this._pac_codigo != value)
+                {
+                    this._pac_codigo = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        private string _pac_descricao;
+        [Required(ErrorMessage = "Campo obrigatório")]
+        [StringLength(30, ErrorMessage = "É permitido apenas 50 caracteres")]
+        public string pac_descricao
+        {
+            get { return this._pac_descricao; }
+            set
+            {
+                if (this._pac_descricao != value)
+                {
+                    this._pac_descricao = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        public bool pac_permiteDesconto { get; set; }
+        public bool pac_permiteCancelarItem { get; set; }
+        public bool pac_permiteCancelarVenda { get; set; }
+        public bool pac_permiteVendaClienteBloqueado { get; set; }
+        public bool pac_permiteVendaClienteNegativo { get; set; }
+
+        public virtual ICollection<tbPerfilAcessoMenu> tbPerfilAcessoMenu { get; set; }
+        public virtual ICollection<tbFuncionario> tbFuncionario { get; set; }
+    }
+}

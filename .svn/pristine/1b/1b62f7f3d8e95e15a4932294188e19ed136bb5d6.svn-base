@@ -1,0 +1,23 @@
+﻿using BSFoodServer.Models;
+using System;
+using System.Collections.Generic;
+using System.Data.Entity.ModelConfiguration;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.DAL.Config
+{
+    public class BairroConfig : EntityTypeConfiguration<Bairro>
+    {
+        public BairroConfig()
+        {
+            this.ToTable("tbBairro");
+            this.HasKey(e => e.Codigo);
+
+            this.Property(e => e.Codigo).HasColumnName("bai_codigo");
+            this.Property(e => e.Nome).HasColumnName("bai_nome").HasMaxLength(100);
+            this.Property(e => e.TaxaEntrega).HasColumnName("bai_taxaEntrega");
+        }
+    }
+}

@@ -1,0 +1,25 @@
+﻿using BSFoodServer.Models;
+using System;
+using System.Collections.Generic;
+using System.Data.Entity.ModelConfiguration;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.DAL.Config
+{
+    public class CidadeConfig : EntityTypeConfiguration<Cidade>
+    {
+        public CidadeConfig()
+        {
+            this.ToTable("tbCidade");
+            this.HasKey(e => e.Codigo);
+            
+            this.Property(e => e.Codigo).HasColumnName("cid_codigo");
+            this.Property(e => e.Ibge).HasColumnName("cid_ibge").HasMaxLength(7);
+            this.Property(e => e.Nome).HasColumnName("cid_nome").HasMaxLength(60);
+            this.HasRequired(e => e.Estado).WithMany(e => e.Cidades).HasForeignKey(e => e.CodigoEstado);
+            this.Property(e => e.CodigoEstado).HasColumnName("est_codigo");
+        }
+    }
+}

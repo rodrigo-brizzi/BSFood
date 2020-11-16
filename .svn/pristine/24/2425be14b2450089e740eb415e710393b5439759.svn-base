@@ -1,0 +1,262 @@
+﻿using BSFood.View;
+using BSFood.Apoio;
+using BSFood.Models;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+using System.Collections.ObjectModel;
+using System.Windows.Data;
+
+namespace BSFood.ViewModel
+{
+    public class PrincipalViewModel : ViewModelBase
+    {
+        public ICommand AbreTelaLoginCommand { get; set; }
+        public ICommand AbreTelaCommand { get; set; }
+
+        public PrincipalViewModel()
+        {
+            AbreTelaLoginCommand = new DelegateCommand(AbreTelaLogin, CanAbreTelaLogin);
+            AbreTelaCommand = new DelegateCommand(AbreTela, CanAbreTela);
+            this.arrViewModel = new ObservableCollection<ViewModelBase>();
+        }
+
+        #region Propriedades
+
+        private List<tbMenu> _arrMenu;
+        public List<tbMenu> arrMenu 
+        {
+            get { return this._arrMenu; }
+            set
+            {
+                this._arrMenu = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private List<tbMenu> _arrToolBar;
+        public List<tbMenu> arrToolBar 
+        {
+            get { return this._arrToolBar; }
+            set
+            {
+                this._arrToolBar = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private string _strFuncionario;
+        public string strFuncionario 
+        {
+            get { return this._strFuncionario; }
+            set
+            {
+                this._strFuncionario = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private string _strVersao;
+        public string strVersao 
+        {
+            get { return this._strVersao; }
+            set
+            {
+                this._strVersao = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private string _strEmpresa;
+        public string strEmpresa
+        {
+            get { return this._strEmpresa; }
+            set
+            {
+                this._strEmpresa = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private string _strCaixa;
+        public string strCaixa
+        {
+            get { return this._strCaixa; }
+            set
+            {
+                this._strCaixa = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private string _strData;
+        public string strData
+        {
+            get { return this._strData; }
+            set
+            {
+                this._strData = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private Brush _bruCaixaCor;
+        public Brush bruCaixaCor
+        {
+            get { return this._bruCaixaCor; }
+            set
+            {
+                this._bruCaixaCor = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private ViewModelBase _objViewModel;
+        public ViewModelBase objViewModel 
+        {
+            get { return this._objViewModel; }
+            set
+            {
+                this._objViewModel = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public ObservableCollection<ViewModelBase> arrViewModel { get; set; }
+
+        #endregion Propriedades
+
+
+
+        #region Comandos
+
+        private bool CanAbreTelaLogin(object objParam)
+        {
+            return true;
+        }
+        private void AbreTelaLogin(object objParam)
+        {
+            winLogin objTelaLogin = new winLogin();
+            objTelaLogin.Owner = (Window)objParam;
+            objTelaLogin.Closed += (sen, eve) =>
+            {
+                if (Util.objConfigStorage != null)
+                    PreparaTelaPrincipal();
+                else
+                    Util.FecharSistema();
+            };
+            objTelaLogin.ShowDialog();
+        }
+
+        private bool CanAbreTela(object objParam)
+        {
+            return true;
+        }
+        private void AbreTela(object objParam)
+        {
+            var objConteudoTelaExistente = this.arrViewModel.Where(vm => vm.strNomeControle == objParam.ToString()).FirstOrDefault();
+            if(objConteudoTelaExistente == null)
+            {
+                Type t = Type.GetType(objParam.ToString());
+                ViewModelBase objConteudoTela = (ViewModelBase)Activator.CreateInstance(t);
+                objConteudoTela.OnDispose += objConteudoTela_OnDispose;
+                this.arrViewModel.Add(objConteudoTela);
+                this.objViewModel = objConteudoTela;
+            }
+            else
+                this.objViewModel = objConteudoTelaExistente;
+        }
+
+        #endregion Comandos
+
+
+
+        #region Eventos
+
+        void objConteudoTela_OnDispose(object sender, EventArgs e)
+        {
+            if (sender.GetType() == typeof(CaixaAberturaViewModel) || sender.GetType() == typeof(CaixaFechamentoViewModel))
+                VerificaCaixaAberto();
+            this.arrViewModel.Remove((ViewModelBase)sender);
+        }
+
+        #endregion Eventos
+
+        
+
+        #region Métodos
+
+        public void PreparaTelaPrincipal()
+        {
+            //Construindo o Menu
+            List<tbMenu> arrMenuAux = new List<tbMenu>();
+            foreach (tbMenu objMenu in Util.objConfigStorage.objPerfilAcesso.tbPerfilAcessoMenu
+                .Where(pam => pam.pam_permiteVisualizacao == true && pam.tbMenu.men_codigoPai == null)
+                .Select(pam => pam.tbMenu).OrderBy(men => men.men_ordem))
+            {
+                tbMenu objMenuItem = new tbMenu() { men_imagem = objMenu.men_imagem, men_cabecalho = objMenu.men_cabecalho, men_nomeControle = objMenu.men_nomeControle };
+                AgrupaMenuItem(ref objMenuItem, objMenu.men_codigo);
+                arrMenuAux.Add(objMenuItem);
+            }
+            this.arrMenu = new List<tbMenu>(arrMenuAux);
+
+            //Construindo a ToolBar
+            List<tbMenu> arrToolBarAux = new List<tbMenu>();
+            foreach (tbMenu objToolBar in Util.objConfigStorage.objPerfilAcesso.tbPerfilAcessoMenu
+                .Where(pam => pam.pam_toolBar == true
+                && pam.tbMenu.men_nomeControle != null
+                && pam.pam_permiteVisualizacao == true).Select(per => per.tbMenu))
+            {
+                arrToolBarAux.Add(new tbMenu() { men_imagem = objToolBar.men_imagem, men_cabecalho = objToolBar.men_cabecalho, men_nomeControle = objToolBar.men_nomeControle });
+            }
+            this.arrToolBar = new List<tbMenu>(arrToolBarAux);
+
+            //Construindo a StatusBar
+            this.strFuncionario = Util.objConfigStorage.objFuncionario.fun_nome;
+            this.strVersao = Util.RetornaVersao();
+            this.strEmpresa = Util.objConfigStorage.objEmpresa.emp_nomeFantasia;
+            this.strData = DateTime.Now.ToString("dd/MM/yyyy");
+            VerificaCaixaAberto();
+        }
+
+        private void VerificaCaixaAberto()
+        {
+            if (Util.objConfigStorage.intCaiCodigo == 0)
+            {
+                this.strCaixa = "Fechado";
+                this.bruCaixaCor = new SolidColorBrush(Colors.Red);
+            }
+            else
+            {
+                this.strCaixa = Util.objConfigStorage.intCaiCodigo.ToString();
+                this.bruCaixaCor = new SolidColorBrush(Colors.White);
+            }
+        }
+
+        private void AgrupaMenuItem(ref tbMenu objMenuItem, int intCodigoMenu)
+        {
+            foreach (tbMenu objMenu in Util.objConfigStorage.objPerfilAcesso.tbPerfilAcessoMenu
+                .Where(pam => pam.tbMenu.men_codigoPai == intCodigoMenu)
+                .Select(pam => pam.tbMenu).OrderBy(men => men.men_ordem))
+            {
+                tbMenu objMenuAux = new tbMenu() { men_imagem = objMenu.men_imagem, men_cabecalho = objMenu.men_cabecalho, men_nomeControle = objMenu.men_nomeControle };
+                AgrupaMenuItem(ref objMenuAux, objMenu.men_codigo);
+                if (objMenuItem.tbMenuFilho == null)
+                    objMenuItem.tbMenuFilho = new List<tbMenu>();
+                objMenuItem.tbMenuFilho.Add(objMenuAux);
+            }
+        }
+       
+
+        #endregion Métodos
+    }
+}

@@ -1,0 +1,22 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.Models
+{
+    public class PerfilAcessoMenu
+    {
+        public bool PermiteInclusao { get; set; }
+        public bool PermiteAlteracao { get; set; }
+        public bool PermiteExclusao { get; set; }
+        public bool PermiteVisualizacao { get; set; }
+
+        public int CodigoMenu { get; set; }
+        public Menu Menu { get; set; }
+
+        public int CodigoPerfilAcesso { get; set; }
+        public PerfilAcesso PerfilAcesso { get; set; }
+    }
+}

@@ -1,0 +1,25 @@
+﻿using BSFoodWEB.DTO;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.ServiceModel;
+using System.Text;
+
+namespace BSFoodWEB.BLL
+{
+    /// <summary>
+    /// Classe que possibilita o compartilhamento dos objetos do entity entre os vários serviços de negócio
+    /// </summary>            
+    public class BSFoodDTO : IBSFoodDTO
+    {
+        /// <summary>
+        /// Método que utiliza alguma entidade do contexto do entity para enviar todos os objetos ao cliente do serviço
+        /// </summary>
+        /// <returns>Objeto do tipo BSRetorno que conhece todos os objetos do entity necessários para o uso dos demais serviços.</returns>        
+        public BSRetorno RetornaDto()
+        {
+            return new BSRetorno();
+        }
+    }
+}

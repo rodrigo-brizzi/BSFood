@@ -1,0 +1,18 @@
+namespace BSFood.Migrations
+{
+    using System;
+    using System.Data.Entity.Migrations;
+    
+    public partial class tbCaixa : DbMigration
+    {
+        public override void Up()
+        {
+            AddColumn("dbo.tbCaixa", "cai_ordemPedido", c => c.Int(nullable: false));
+        }
+        
+        public override void Down()
+        {
+            DropColumn("dbo.tbCaixa", "cai_ordemPedido");
+        }
+    }
+}

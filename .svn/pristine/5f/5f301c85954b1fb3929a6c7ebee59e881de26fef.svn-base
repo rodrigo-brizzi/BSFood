@@ -1,0 +1,23 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.Models
+{
+    public class Cidade
+    {
+        public int Codigo { get; set; }
+        public string Ibge { get; set; }
+        public string Nome { get; set; }
+
+        public int CodigoEstado { get; set; }
+        public Estado Estado { get; set; }
+
+        public ICollection<ClienteEndereco> ClienteEnderecos { get; set; }
+        public ICollection<Empresa> Empresas { get; set; }
+        public ICollection<Empresa> EmpresasPadroes { get; set; }
+        public ICollection<Funcionario> Funcionarios { get; set; }
+    }
+}

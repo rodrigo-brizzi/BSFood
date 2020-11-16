@@ -1,0 +1,37 @@
+﻿using BSFoodServer.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BSFoodServer.DTO
+{
+    [DataContract]
+    [KnownType(typeof(Estado))]
+    [KnownType(typeof(Funcionario))]
+    [KnownType(typeof(PerfilAcessoMenu))]
+    [KnownType(typeof(ConfigStorage))]
+    [KnownType(typeof(Menu))]
+    [KnownType(typeof(PerfilAcesso))]
+
+
+    [KnownType(typeof(List<Estado>))]
+    [KnownType(typeof(List<Funcionario>))]
+    [KnownType(typeof(List<PerfilAcessoMenu>))]
+    [KnownType(typeof(List<ConfigStorage>))]
+    [KnownType(typeof(List<Menu>))]
+    [KnownType(typeof(List<PerfilAcesso>))]
+    public class Retorno
+    {
+        [DataMember]
+        public int intCodigoErro { get; set; }
+        [DataMember]
+        public string strMsgErro { get; set; }
+        [DataMember]
+        public string strExceptionToString { get; set; }
+        [DataMember]
+        public object objRetorno { get; set; }
+    }
+}

@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <configSections>
+    <!-- For more information on Entity Framework configuration, visit http://go.microsoft.com/fwlink/?LinkID=237468 -->
+    <section name="entityFramework" type="System.Data.Entity.Internal.ConfigFile.EntityFrameworkSection, EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" requirePermission="false" />
+    <!-- For more information on Entity Framework configuration, visit http://go.microsoft.com/fwlink/?LinkID=237468 -->
+  </configSections>
+  <startup>
+    <supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.5" />
+  </startup>
+  <entityFramework>
+    <defaultConnectionFactory type="System.Data.Entity.Infrastructure.SqlCeConnectionFactory, EntityFramework">
+      <parameters>
+        <parameter value="System.Data.SqlServerCe.4.0" />
+      </parameters>
+    </defaultConnectionFactory>
+    <providers>
+      <provider invariantName="System.Data.SqlServerCe.4.0" type="System.Data.Entity.SqlServerCompact.SqlCeProviderServices, EntityFramework.SqlServerCompact" />
+      <provider invariantName="System.Data.SqlClient" type="System.Data.Entity.SqlServer.SqlProviderServices, EntityFramework.SqlServer" />
+    </providers>
+  </entityFramework>
+  <connectionStrings>
+    <add name="BSFoodServer.DAL.EFContexto" providerName="System.Data.SqlServerCe.4.0" connectionString="Data Source=|DataDirectory|\BSFoodDb.sdf" />
+    <!--<add name="BSFoodServer.DAL.EFContexto" providerName="System.Data.SqlClient" connectionString="Server=.\sqlexpress;Database=BSFOOD_DB;User Id=sa;Password=developer;Integrated Security=False" />-->    
+  </connectionStrings>
+
+  <system.serviceModel>
+    <serviceHostingEnvironment multipleSiteBindingsEnabled="true" />
+
+    <bindings>
+      <basicHttpBinding>
+        <binding maxBufferSize="2147483647"
+                 maxReceivedMessageSize="2147483647"
+                 maxBufferPoolSize="2147483647"
+                 sendTimeout="00:10:00"
+                 receiveTimeout="00:10:00"
+                 openTimeout="00:10:00"
+                 closeTimeout="00:10:00"
+                 transferMode="Buffered">
+          <readerQuotas maxDepth="32"
+                        maxArrayLength="2147483647"
+                        maxStringContentLength="2147483647"
+                        maxBytesPerRead="4096"
+                        maxNameTableCharCount="16384" />
+        </binding>
+      </basicHttpBinding>
+    </bindings>
+    <behaviors>
+      <endpointBehaviors>
+        <behavior name="WebHttpNewBehavior">
+          <webHttp />
+        </behavior>
+      </endpointBehaviors>
+      <serviceBehaviors>
+        <behavior name="metadata_and_debug_enabled">
+          <serviceMetadata httpGetEnabled="true" />
+          <serviceDebug includeExceptionDetailInFaults="true" />
+          <dataContractSerializer maxItemsInObjectGraph="2147483647" />
+        </behavior>
+        <behavior name="">
+          <serviceMetadata httpGetEnabled="true" />
+          <serviceDebug includeExceptionDetailInFaults="false" />
+        </behavior>
+      </serviceBehaviors>
+    </behaviors>
+    <services>
+      <service name="BSFoodServer.BLL.Configuracao" behaviorConfiguration="metadata_and_debug_enabled">
+        <host>
+          <baseAddresses>
+            <add baseAddress="http://localhost:9090/svcConfiguracao.svc" />
+          </baseAddresses>
+        </host>
+        <endpoint address="" binding="basicHttpBinding" contract="BSFoodServer.BLL.Interfaces.IConfiguracao" />
+      </service>
+      <service name="BSFoodServer.BLL.Pessoas" behaviorConfiguration="metadata_and_debug_enabled">
+        <host>
+          <baseAddresses>
+            <add baseAddress="http://localhost:9090/svcPessoas.svc" />
+          </baseAddresses>
+        </host>
+        <endpoint address="" binding="basicHttpBinding" contract="BSFoodServer.BLL.Interfaces.IPessoas" />
+      </service>
+      <service name="BSFoodServer.BLL.ClientAccessPolicy" behaviorConfiguration="metadata_and_debug_enabled">
+        <host>
+          <baseAddresses>
+            <add baseAddress="http://localhost:9090/" />
+          </baseAddresses>
+        </host>
+        <endpoint address="" binding="webHttpBinding" contract="BSFoodServer.BLL.Interfaces.IClientAccessPolicy" behaviorConfiguration="WebHttpNewBehavior" />
+      </service>
+    </services>
+  </system.serviceModel>
+  
+</configuration>
